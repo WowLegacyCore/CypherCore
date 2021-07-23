@@ -1,4 +1,4 @@
-## WowLegacyCore-CypherCore [![tbc_classic_build Actions Status](https://github.com/WowLegacyCore/CypherCore/workflows/dotnet/badge.svg)](https://github.com/WowLegacyCore/CypherCore/actions)
+## WowLegacyCore-CypherCore
 
 CypherCore is an open source server project for World of Warcraft written in C#.
 

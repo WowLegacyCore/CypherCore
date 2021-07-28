@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -373,7 +373,7 @@ namespace Game.Networking
                 buffer.WriteUInt32(ZLib.adler32(ZLib.adler32(0x9827D8F1, BitConverter.GetBytes((ushort)opcode), 2), data, (uint)packetSize));
 
                 uint compressedSize = CompressPacket(data, opcode, out byte[] compressedData);
-                buffer.WriteUInt32(ZLib.adler32(0x9827D8F1, compressedData, compressedSize)); 
+                buffer.WriteUInt32(ZLib.adler32(0x9827D8F1, compressedData, compressedSize));
                 buffer.WriteBytes(compressedData, compressedSize);
 
                 packetSize = (int)(compressedSize + 12);
@@ -479,45 +479,45 @@ namespace Game.Networking
                 return;
             }
 
-            RealmBuildInfo buildInfo = Global.RealmMgr.GetBuildInfo(Global.WorldMgr.GetRealm().Build);
-            if (buildInfo == null)
-            {
-                SendAuthResponseError(BattlenetRpcErrorCode.BadVersion);
-                Log.outError(LogFilter.Network, $"WorldSocket.HandleAuthSessionCallback: Missing auth seed for realm build {Global.WorldMgr.GetRealm().Build} ({GetRemoteIpAddress()}).");
-                CloseSocket();
-                return;
-            }
+            // RealmBuildInfo buildInfo = Global.RealmMgr.GetBuildInfo(Global.WorldMgr.GetRealm().Build);
+            // if (buildInfo == null)
+            // {
+            //     SendAuthResponseError(BattlenetRpcErrorCode.BadVersion);
+            //     Log.outError(LogFilter.Network, $"WorldSocket.HandleAuthSessionCallback: Missing auth seed for realm build {Global.WorldMgr.GetRealm().Build} ({GetRemoteIpAddress()}).");
+            //     CloseSocket();
+            //     return;
+            // }
 
             AccountInfo account = new(result.GetFields());
 
             // For hook purposes, we get Remoteaddress at this point.
             var address = GetRemoteIpAddress();
 
-            Sha256 digestKeyHash = new();
-            digestKeyHash.Process(account.game.SessionKey, account.game.SessionKey.Length);
-            if (account.game.OS == "Wn64")
-                digestKeyHash.Finish(buildInfo.Win64AuthSeed);
-            else if (account.game.OS == "Mc64")
-                digestKeyHash.Finish(buildInfo.Mac64AuthSeed);
-            else
-            {
-                Log.outError(LogFilter.Network, "WorldSocket.HandleAuthSession: Authentication failed for account: {0} ('{1}') address: {2}", account.game.Id, authSession.RealmJoinTicket, address);
-                CloseSocket();
-                return;
-            }
+            // Sha256 digestKeyHash = new();
+            // digestKeyHash.Process(account.game.SessionKey, account.game.SessionKey.Length);
+            // if (account.game.OS == "Wn64")
+            //     digestKeyHash.Finish(buildInfo.Win64AuthSeed);
+            // else if (account.game.OS == "Mc64")
+            //     digestKeyHash.Finish(buildInfo.Mac64AuthSeed);
+            // else
+            // {
+            //     Log.outError(LogFilter.Network, "WorldSocket.HandleAuthSession: Authentication failed for account: {0} ('{1}') address: {2}", account.game.Id, authSession.RealmJoinTicket, address);
+            //     CloseSocket();
+            //     return;
+            // }
 
-            HmacSha256 hmac = new(digestKeyHash.Digest);
-            hmac.Process(authSession.LocalChallenge, authSession.LocalChallenge.Count);
-            hmac.Process(_serverChallenge, 16);
-            hmac.Finish(AuthCheckSeed, 16);
+            // HmacSha256 hmac = new(digestKeyHash.Digest);
+            // hmac.Process(authSession.LocalChallenge, authSession.LocalChallenge.Count);
+            // hmac.Process(_serverChallenge, 16);
+            // hmac.Finish(AuthCheckSeed, 16);
 
             // Check that Key and account name are the same on client and server
-            if (!hmac.Digest.Compare(authSession.Digest))
-            {
-                Log.outError(LogFilter.Network, "WorldSocket.HandleAuthSession: Authentication failed for account: {0} ('{1}') address: {2}", account.game.Id, authSession.RealmJoinTicket, address);
-                CloseSocket();
-                return;
-            }
+            // if (!hmac.Digest.Compare(authSession.Digest))
+            // {
+            //     Log.outError(LogFilter.Network, "WorldSocket.HandleAuthSession: Authentication failed for account: {0} ('{1}') address: {2}", account.game.Id, authSession.RealmJoinTicket, address);
+            //     CloseSocket();
+            //     return;
+            // }
 
             Sha256 keyData = new();
             keyData.Finish(account.game.SessionKey);

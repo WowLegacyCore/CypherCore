@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -749,6 +749,17 @@ namespace Game
             SendPacket(motd);
 
             SendSetTimeZoneInformation();
+
+            // Send PVPSeason
+            {
+                SeasonInfo seasonInfo = new();
+                seasonInfo.PreviousSeason = (WorldConfig.GetIntValue(WorldCfg.ArenaSeasonId) - (WorldConfig.GetBoolValue(WorldCfg.ArenaSeasonInProgress) ? 1 : 0));
+
+                if (WorldConfig.GetBoolValue(WorldCfg.ArenaSeasonInProgress))
+                    seasonInfo.CurrentSeason = WorldConfig.GetIntValue(WorldCfg.ArenaSeasonId);
+
+                SendPacket(seasonInfo);
+            }
 
             SQLResult resultGuild = holder.GetResult(PlayerLoginQueryLoad.Guild);
             if (!resultGuild.IsEmpty())

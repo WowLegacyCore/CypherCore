@@ -772,6 +772,7 @@ namespace Framework.Constants
         PartyInvite                                         = 0x25BA,
         FeatureSystemStatus                                 = 0x25BC,
         FeatureSystemStatusGlueScreen                       = 0x25BD,
+        SeasonInfo                                          = 0x25BE,
         GameObjectActivateAnimKit                           = 0x25BF,
         GameObjectCustomAnim                                = 0x25C0,
         GameObjectDespawn                                   = 0x25C1,

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,29 @@ using System.Collections.Generic;
 
 namespace Game.Networking.Packets
 {
+    public class SeasonInfo : ServerPacket
+    {
+        public SeasonInfo() : base(ServerOpcodes.SeasonInfo) { }
+
+        public override void Write()
+        {
+            _worldPacket.WriteInt32(MythicPlusSeasonID);
+            _worldPacket.WriteInt32(CurrentSeason);
+            _worldPacket.WriteInt32(PreviousSeason);
+            _worldPacket.WriteInt32(ConquestWeeklyProgressCurrencyID);
+            _worldPacket.WriteInt32(PvpSeasonID);
+            _worldPacket.WriteBit(WeeklyRewardChestsEnabled);
+            _worldPacket.FlushBits();
+        }
+
+        public int MythicPlusSeasonID;
+        public int PreviousSeason;
+        public int CurrentSeason;
+        public int PvpSeasonID;
+        public int ConquestWeeklyProgressCurrencyID;
+        public bool WeeklyRewardChestsEnabled;
+    }
+
     public class AreaSpiritHealerQuery : ClientPacket
     {
         public AreaSpiritHealerQuery(WorldPacket packet) : base(packet) { }

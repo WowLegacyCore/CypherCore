@@ -124,7 +124,9 @@ namespace Game.DataStorage
 
             foreach (var uiDisplay in ChrClassUIDisplayStorage.Values)
             {
-                Cypher.Assert(uiDisplay.ChrClassesID < (byte)Class.Max);
+                if (uiDisplay.ChrClassesID >= (byte)Class.Max)
+                    continue;
+
                 _uiDisplayByClass[uiDisplay.ChrClassesID] = uiDisplay;
             }
 
@@ -135,6 +137,12 @@ namespace Game.DataStorage
             powers.Sort(new ChrClassesXPowerTypesRecordComparer());
             foreach (var power in powers)
             {
+                if (power.ClassID >= (byte)Class.Max)
+                    continue;
+
+                if (power.PowerType >= (byte)PowerType.Max)
+                    continue;
+
                 uint index = 0;
                 for (uint j = 0; j < (int)PowerType.Max; ++j)
                     if (_powersByClass[power.ClassID][j] != (int)PowerType.Max)
@@ -428,7 +436,8 @@ namespace Game.DataStorage
 
             foreach (PowerTypeRecord powerType in PowerTypeStorage.Values)
             {
-                Cypher.Assert(powerType.PowerTypeEnum < PowerType.Max);
+                if (powerType.PowerTypeEnum >= PowerType.Max)
+                    continue;
 
                 _powerTypes[powerType.PowerTypeEnum] = powerType;
             }
@@ -513,6 +522,9 @@ namespace Game.DataStorage
                 //ASSERT(talentInfo.ClassID < MAX_CLASSES);
                 //ASSERT(talentInfo.TierID < MAX_TALENT_TIERS, "MAX_TALENT_TIERS must be at least {0}", talentInfo.TierID);
                 //ASSERT(talentInfo.ColumnIndex < MAX_TALENT_COLUMNS, "MAX_TALENT_COLUMNS must be at least {0}", talentInfo.ColumnIndex);
+                if (talentInfo.ClassID >= (byte)Class.Max)
+                    continue;
+
                 _talentsByPosition[talentInfo.ClassID][talentInfo.TierID][talentInfo.ColumnIndex].Add(talentInfo);
             }
 

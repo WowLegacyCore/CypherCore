@@ -2275,7 +2275,7 @@ namespace Framework.Constants
         RandomizeArchaeologyDigsites = 187,
         SummonStabledPetAsGuardian = 188,
         Loot = 189, // NYI, lootid in MiscValue ?
-        TotalSpellEffects
+        TotalSpellEffects = 284
     }
 
     public enum SpellEffectHandle

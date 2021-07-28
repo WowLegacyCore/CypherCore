@@ -5553,6 +5553,9 @@ namespace Game
                         continue;
                     }
 
+                    if (currentrace >= (byte)Race.Max || currentclass >= (byte)Class.Max)
+                        continue;
+
                     PlayerInfo pInfo = new();
                     pInfo.MapId = mapId;
                     pInfo.ZoneId = zoneId;
@@ -5595,6 +5598,9 @@ namespace Game
                     for (var raceIndex = Race.Human; raceIndex < Race.Max; ++raceIndex)
                     {
                         if (!characterLoadout.RaceMask.HasAnyFlag(SharedConst.GetMaskForRace(raceIndex)))
+                            continue;
+
+                        if (raceIndex >= Race.Max || characterLoadout.ChrClassID >= (byte)Class.Max)
                             continue;
 
                         PlayerInfo playerInfo = _playerInfo[(int)raceIndex][characterLoadout.ChrClassID];

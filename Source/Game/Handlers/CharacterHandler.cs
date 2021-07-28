@@ -2538,14 +2538,6 @@ namespace Game
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.ArenaInfo, stmt);
 
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_ACHIEVEMENTS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.Achievements, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_CRITERIAPROGRESS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.CriteriaProgress, stmt);
-
             stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_EQUIPMENTSETS);
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.EquipmentSets, stmt);
@@ -2669,8 +2661,6 @@ namespace Game
         DeclinedNames,
         Guild,
         ArenaInfo,
-        Achievements,
-        CriteriaProgress,
         EquipmentSets,
         BgData,
         Glyphs,

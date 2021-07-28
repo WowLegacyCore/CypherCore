@@ -127,7 +127,6 @@ namespace Framework.Database
             PrepareStatement(CharStatements.SEL_GUILD_MEMBER_EXTENDED, "SELECT g.guildid, g.name, gr.rname, gr.rid, gm.pnote, gm.offnote " +
                 "FROM guild g JOIN guild_member gm ON g.guildid = gm.guildid " +
                 "JOIN guild_rank gr ON g.guildid = gr.guildid AND gm.rank = gr.rid WHERE gm.guid = ?");
-            PrepareStatement(CharStatements.SEL_CHARACTER_CRITERIAPROGRESS, "SELECT criteria, counter, date FROM character_achievement_progress WHERE guid = ?");
             PrepareStatement(CharStatements.SEL_CHARACTER_EQUIPMENTSETS, "SELECT setguid, setindex, name, iconname, ignore_mask, AssignedSpecIndex, item0, item1, item2, item3, item4, item5, item6, item7, item8, " +
                 "item9, item10, item11, item12, item13, item14, item15, item16, item17, item18 FROM character_equipmentsets WHERE guid = ? ORDER BY setindex");
             PrepareStatement(CharStatements.SEL_CHARACTER_BGDATA, "SELECT instanceId, team, joinX, joinY, joinZ, joinO, joinMapId, taxiStart, taxiEnd, mountSpell FROM character_battleground_data WHERE guid = ?");
@@ -759,8 +758,6 @@ namespace Framework.Database
         SEL_GUILD_MEMBER,
         SEL_GUILD_MEMBER_EXTENDED,
         SEL_CHARACTER_ARENAINFO,
-        SEL_CHARACTER_ACHIEVEMENTS,
-        SEL_CHARACTER_CRITERIAPROGRESS,
         SEL_CHARACTER_EQUIPMENTSETS,
         SEL_CHARACTER_BGDATA,
         SEL_CHARACTER_GLYPHS,
@@ -1007,9 +1004,6 @@ namespace Framework.Database
         UPD_RESTORE_DELETE_INFO,
         UPD_ZONE,
         UPD_LEVEL,
-        DEL_INVALID_ACHIEV_PROGRESS_CRITERIA,
-        DEL_INVALID_ACHIEV_PROGRESS_CRITERIA_GUILD,
-        DEL_INVALID_ACHIEVMENT,
         DEL_INVALID_PET_SPELL,
         DEL_GROUP_INSTANCE_BY_INSTANCE,
         DEL_GROUP_INSTANCE_BY_GUID,

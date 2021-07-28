@@ -779,7 +779,7 @@ namespace Game.Entities
                     return;
                 }
 
-                if (update || ((byte)(GetUpdateField<uint>(index) >> (offset * 8)) != Convert.ToByte(value)))
+                if ((byte)(GetUpdateField<uint>(index) >> (offset * 8)) != Convert.ToByte(value))
                 {
                     if (value is byte)
                     {
@@ -803,7 +803,7 @@ namespace Game.Entities
                     return;
                 }
 
-                if (update || ((ushort)(GetUpdateField<uint>(index) >> (offset * 16)) != Convert.ToUInt16(value)))
+                if ((ushort)(GetUpdateField<uint>(index) >> (offset * 16)) != Convert.ToUInt16(value))
                 {
                     if (value is ushort)
                     {
@@ -821,17 +821,17 @@ namespace Game.Entities
             }
             else if (value is int || value is uint || value is float)
             {
-                if (update || (value is uint && GetUpdateField<uint>(index) != Convert.ToUInt32(value)))
+                if (value is uint && GetUpdateField<uint>(index) != Convert.ToUInt32(value))
                 {
                     m_updateValues[(int)index].UnsignedValue = Convert.ToUInt32(value);
                     m_changesMask.Set((int)index, true);
                 }
-                else if (update || (value is int && GetUpdateField<int>(index) != Convert.ToInt32(value)))
+                else if (value is int && GetUpdateField<int>(index) != Convert.ToInt32(value))
                 {
                     m_updateValues[(int)index].SignedValue = Convert.ToInt32(value);
                     m_changesMask.Set((int)index, true);
                 }
-                else if (update || (value is float && GetUpdateField<float>(index) != Convert.ToSingle(value)))
+                else if (value is float && GetUpdateField<float>(index) != Convert.ToSingle(value))
                 {
                     m_updateValues[(int)index].FloatValue = Convert.ToSingle(value);
                     m_changesMask.Set((int)index, true);
@@ -839,14 +839,14 @@ namespace Game.Entities
             }
             else if (value is long || value is ulong)
             {
-                if (update || (value is long && GetUpdateField<long>(index) != Convert.ToInt64(value)))
+                if (value is long && GetUpdateField<long>(index) != Convert.ToInt64(value))
                 {
                     m_updateValues[(int)index].SignedValue = (int)MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
                     m_updateValues[(int)index + 1].SignedValue = (int)MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
                     m_changesMask.Set((int)index, true);
                     m_changesMask.Set((int)index + 1, true);
                 }
-                else if (update || (value is ulong && GetUpdateField<ulong>(index) != Convert.ToUInt64(value)))
+                else if (value is ulong && GetUpdateField<ulong>(index) != Convert.ToUInt64(value))
                 {
                     m_updateValues[(int)index].UnsignedValue = MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
                     m_updateValues[(int)index + 1].UnsignedValue = MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
@@ -868,18 +868,18 @@ namespace Game.Entities
                 AddToObjectUpdateIfNeeded();
         }
 
-        public T GetUpdateField<T>(object index, byte offset = 0) where T : new() =>
+        public T GetUpdateField<T>(object index, byte offset = 0) =>
             default(T) switch
             {
-                sbyte => (T)Convert.ChangeType(Convert.ToSByte(m_updateValues[(int)index].SignedValue >> (offset * 8)) & 0xFF, typeof(T)),
-                byte => (T)Convert.ChangeType(Convert.ToByte(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) & 0xFF, typeof(T)),
-                short => (T)Convert.ChangeType(Convert.ToInt16(m_updateValues[(int)index].SignedValue >> (offset * 16)) & 0xFF, typeof(T)),
-                ushort => (T)Convert.ChangeType(Convert.ToUInt16(m_updateValues[(int)index].UnsignedValue >> (offset * 16)) & 0xFF, typeof(T)),
-                int => (T)Convert.ChangeType(Convert.ToInt32(m_updateValues[(int)index].SignedValue), typeof(T)),
-                uint => (T)Convert.ChangeType(Convert.ToUInt32(m_updateValues[(int)index].UnsignedValue), typeof(T)),
-                float => (T)Convert.ChangeType(Convert.ToSingle(m_updateValues[(int)index].FloatValue), typeof(T)),
-                long => (T)Convert.ChangeType(Convert.ToInt64(m_updateValues[(int)index + 1].SignedValue) << 32 | (uint)m_updateValues[(int)index].SignedValue, typeof(T)),
-                ulong => (T)Convert.ChangeType(Convert.ToUInt64(m_updateValues[(int)index + 1].UnsignedValue) << 32 | m_updateValues[(int)index].UnsignedValue, typeof(T)),
+                sbyte => (T)Convert.ChangeType((sbyte)(m_updateValues[(int)index].SignedValue >> (offset * 8)) & 0xFF, typeof(T)),
+                byte => (T)Convert.ChangeType((byte)(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) & 0xFF, typeof(T)),
+                short => (T)Convert.ChangeType((short)(m_updateValues[(int)index].SignedValue >> (offset * 16)) & 0xFFFF, typeof(T)),
+                ushort => (T)Convert.ChangeType((ushort)(m_updateValues[(int)index].UnsignedValue >> (offset * 16)) & 0xFFFF, typeof(T)),
+                int => (T)Convert.ChangeType(m_updateValues[(int)index].SignedValue, typeof(T)),
+                uint => (T)Convert.ChangeType(m_updateValues[(int)index].UnsignedValue, typeof(T)),
+                float => (T)Convert.ChangeType(m_updateValues[(int)index].FloatValue, typeof(T)),
+                long => (T)Convert.ChangeType((long)m_updateValues[(int)index + 1].SignedValue << 32 | (long)m_updateValues[(int)index].SignedValue, typeof(T)),
+                ulong => (T)Convert.ChangeType((ulong)m_updateValues[(int)index + 1].UnsignedValue << 32 | m_updateValues[(int)index].UnsignedValue, typeof(T)),
                 ObjectGuid => (T)Convert.ChangeType(new ObjectGuid(GetUpdateField<ulong>((int)index + 2), GetUpdateField<ulong>(index)), typeof(T)),
                 _ => throw new Exception($"{typeof(T)} is not implemented in GetUpdateField<T>"),
             };

@@ -7081,10 +7081,10 @@ namespace Game.Entities
         public WorldLocation GetRecall() => m_recall_location;
 
         public void SetRestState(RestTypes type, PlayerRestState state) =>
-            SetUpdateField<uint>((uint)ActivePlayerFields.RestInfo + (uint)type * 2, (uint)state);
+            SetUpdateField<uint>(ActivePlayerFields.RestInfo + (int)type * 2, (uint)state);
         public uint GetRestState(RestTypes type) => GetUpdateField<uint>(ActivePlayerFields.RestInfo + (int)type * 2);
         public void SetRestThreshold(RestTypes type, uint threshold) =>
-            SetUpdateField<uint>((uint)ActivePlayerFields.RestInfo + ((uint)type * 2) + 1, threshold);
+            SetUpdateField<uint>(ActivePlayerFields.RestInfo + ((int)type * 2) + 1, threshold);
         public uint GetRestThreshold(RestTypes type) => GetUpdateField<uint>(ActivePlayerFields.RestInfo + ((int)type * 2) + 1);
 
         public bool HasPlayerFlag(PlayerFlags flags) => ((PlayerFlags)GetUpdateField<uint>(PlayerFields.PlayerFlags)).HasAnyFlag(flags);

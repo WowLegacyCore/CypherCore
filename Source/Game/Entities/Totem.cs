@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -62,12 +62,12 @@ namespace Game.Entities
                     packet.Totem = GetGUID();
                     packet.Slot = (byte)(m_Properties.Slot - (int)SummonSlot.Totem);
                     packet.Duration = duration;
-                    packet.SpellID = m_unitData.CreatedBySpell;
+                    packet.SpellID = GetUpdateField<uint>(UnitFields.CreatedBySpell);
                     owner.ToPlayer().SendPacket(packet);
                 }
 
                 // set display id depending on caster's race
-                uint totemDisplayId = Global.SpellMgr.GetModelForTotem(m_unitData.CreatedBySpell, owner.GetRace());
+                uint totemDisplayId = Global.SpellMgr.GetModelForTotem(GetUpdateField<uint>(UnitFields.CreatedBySpell), owner.GetRace());
                 if (totemDisplayId != 0)
                     SetDisplayId(totemDisplayId);
             }
@@ -124,7 +124,7 @@ namespace Game.Entities
             {
                 owner.SendAutoRepeatCancel(this);
 
-                SpellInfo spell = Global.SpellMgr.GetSpellInfo(m_unitData.CreatedBySpell, GetMap().GetDifficultyID());
+                SpellInfo spell = Global.SpellMgr.GetSpellInfo(GetUpdateField<uint>(UnitFields.CreatedBySpell), GetMap().GetDifficultyID());
                 if (spell != null)
                     GetSpellHistory().SendCooldownEvent(spell, 0, null, false);
 
@@ -167,17 +167,17 @@ namespace Game.Entities
             return base.IsImmunedToSpellEffect(spellInfo, index, caster);
         }
 
-        public uint GetSpell(byte slot = 0) { return m_spells[slot]; }
+        public uint GetSpell(byte slot = 0) => m_spells[slot];
 
-        public uint GetTotemDuration() { return m_duration; }
+        public uint GetTotemDuration() => m_duration;
 
-        public void SetTotemDuration(uint duration) { m_duration = duration; }
+        public void SetTotemDuration(uint duration) => m_duration = duration;
 
-        public TotemType GetTotemType() { return m_type; }
+        public TotemType GetTotemType() => m_type;
 
-        public override bool UpdateStats(Stats stat) { return true; }
+        public override bool UpdateStats(Stats stat) => true;
 
-        public override bool UpdateAllStats() { return true; }
+        public override bool UpdateAllStats() => true;
 
         public override void UpdateResistances(SpellSchools school) { }
         public override void UpdateArmor() { }

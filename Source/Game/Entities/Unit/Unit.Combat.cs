@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -84,11 +84,11 @@ namespace Game.Entities
                 minion.CombatStop(includingCast);
         }
 
-        public bool IsInCombat() { return HasUnitFlag(UnitFlags.InCombat); }
+        public bool IsInCombat() => HasUnitFlag(UnitFlags.InCombat);
 
-        public bool IsInCombatWith(Unit who) { return who != null && m_combatManager.IsInCombatWith(who); }
+        public bool IsInCombatWith(Unit who) => who != null && m_combatManager.IsInCombatWith(who);
 
-        public bool IsPetInCombat() { return HasUnitFlag(UnitFlags.PetInCombat); }
+        public bool IsPetInCombat() => HasUnitFlag(UnitFlags.PetInCombat);
 
         public void SetInCombatWith(Unit enemy)
         {
@@ -118,7 +118,7 @@ namespace Game.Entities
             }
         }
 
-        public void ClearInCombat() { m_combatManager.EndAllCombat(); }
+        public void ClearInCombat() => m_combatManager.EndAllCombat();
 
         public void ClearInPetCombat()
         {
@@ -150,18 +150,18 @@ namespace Game.Entities
             }
         }
 
-        public bool CanHaveThreatList() { return m_threatManager.CanHaveThreatList(); }
+        public bool CanHaveThreatList() => m_threatManager.CanHaveThreatList();
 
-        void SendThreatListUpdate() { m_threatManager.SendThreatListToClients(); }
+        void SendThreatListUpdate() => m_threatManager.SendThreatListToClients();
 
         // For NPCs with threat list: Whether there are any enemies on our threat list
         // For other units: Whether we're in combat
         // This value is different from IsInCombat when a projectile spell is midair (combat on launch - threat+aggro on impact)
-        public bool IsEngaged() { return CanHaveThreatList() ? m_threatManager.IsEngaged() : IsInCombat(); }
+        public bool IsEngaged() => CanHaveThreatList() ? m_threatManager.IsEngaged() : IsInCombat();
 
-        public bool IsEngagedBy(Unit who) { return CanHaveThreatList() ? IsThreatenedBy(who) : IsInCombatWith(who); }
+        public bool IsEngagedBy(Unit who) => CanHaveThreatList() ? IsThreatenedBy(who) : IsInCombatWith(who);
 
-        public bool IsThreatenedBy(Unit who) { return who != null && m_threatManager.IsThreatenedBy(who, true); }
+        public bool IsThreatenedBy(Unit who) => who != null && m_threatManager.IsThreatenedBy(who, true);
 
         public bool IsTargetableForAttack(bool checkFakeDeath = true)
         {
@@ -380,7 +380,7 @@ namespace Game.Entities
                 Log.outInfo(LogFilter.Unit, "{0} {1} stopped attacking", (IsTypeId(TypeId.Player) ? "Player" : "Creature"), GetGUID().ToString());
         }
 
-        public ObjectGuid GetTarget() { return m_unitData.Target; }
+        public ObjectGuid GetTarget() => GetUpdateField<ObjectGuid>(UnitFields.Target);
 
         public virtual void SetTarget(ObjectGuid guid) { }
 
@@ -418,20 +418,10 @@ namespace Game.Entities
             return true;
         }
 
-        void _addAttacker(Unit pAttacker)
-        {
-            attackerList.Add(pAttacker);
-        }
+        void _addAttacker(Unit pAttacker) => attackerList.Add(pAttacker);
+        void _removeAttacker(Unit pAttacker) => attackerList.Remove(pAttacker);
 
-        void _removeAttacker(Unit pAttacker)
-        {
-            attackerList.Remove(pAttacker);
-        }
-
-        public Unit GetVictim()
-        {
-            return attacking;
-        }
+        public Unit GetVictim() => attacking;
 
         public Unit GetAttackerForHelper()
         {
@@ -461,43 +451,25 @@ namespace Game.Entities
             return null;
         }
 
-        public List<Unit> GetAttackers()
-        {
-            return attackerList;
-        }
+        public List<Unit> GetAttackers() => attackerList;
 
-        public override float GetCombatReach() { return m_unitData.CombatReach; }
+        public override float GetCombatReach() => GetUpdateField<float>(UnitFields.CombatReach);
 
-        public void SetCombatReach(float combatReach) { SetUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.CombatReach), combatReach); }
+        public void SetCombatReach(float combatReach) => SetUpdateField<float>(UnitFields.CombatReach, combatReach);
 
-        public float GetBoundingRadius() { return m_unitData.BoundingRadius; }
+        public float GetBoundingRadius() => GetUpdateField<float>(UnitFields.BoundingRadius);
 
-        public void SetBoundingRadius(float boundingRadius) { SetUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.BoundingRadius), boundingRadius); }
+        public void SetBoundingRadius(float boundingRadius) => SetUpdateField<float>(UnitFields.BoundingRadius, boundingRadius);
 
-        public void ResetAttackTimer(WeaponAttackType type = WeaponAttackType.BaseAttack)
-        {
-            m_attackTimer[(int)type] = (uint)(GetBaseAttackTime(type) * m_modAttackSpeedPct[(int)type]);
-        }
+        public void ResetAttackTimer(WeaponAttackType type = WeaponAttackType.BaseAttack) => m_attackTimer[(int)type] = (uint)(GetBaseAttackTime(type) * m_modAttackSpeedPct[(int)type]);
 
-        public void SetAttackTimer(WeaponAttackType type, uint time)
-        {
-            m_attackTimer[(int)type] = time;
-        }
+        public void SetAttackTimer(WeaponAttackType type, uint time) => m_attackTimer[(int)type] = time;
 
-        public uint GetAttackTimer(WeaponAttackType type)
-        {
-            return m_attackTimer[(int)type];
-        }
+        public uint GetAttackTimer(WeaponAttackType type) => m_attackTimer[(int)type];
 
-        public bool IsAttackReady(WeaponAttackType type = WeaponAttackType.BaseAttack)
-        {
-            return m_attackTimer[(int)type] == 0;
-        }
+        public bool IsAttackReady(WeaponAttackType type = WeaponAttackType.BaseAttack) => m_attackTimer[(int)type] == 0;
 
-        public uint GetBaseAttackTime(WeaponAttackType att)
-        {
-            return m_baseAttackSpeed[(int)att];
-        }
+        public uint GetBaseAttackTime(WeaponAttackType att) => m_baseAttackSpeed[(int)att];
 
         public void AttackerStateUpdate(Unit victim, WeaponAttackType attType = WeaponAttackType.BaseAttack, bool extra = false)
         {
@@ -555,8 +527,7 @@ namespace Game.Entities
 
                 if (meleeAttackAuraEffect == null)
                 {
-                    CalcDamageInfo damageInfo;
-                    CalculateMeleeDamage(victim, out damageInfo, attType);
+                    CalculateMeleeDamage(victim, out CalcDamageInfo damageInfo, attType);
                     // Send log damage message to client
                     DealDamageMods(damageInfo.Attacker, victim, ref damageInfo.Damage, ref damageInfo.Absorb);
                     SendAttackStateUpdate(damageInfo);
@@ -629,7 +600,7 @@ namespace Game.Entities
             SendAttackStateUpdate(damageInfo);
         }
 
-        public void SetBaseWeaponDamage(WeaponAttackType attType, WeaponDamageRange damageRange, float value) { m_weaponDamage[(int)attType][(int)damageRange] = value; }
+        public void SetBaseWeaponDamage(WeaponAttackType attType, WeaponDamageRange damageRange, float value) => m_weaponDamage[(int)attType][(int)damageRange] = value;
 
         public Unit GetMagicHitRedirectTarget(Unit victim, SpellInfo spellInfo)
         {
@@ -686,10 +657,7 @@ namespace Game.Entities
             return victim;
         }
 
-        public bool IsValidAttackTarget(Unit target)
-        {
-            return _IsValidAttackTarget(target, null);
-        }
+        public bool IsValidAttackTarget(Unit target) => _IsValidAttackTarget(target, null);
 
         public void SendAttackStateUpdate(HitInfo HitInfo, Unit target, SpellSchoolMask damageSchoolMask, uint Damage, uint AbsorbDamage, uint Resist, VictimState TargetState, uint BlockedAmount)
         {
@@ -769,10 +737,7 @@ namespace Game.Entities
             Cell.VisitWorldObjects(this, notifier, GetVisibilityRange());
         }
 
-        bool IsThreatened()
-        {
-            return !m_threatManager.IsThreatListEmpty();
-        }
+        bool IsThreatened() => !m_threatManager.IsThreatListEmpty();
 
         public static void Kill(Unit attacker, Unit victim, bool durabilityLoss = true, bool skipSettingDeathState = false)
         {
@@ -889,15 +854,6 @@ namespace Game.Entities
 
             // Proc auras on death - must be before aura/combat remove
             ProcSkillsAndAuras(victim, victim, ProcFlags.None, ProcFlags.Death, ProcFlagsSpellType.MaskAll, ProcFlagsSpellPhase.None, ProcFlagsHit.None, null, null, null);
-
-            // update get killing blow achievements, must be done before setDeathState to be able to require auras on target
-            // and before Spirit of Redemption as it also removes auras
-            if (attacker != null)
-            {
-                Player killerPlayer = attacker.GetCharmerOrOwnerPlayerOrPlayerItself();
-                if (killerPlayer != null)
-                    killerPlayer.UpdateCriteria(CriteriaTypes.GetKillingBlows, 1, 0, 0, victim);
-            }
 
             if (!skipSettingDeathState)
             {
@@ -1032,15 +988,6 @@ namespace Game.Entities
                 }
             }
 
-            // achievement stuff
-            if (attacker != null && victim.IsPlayer())
-            {
-                if (attacker.IsCreature())
-                    victim.ToPlayer().UpdateCriteria(CriteriaTypes.KilledByCreature, attacker.GetEntry());
-                else if (attacker.IsPlayer() && victim != attacker)
-                    victim.ToPlayer().UpdateCriteria(CriteriaTypes.KilledByPlayer, 1, (ulong)attacker.ToPlayer().GetTeam());
-            }
-
             // Hook for OnPVPKill Event
             if (attacker != null)
             {
@@ -1070,21 +1017,17 @@ namespace Game.Entities
             }
         }
 
-        public void KillSelf(bool durabilityLoss = true, bool skipSettingDeathState = false) { Kill(this, this, durabilityLoss, skipSettingDeathState); }
+        public void KillSelf(bool durabilityLoss = true, bool skipSettingDeathState = false) => Kill(this, this, durabilityLoss, skipSettingDeathState);
 
         public virtual bool CanUseAttackType(WeaponAttackType attacktype)
         {
-            switch (attacktype)
+            return attacktype switch
             {
-                case WeaponAttackType.BaseAttack:
-                    return !HasUnitFlag(UnitFlags.Disarmed);
-                case WeaponAttackType.OffAttack:
-                    return !HasUnitFlag2(UnitFlags2.DisarmOffhand);
-                case WeaponAttackType.RangedAttack:
-                    return !HasUnitFlag2(UnitFlags2.DisarmRanged);
-                default:
-                    return true;
-            }
+                WeaponAttackType.BaseAttack => !HasUnitFlag(UnitFlags.Disarmed),
+                WeaponAttackType.OffAttack => !HasUnitFlag2(UnitFlags2.DisarmOffhand),
+                WeaponAttackType.RangedAttack => !HasUnitFlag2(UnitFlags2.DisarmRanged),
+                _ => true,
+            };
         }
 
         // TODO for melee need create structure as in
@@ -1416,21 +1359,21 @@ namespace Game.Entities
                 switch (attType)
                 {
                     case WeaponAttackType.RangedAttack:
-                        minDamage = m_unitData.MinRangedDamage;
-                        maxDamage = m_unitData.MaxRangedDamage;
+                        minDamage = GetUpdateField<float>(UnitFields.MinRangedDamage);
+                        maxDamage = GetUpdateField<float>(UnitFields.MaxRangedDamage);
                         break;
                     case WeaponAttackType.BaseAttack:
-                        minDamage = m_unitData.MinDamage;
-                        maxDamage = m_unitData.MaxDamage;
+                        minDamage = GetUpdateField<float>(UnitFields.MinDamage);
+                        maxDamage = GetUpdateField<float>(UnitFields.MaxDamage);
                         if (IsInFeralForm())
                         {
-                            minDamage += m_unitData.MinOffHandDamage;
-                            maxDamage += m_unitData.MaxOffHandDamage;
+                            minDamage += GetUpdateField<float>(UnitFields.MinOffHandDamage);
+                            maxDamage += GetUpdateField<float>(UnitFields.MaxOffHandDamage);
                         }
                         break;
                     case WeaponAttackType.OffAttack:
-                        minDamage = m_unitData.MinOffHandDamage;
-                        maxDamage = m_unitData.MaxOffHandDamage;
+                        minDamage = GetUpdateField<float>(UnitFields.MinOffHandDamage);
+                        maxDamage = GetUpdateField<float>(UnitFields.MaxOffHandDamage);
                         break;
                     // Just for good manner
                     default:
@@ -1498,29 +1441,17 @@ namespace Game.Entities
         {
             if (attType == WeaponAttackType.RangedAttack)
             {
-                float ap = m_unitData.RangedAttackPower + m_unitData.RangedAttackPowerModPos + m_unitData.RangedAttackPowerModNeg;
-                if (includeWeapon)
-                    ap += Math.Max(m_unitData.MainHandWeaponAttackPower, m_unitData.RangedWeaponAttackPower);
+                float ap = GetUpdateField<float>(UnitFields.RangedAttackPower) + GetUpdateField<float>(UnitFields.RangedAttackPowerModPos) + GetUpdateField<float>(UnitFields.RangedAttackPowerModNeg);
                 if (ap < 0)
                     return 0.0f;
-                return ap * (1.0f + m_unitData.RangedAttackPowerMultiplier);
+                return ap * (1.0f + GetUpdateField<float>(UnitFields.RangedAttackPowerMultiplier));
             }
             else
             {
-                float ap = m_unitData.AttackPower + m_unitData.AttackPowerModPos + m_unitData.AttackPowerModNeg;
-                if (includeWeapon)
-                {
-                    if (attType == WeaponAttackType.BaseAttack)
-                        ap += Math.Max(m_unitData.MainHandWeaponAttackPower, m_unitData.RangedWeaponAttackPower);
-                    else
-                    {
-                        ap += m_unitData.OffHandWeaponAttackPower;
-                        ap /= 2;
-                    }
-                }
+                float ap = GetUpdateField<float>(UnitFields.AttackPower) + GetUpdateField<float>(UnitFields.AttackPowerModPos) + GetUpdateField<float>(UnitFields.AttackPowerModNeg);
                 if (ap < 0)
                     return 0.0f;
-                return ap * (1.0f + m_unitData.AttackPowerMultiplier);
+                return ap * (1.0f + GetUpdateField<float>(UnitFields.AttackPowerMultiplier));
             }
         }
 
@@ -1557,10 +1488,10 @@ namespace Game.Entities
             {
                 case WeaponAttackType.BaseAttack:
                 case WeaponAttackType.OffAttack:
-                    SetUpdateFieldValue(ref m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.AttackRoundBaseTime, (int)att), (uint)(m_baseAttackSpeed[(int)att] * m_modAttackSpeedPct[(int)att]));
+                    SetUpdateField<uint>(UnitFields.AttackRoundBaseTime + (int)att, (uint)(m_baseAttackSpeed[(int)att] * m_modAttackSpeedPct[(int)att]));
                     break;
                 case WeaponAttackType.RangedAttack:
-                    SetUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.RangedAttackRoundBaseTime), (uint)(m_baseAttackSpeed[(int)att] * m_modAttackSpeedPct[(int)att]));
+                    SetUpdateField<uint>(UnitFields.RangedAttackRoundBaseTime, (uint)(m_baseAttackSpeed[(int)att] * m_modAttackSpeedPct[(int)att]));
                     break;
                 default:
                     break; ;
@@ -1701,10 +1632,7 @@ namespace Game.Entities
             return true;
         }
 
-        public bool IsValidAssistTarget(Unit target)
-        {
-            return _IsValidAssistTarget(target, null);
-        }
+        public bool IsValidAssistTarget(Unit target) => _IsValidAssistTarget(target, null);
 
         // function based on function Unit.CanAssist from 13850 client
         public bool _IsValidAssistTarget(Unit target, SpellInfo bySpell)
@@ -1797,7 +1725,7 @@ namespace Game.Entities
             return true;
         }
 
-        public virtual bool CheckAttackFitToAuraRequirement(WeaponAttackType attackType, AuraEffect aurEff) { return true; }
+        public virtual bool CheckAttackFitToAuraRequirement(WeaponAttackType attackType, AuraEffect aurEff) => true;
 
         public void ApplyAttackTimePercentMod(WeaponAttackType att, float val, bool apply)
         {
@@ -1807,22 +1735,24 @@ namespace Game.Entities
                 MathFunctions.ApplyPercentModFloatVar(ref m_modAttackSpeedPct[(int)att], val, !apply);
 
                 if (att == WeaponAttackType.BaseAttack)
-                    ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModHaste), val, !apply);
+                    ApplyModUpdateField<float>(UnitFields.ModHaste, val, !apply);
                 else if (att == WeaponAttackType.RangedAttack)
-                    ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModRangedHaste), val, !apply);
+                    ApplyModUpdateField<float>(UnitFields.ModRangedHaste, val, !apply);
             }
             else
             {
                 MathFunctions.ApplyPercentModFloatVar(ref m_modAttackSpeedPct[(int)att], -val, apply);
 
                 if (att == WeaponAttackType.BaseAttack)
-                    ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModHaste), -val, apply);
+                    ApplyModUpdateField<float>(UnitFields.ModHaste, -val, apply);
                 else if (att == WeaponAttackType.RangedAttack)
-                    ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModRangedHaste), -val, apply);
+                    ApplyModUpdateField<float>(UnitFields.ModRangedHaste, -val, apply);
             }
 
             UpdateAttackTimeField(att);
             m_attackTimer[(int)att] = (uint)(m_baseAttackSpeed[(int)att] * m_modAttackSpeedPct[(int)att] * remainingTimePct);
         }
+
+        public float GetModCastingSpeed() => GetModCastingSpeed();
     }
 }

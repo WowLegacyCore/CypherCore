@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -213,7 +213,7 @@ namespace Game.Spells
             AuraDataInfo auraData = auraInfo.AuraData.Value;
             auraData.CastID = aura.GetCastGUID();
             auraData.SpellID = (int)aura.GetId();
-            auraData.Visual= aura.GetSpellVisual();
+            auraData.SpellXSpellVisualID = aura.GetSpellXSpellVisualID();
             auraData.Flags = GetFlags();
             if (aura.GetMaxDuration() > 0 && !aura.GetSpellInfo().HasAttribute(SpellAttr5.HideDuration))
                 auraData.Flags |= AuraFlags.Duration;
@@ -303,7 +303,7 @@ namespace Game.Spells
             m_castItemGuid = castItem != null ? castItem.GetGUID() : castItemGuid;
             m_castItemId = castItem != null ? castItem.GetEntry() : castItemId;
             m_castItemLevel = castItemLevel;
-            m_spellVisual = new SpellCastVisual(caster ? caster.GetCastSpellXSpellVisualId(spellproto) : spellproto.GetSpellXSpellVisualId(), 0);
+            m_spellXSpellVisualID = caster.GetCastSpellXSpellVisualId(spellproto);
             m_applyTime = GameTime.GetGameTime();
             m_owner = owner;
             m_timeCla = 0;
@@ -355,7 +355,7 @@ namespace Game.Spells
                     _effects[effect.EffectIndex] = new AuraEffect(this, effect, baseAmount != null ? baseAmount[effect.EffectIndex] : null, caster);
             }
         }
-        
+
         public Unit GetCaster()
         {
             if (m_owner.GetGUID() == m_casterGuid)
@@ -667,7 +667,7 @@ namespace Game.Spells
                                 if (power.RequiredAuraSpellID != 0 && !caster.HasAura(power.RequiredAuraSpellID))
                                     continue;
 
-                                int manaPerSecond = (int)power.ManaPerSecond;
+                                int manaPerSecond = power.ManaPerSecond;
                                 if (power.PowerType != PowerType.Health)
                                     manaPerSecond += MathFunctions.CalculatePct(caster.GetMaxPower(power.PowerType), power.PowerPctPerSecond);
                                 else
@@ -741,7 +741,7 @@ namespace Game.Spells
                 int duration = m_spellInfo.GetMaxDuration();
                 // Calculate duration of periodics affected by haste.
                 if (m_spellInfo.HasAttribute(SpellAttr5.HasteAffectDuration))
-                    duration = (int)(duration * caster.m_unitData.ModCastingSpeed);
+                    duration = (int)(duration * caster.GetModCastingSpeed());
 
                 SetMaxDuration(duration);
                 SetDuration(duration);
@@ -1147,8 +1147,7 @@ namespace Game.Spells
             var saBounds = Global.SpellMgr.GetSpellAreaForAuraMapBounds(GetId());
             if (saBounds != null)
             {
-                uint zone, area;
-                target.GetZoneAndAreaId(out zone, out area);
+                target.GetZoneAndAreaId(out uint zone, out uint area);
 
                 foreach (var spellArea in saBounds)
                 {
@@ -2017,7 +2016,7 @@ namespace Game.Spells
                 loadedScript._FinishScriptCall();
             }
         }
-        
+
         public void CallScriptEffectAbsorbHandlers(AuraEffect aurEff, AuraApplication aurApp, DamageInfo dmgInfo, ref uint absorbAmount, ref bool defaultPrevented)
         {
             foreach (var auraScript in m_loadedScripts)
@@ -2101,7 +2100,7 @@ namespace Game.Spells
                 loadedScript._FinishScriptCall();
             }
         }
-        
+
         public bool CallScriptCheckProcHandlers(AuraApplication aurApp, ProcEventInfo eventInfo)
         {
             bool result = true;
@@ -2219,16 +2218,16 @@ namespace Game.Spells
 
         #endregion
 
-        public SpellInfo GetSpellInfo() { return m_spellInfo; }
-        public uint GetId() { return m_spellInfo.Id; }
-        public Difficulty GetCastDifficulty() { return m_castDifficulty; }
-        public ObjectGuid GetCastGUID() { return m_castGuid; }
-        public ObjectGuid GetCasterGUID() { return m_casterGuid; }
-        public ObjectGuid GetCastItemGUID() { return m_castItemGuid; }
-        public uint GetCastItemId() { return m_castItemId; }
-        public int GetCastItemLevel() { return m_castItemLevel; }
-        public SpellCastVisual GetSpellVisual() { return m_spellVisual; }
-        public WorldObject GetOwner() { return m_owner; }
+        public SpellInfo GetSpellInfo() => m_spellInfo;
+        public uint GetId() => m_spellInfo.Id;
+        public Difficulty GetCastDifficulty() => m_castDifficulty;
+        public ObjectGuid GetCastGUID() => m_castGuid;
+        public ObjectGuid GetCasterGUID() => m_casterGuid;
+        public ObjectGuid GetCastItemGUID() => m_castItemGuid;
+        public uint GetCastItemId() => m_castItemId;
+        public int GetCastItemLevel() => m_castItemLevel;
+        public uint GetSpellXSpellVisualID() => m_spellXSpellVisualID;
+        public WorldObject GetOwner() => m_owner;
         public Unit GetUnitOwner()
         {
             Cypher.Assert(GetAuraType() == AuraObjectType.Unit);
@@ -2464,7 +2463,7 @@ namespace Game.Spells
         ObjectGuid m_castItemGuid;
         uint m_castItemId;
         int m_castItemLevel;
-        SpellCastVisual m_spellVisual;
+        uint m_spellXSpellVisualID;
         long m_applyTime;
         WorldObject m_owner;
 
@@ -2555,9 +2554,8 @@ namespace Game.Spells
                         switch (effect.Effect)
                         {
                             case SpellEffectName.ApplyAreaAuraParty:
-                            case SpellEffectName.ApplyAreaAuraPartyNonrandom:
-                                    selectionType = SpellTargetCheckTypes.Party;
-                                    break;
+                                selectionType = SpellTargetCheckTypes.Party;
+                                break;
                             case SpellEffectName.ApplyAreaAuraRaid:
                                 selectionType = SpellTargetCheckTypes.Raid;
                                 break;
@@ -2572,30 +2570,22 @@ namespace Game.Spells
                                     targetList.Add(GetUnitOwner());
                                 goto case SpellEffectName.ApplyAreaAuraOwner;
                             case SpellEffectName.ApplyAreaAuraOwner:
-                                {
-                                    Unit owner = GetUnitOwner().GetCharmerOrOwner();
-                                    if (owner != null)
-                                        if (GetUnitOwner().IsWithinDistInMap(owner, radius))
-                                            if (condList == null || Global.ConditionMgr.IsObjectMeetToConditions(owner, GetUnitOwner(), condList))
-                                                targetList.Add(owner);
-                                    break;
-                                }
+                            {
+                                Unit owner = GetUnitOwner().GetCharmerOrOwner();
+                                if (owner != null)
+                                    if (GetUnitOwner().IsWithinDistInMap(owner, radius))
+                                        if (condList == null || Global.ConditionMgr.IsObjectMeetToConditions(owner, GetUnitOwner(), condList))
+                                            targetList.Add(owner);
+                                break;
+                            }
                             case SpellEffectName.ApplyAuraOnPet:
-                                {
-                                    Unit pet = Global.ObjAccessor.GetUnit(GetUnitOwner(), GetUnitOwner().GetPetGUID());
-                                    if (pet != null)
-                                        if (condList == null || Global.ConditionMgr.IsObjectMeetToConditions(pet, GetUnitOwner(), condList))
-                                            targetList.Add(pet);
-                                    break;
-                                }
-                            case SpellEffectName.ApplyAreaAuraSummons:
-                                {
-                                    if (condList == null || Global.ConditionMgr.IsObjectMeetToConditions(GetUnitOwner(), GetUnitOwner(), condList))
-                                        targetList.Add(GetUnitOwner());
-
-                                    selectionType = SpellTargetCheckTypes.Summoned;
-                                    break;
-                                }
+                            {
+                                Unit pet = Global.ObjAccessor.GetUnit(GetUnitOwner(), GetUnitOwner().GetPetGUID());
+                                if (pet != null)
+                                    if (condList == null || Global.ConditionMgr.IsObjectMeetToConditions(pet, GetUnitOwner(), condList))
+                                        targetList.Add(pet);
+                                break;
+                            }
                         }
 
                         if (selectionType != SpellTargetCheckTypes.Default)

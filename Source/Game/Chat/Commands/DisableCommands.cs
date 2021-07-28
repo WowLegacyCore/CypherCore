@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -44,85 +44,75 @@ namespace Game.Chat.Commands
                 switch (disableType)
                 {
                     case DisableType.Spell:
+                    {
+                        if (!Global.SpellMgr.HasSpellInfo(entry, Difficulty.None))
                         {
-                            if (!Global.SpellMgr.HasSpellInfo(entry, Difficulty.None))
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNospellfound);
-                                return false;
-                            }
-                            disableTypeStr = "spell";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNospellfound);
+                            return false;
                         }
+                        disableTypeStr = "spell";
+                        break;
+                    }
                     case DisableType.Quest:
+                    {
+                        if (Global.ObjectMgr.GetQuestTemplate(entry) == null)
                         {
-                            if (Global.ObjectMgr.GetQuestTemplate(entry) == null)
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNoquestfound, entry);
-                                return false;
-                            }
-                            disableTypeStr = "quest";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNoquestfound, entry);
+                            return false;
                         }
+                        disableTypeStr = "quest";
+                        break;
+                    }
                     case DisableType.Map:
+                    {
+                        if (!CliDB.MapStorage.ContainsKey(entry))
                         {
-                            if (!CliDB.MapStorage.ContainsKey(entry))
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNomapfound);
-                                return false;
-                            }
-                            disableTypeStr = "map";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNomapfound);
+                            return false;
                         }
+                        disableTypeStr = "map";
+                        break;
+                    }
                     case DisableType.Battleground:
+                    {
+                        if (!CliDB.BattlemasterListStorage.ContainsKey(entry))
                         {
-                            if (!CliDB.BattlemasterListStorage.ContainsKey(entry))
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNoBattlegroundFound);
-                                return false;
-                            }
-                            disableTypeStr = "Battleground";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNoBattlegroundFound);
+                            return false;
                         }
-                    case DisableType.Criteria:
-                        {
-                            if (Global.CriteriaMgr.GetCriteria(entry) == null)
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNoAchievementCriteriaFound);
-                                return false;
-                            }
-                            disableTypeStr = "criteria";
-                            break;
-                        }
+                        disableTypeStr = "Battleground";
+                        break;
+                    }
                     case DisableType.OutdoorPVP:
+                    {
+                        if (entry > (int)OutdoorPvPTypes.Max)
                         {
-                            if (entry > (int)OutdoorPvPTypes.Max)
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNoOutdoorPvpForund);
-                                return false;
-                            }
-                            disableTypeStr = "outdoorpvp";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNoOutdoorPvpForund);
+                            return false;
                         }
+                        disableTypeStr = "outdoorpvp";
+                        break;
+                    }
                     case DisableType.VMAP:
+                    {
+                        if (!CliDB.MapStorage.ContainsKey(entry))
                         {
-                            if (!CliDB.MapStorage.ContainsKey(entry))
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNomapfound);
-                                return false;
-                            }
-                            disableTypeStr = "vmap";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNomapfound);
+                            return false;
                         }
+                        disableTypeStr = "vmap";
+                        break;
+                    }
                     case DisableType.MMAP:
+                    {
+                        if (!CliDB.MapStorage.ContainsKey(entry))
                         {
-                            if (!CliDB.MapStorage.ContainsKey(entry))
-                            {
-                                handler.SendSysMessage(CypherStrings.CommandNomapfound);
-                                return false;
-                            }
-                            disableTypeStr = "mmap";
-                            break;
+                            handler.SendSysMessage(CypherStrings.CommandNomapfound);
+                            return false;
                         }
+                        disableTypeStr = "mmap";
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -184,15 +174,6 @@ namespace Game.Chat.Commands
                 return HandleAddDisables(args, handler, DisableType.Battleground);
             }
 
-            [Command("criteria", RBACPermissions.CommandDisableAddCriteria, true)]
-            static bool HandleAddDisableCriteriaCommand(StringArguments args, CommandHandler handler)
-            {
-                if (args.Empty())
-                    return false;
-
-                return HandleAddDisables(args, handler, DisableType.Criteria);
-            }
-
             [Command("outdoorpvp", RBACPermissions.CommandDisableAddOutdoorpvp, true)]
             static bool HandleAddDisableOutdoorPvPCommand(StringArguments args, CommandHandler handler)
             {
@@ -244,9 +225,6 @@ namespace Game.Chat.Commands
                         break;
                     case DisableType.Battleground:
                         disableTypeStr = "Battleground";
-                        break;
-                    case DisableType.Criteria:
-                        disableTypeStr = "criteria";
                         break;
                     case DisableType.OutdoorPVP:
                         disableTypeStr = "outdoorpvp";
@@ -312,15 +290,6 @@ namespace Game.Chat.Commands
                     return false;
 
                 return HandleRemoveDisables(args, handler, DisableType.Battleground);
-            }
-
-            [Command("criteria", RBACPermissions.CommandDisableRemoveCriteria, true)]
-            static bool HandleRemoveDisableCriteriaCommand(StringArguments args, CommandHandler handler)
-            {
-                if (args.Empty())
-                    return false;
-
-                return HandleRemoveDisables(args, handler, DisableType.Criteria);
             }
 
             [Command("outdoorpvp", RBACPermissions.CommandDisableRemoveOutdoorpvp, true)]

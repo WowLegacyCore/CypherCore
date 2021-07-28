@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,7 +21,6 @@ using Framework.IO;
 using Game.Entities;
 using Game.Groups;
 using Game.Networking.Packets;
-using Game.Scenarios;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,10 +37,6 @@ namespace Game.Maps
 
         public void SaveToDB()
         {
-            InstanceScenario scenario = instance.GetInstanceScenario();
-            if (scenario != null)
-                scenario.SaveToDB();
-
             string data = GetSaveData();
             if (string.IsNullOrEmpty(data))
                 return;
@@ -89,15 +84,9 @@ namespace Game.Maps
             AddDoor(go, false);
         }
 
-        public ObjectGuid GetObjectGuid(uint type)
-        {
-            return _objectGuids.LookupByKey(type);
-        }
+        public ObjectGuid GetObjectGuid(uint type) => _objectGuids.LookupByKey(type);
 
-        public override ObjectGuid GetGuidData(uint type)
-        {
-            return GetObjectGuid(type);
-        }
+        public override ObjectGuid GetGuidData(uint type) => GetObjectGuid(type);
 
         public void SetHeaders(string dataHeaders)
         {
@@ -215,34 +204,34 @@ namespace Game.Maps
             }
         }
 
-        enum states { Block, Spawn, ForceBlock };
+        enum States { Block, Spawn, ForceBlock };
         void UpdateSpawnGroups()
         {
             if (_instanceSpawnGroups.Empty())
                 return;
 
-            Dictionary<uint, states> newStates = new();
+            Dictionary<uint, States> newStates = new();
             foreach (var info in _instanceSpawnGroups)
             {
                 if (!newStates.ContainsKey(info.SpawnGroupId))
                     newStates[info.SpawnGroupId] = 0;// makes sure there's a BLOCK value in the map
 
-                if (newStates[info.SpawnGroupId] == states.ForceBlock) // nothing will change this
+                if (newStates[info.SpawnGroupId] == States.ForceBlock) // nothing will change this
                     continue;
 
                 if (((1 << (int)GetBossState(info.BossStateId)) & info.BossStates) == 0)
                     continue;
 
                 if (info.Flags.HasAnyFlag(InstanceSpawnGroupFlags.BlockSpawn))
-                    newStates[info.SpawnGroupId] = states.ForceBlock;
+                    newStates[info.SpawnGroupId] = States.ForceBlock;
                 else if (info.Flags.HasAnyFlag(InstanceSpawnGroupFlags.ActivateSpawn))
-                    newStates[info.SpawnGroupId] = states.Spawn;
+                    newStates[info.SpawnGroupId] = States.Spawn;
             }
 
             foreach (var pair in newStates)
             {
                 uint groupId = pair.Key;
-                bool doSpawn = pair.Value == states.Spawn;
+                bool doSpawn = pair.Value == States.Spawn;
                 if (instance.IsSpawnGroupActive(groupId) == doSpawn)
                     continue; // nothing to do here
                               // if we should spawn group, then spawn it...
@@ -313,15 +302,9 @@ namespace Game.Maps
                 minionInfo.bossInfo.minion.Remove(minion.GetGUID());
         }
 
-        public Creature GetCreature(uint type)
-        {
-            return instance.GetCreature(GetObjectGuid(type));
-        }
+        public Creature GetCreature(uint type) => instance.GetCreature(GetObjectGuid(type));
 
-        public GameObject GetGameObject(uint type)
-        {
-            return instance.GetGameObject(GetObjectGuid(type));
-        }
+        public GameObject GetGameObject(uint type) => instance.GetGameObject(GetObjectGuid(type));
 
         public virtual bool SetBossState(uint id, EncounterState state)
         {
@@ -359,17 +342,17 @@ namespace Game.Maps
                     switch (state)
                     {
                         case EncounterState.InProgress:
-                            {
-                                uint resInterval = GetCombatResurrectionChargeInterval();
-                                InitializeCombatResurrections(1, resInterval);
-                                SendEncounterStart(1, 9, resInterval, resInterval);
+                        {
+                            uint resInterval = GetCombatResurrectionChargeInterval();
+                            InitializeCombatResurrections(1, resInterval);
+                            SendEncounterStart(1, 9, resInterval, resInterval);
 
-                                var playerList = instance.GetPlayers();
-                                foreach (var player in playerList)
-                                        if (player.IsAlive())
-                                            Unit.ProcSkillsAndAuras(player, null, ProcFlags.EncounterStart, ProcFlags.None, ProcFlagsSpellType.MaskAll, ProcFlagsSpellPhase.None, ProcFlagsHit.None, null, null, null);
-                                break;
-                            }
+                            var playerList = instance.GetPlayers();
+                            foreach (var player in playerList)
+                                if (player.IsAlive())
+                                    Unit.ProcSkillsAndAuras(player, null, ProcFlags.EncounterStart, ProcFlags.None, ProcFlagsSpellType.MaskAll, ProcFlagsSpellPhase.None, ProcFlagsHit.None, null, null, null);
+                            break;
+                        }
                         case EncounterState.Fail:
                         case EncounterState.Done:
                             ResetCombatResurrections();
@@ -406,10 +389,7 @@ namespace Game.Maps
             return false;
         }
 
-        public bool _SkipCheckRequiredBosses(Player player = null)
-        {
-            return player && player.GetSession().HasPermission(RBACPermissions.SkipCheckInstanceRequiredBosses);
-        }
+        public bool _SkipCheckRequiredBosses(Player player = null) => player && player.GetSession().HasPermission(RBACPermissions.SkipCheckInstanceRequiredBosses);
 
         public virtual void Create()
         {
@@ -604,36 +584,6 @@ namespace Game.Maps
             }
         }
 
-        // Update Achievement Criteria for all players in instance
-        public void DoUpdateCriteria(CriteriaTypes type, uint miscValue1 = 0, uint miscValue2 = 0, Unit unit = null)
-        {
-            var PlayerList = instance.GetPlayers();
-
-            if (!PlayerList.Empty())
-                foreach (var player in PlayerList)
-                    player.UpdateCriteria(type, miscValue1, miscValue2, 0, unit);
-        }
-
-        // Start timed achievement for all players in instance
-        public void DoStartCriteriaTimer(CriteriaStartEvent startEvent, uint entry)
-        {
-            var PlayerList = instance.GetPlayers();
-
-            if (!PlayerList.Empty())
-                foreach (var player in PlayerList)
-                    player.StartCriteriaTimer(startEvent, entry);
-        }
-
-        // Stop timed achievement for all players in instance
-        public void DoStopCriteriaTimer(CriteriaStartEvent startEvent, uint entry)
-        {
-            var PlayerList = instance.GetPlayers();
-
-            if (!PlayerList.Empty())
-                foreach (var player in PlayerList)
-                    player.RemoveCriteriaTimer(startEvent, entry);
-        }
-
         // Remove Auras due to Spell on all players in instance
         public void DoRemoveAurasDueToSpellOnPlayers(uint spell)
         {
@@ -720,10 +670,7 @@ namespace Game.Maps
             instance.SendToPlayers(encounterStartMessage);
         }
 
-        void SendEncounterEnd()
-        {
-            instance.SendToPlayers(new InstanceEncounterEnd());
-        }
+        void SendEncounterEnd() => instance.SendToPlayers(new InstanceEncounterEnd());
 
         public void SendBossKillCredit(uint encounterId)
         {
@@ -733,15 +680,9 @@ namespace Game.Maps
             instance.SendToPlayers(bossKillCreditMessage);
         }
 
-        public void UpdateEncounterStateForKilledCreature(uint creatureId, Unit source)
-        {
-            UpdateEncounterState(EncounterCreditType.KillCreature, creatureId, source);
-        }
+        public void UpdateEncounterStateForKilledCreature(uint creatureId, Unit source) => UpdateEncounterState(EncounterCreditType.KillCreature, creatureId, source);
 
-        public void UpdateEncounterStateForSpellCast(uint spellId, Unit source)
-        {
-            UpdateEncounterState(EncounterCreditType.CastSpell, spellId, source);
-        }
+        public void UpdateEncounterStateForSpellCast(uint spellId, Unit source) => UpdateEncounterState(EncounterCreditType.CastSpell, spellId, source);
 
         void UpdateEncounterState(EncounterCreditType type, uint creditEntry, Unit source)
         {
@@ -759,7 +700,7 @@ namespace Game.Maps
                     if (encounter.lastEncounterDungeon != 0)
                     {
                         dungeonId = encounter.lastEncounterDungeon;
-                        Log.outDebug(LogFilter.Lfg, "UpdateEncounterState: Instance {0} (instanceId {1}) completed encounter {2}. Credit Dungeon: {3}", 
+                        Log.outDebug(LogFilter.Lfg, "UpdateEncounterState: Instance {0} (instanceId {1}) completed encounter {2}. Credit Dungeon: {3}",
                             instance.GetMapName(), instance.GetInstanceId(), encounter.dbcEntry.Name[Global.WorldMgr.GetDefaultDbcLocale()], dungeonId);
                         break;
                     }
@@ -860,33 +801,33 @@ namespace Game.Maps
         public virtual void OnPlayerEnter(Player player) { }
 
         // Return wether server allow two side groups or not
-        public bool ServerAllowsTwoSideGroups() { return WorldConfig.GetBoolValue(WorldCfg.AllowTwoSideInteractionGroup); }
+        public bool ServerAllowsTwoSideGroups() => WorldConfig.GetBoolValue(WorldCfg.AllowTwoSideInteractionGroup);
 
-        public EncounterState GetBossState(uint id) { return id < bosses.Count ? bosses[id].state : EncounterState.ToBeDecided; }
-        public List<AreaBoundary> GetBossBoundary(uint id) { return id < bosses.Count ? bosses[id].boundary : null; }
+        public EncounterState GetBossState(uint id) => id < bosses.Count ? bosses[id].state : EncounterState.ToBeDecided;
+        public List<AreaBoundary> GetBossBoundary(uint id) => id < bosses.Count ? bosses[id].boundary : null;
 
-        public virtual bool CheckRequiredBosses(uint bossId, Player player = null) { return true; }
+        public virtual bool CheckRequiredBosses(uint bossId, Player player = null) => true;
 
-        public void SetCompletedEncountersMask(uint newMask) { completedEncounters = newMask; }
+        public void SetCompletedEncountersMask(uint newMask) => completedEncounters = newMask;
 
-        public uint GetCompletedEncounterMask() { return completedEncounters; }
+        public uint GetCompletedEncounterMask() => completedEncounters;
 
         // Sets a temporary entrance that does not get saved to db
-        public void SetTemporaryEntranceLocation(uint worldSafeLocationId) { _temporaryEntranceId = worldSafeLocationId; }
+        public void SetTemporaryEntranceLocation(uint worldSafeLocationId) => _temporaryEntranceId = worldSafeLocationId;
 
         // Get's the current entrance id
-        public uint GetEntranceLocation() { return _temporaryEntranceId != 0 ? _temporaryEntranceId : _entranceId; }
+        public uint GetEntranceLocation() => _temporaryEntranceId != 0 ? _temporaryEntranceId : _entranceId;
 
         // Only used by areatriggers that inherit from OnlyOnceAreaTriggerScript
-        public void MarkAreaTriggerDone(uint id) { _activatedAreaTriggers.Add(id); }
-        public void ResetAreaTriggerDone(uint id) { _activatedAreaTriggers.Remove(id); }
-        public bool IsAreaTriggerDone(uint id) { return _activatedAreaTriggers.Contains(id); }
-        
+        public void MarkAreaTriggerDone(uint id) => _activatedAreaTriggers.Add(id);
+        public void ResetAreaTriggerDone(uint id) => _activatedAreaTriggers.Remove(id);
+        public bool IsAreaTriggerDone(uint id) => _activatedAreaTriggers.Contains(id);
+
         public virtual void FillInitialWorldStates(InitWorldStates data) { }
 
-        public int GetEncounterCount() { return bosses.Count; }
+        public int GetEncounterCount() => bosses.Count;
 
-        public byte GetCombatResurrectionCharges() { return _combatResurrectionCharges; }
+        public byte GetCombatResurrectionCharges() => _combatResurrectionCharges;
 
         public void SetBossNumber(uint number)
         {
@@ -904,7 +845,7 @@ namespace Game.Maps
 
         public virtual void WriteSaveDataMore(StringBuilder data) { }
 
-        public List<InstanceSpawnGroupInfo> GetInstanceSpawnGroups() { return _instanceSpawnGroups; }
+        public List<InstanceSpawnGroupInfo> GetInstanceSpawnGroups() => _instanceSpawnGroups;
 
         public InstanceMap instance;
         List<char> headers = new();

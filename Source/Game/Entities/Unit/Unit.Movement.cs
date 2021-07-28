@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -31,24 +31,15 @@ namespace Game.Entities
 {
     public partial class Unit
     {
-        public bool IsLevitating()
-        {
-            return m_movementInfo.HasMovementFlag(MovementFlag.DisableGravity);
-        }
-        public bool IsWalking()
-        {
-            return m_movementInfo.HasMovementFlag(MovementFlag.Walking);
-        }
-        public bool IsHovering() { return m_movementInfo.HasMovementFlag(MovementFlag.Hover); }
-        public bool IsStopped() { return !HasUnitState(UnitState.Moving); }
-        public bool IsMoving() { return m_movementInfo.HasMovementFlag(MovementFlag.MaskMoving); }
-        public bool IsTurning() { return m_movementInfo.HasMovementFlag(MovementFlag.MaskTurning); }
-        public virtual bool CanFly() { return false; }
-        public bool IsFlying() { return m_movementInfo.HasMovementFlag(MovementFlag.Flying | MovementFlag.DisableGravity); }
-        public bool IsFalling()
-        {
-            return m_movementInfo.HasMovementFlag(MovementFlag.Falling | MovementFlag.FallingFar) || MoveSpline.IsFalling();
-        }
+        public bool IsLevitating() => m_movementInfo.HasMovementFlag(MovementFlag.DisableGravity);
+        public bool IsWalking() => m_movementInfo.HasMovementFlag(MovementFlag.Walking);
+        public bool IsHovering() => m_movementInfo.HasMovementFlag(MovementFlag.Hover);
+        public bool IsStopped() => !HasUnitState(UnitState.Moving);
+        public bool IsMoving() => m_movementInfo.HasMovementFlag(MovementFlag.MaskMoving);
+        public bool IsTurning() => m_movementInfo.HasMovementFlag(MovementFlag.MaskTurning);
+        public virtual bool CanFly() => false;
+        public bool IsFlying() => m_movementInfo.HasMovementFlag(MovementFlag.Flying | MovementFlag.DisableGravity);
+        public bool IsFalling() => m_movementInfo.HasMovementFlag(MovementFlag.Falling | MovementFlag.FallingFar) || MoveSpline.IsFalling();
         public virtual bool CanSwim()
         {
             // Mirror client behavior, if this method returns false then client will not use swimming animation and for players will apply gravity as if there was no water
@@ -63,26 +54,13 @@ namespace Game.Entities
 
             return HasUnitFlag(UnitFlags.Rename | UnitFlags.Unk15);
         }
-        public virtual bool IsInWater()
-        {
-            return GetMap().IsInWater(GetPhaseShift(), GetPositionX(), GetPositionY(), GetPositionZ());
-        }
-        public virtual bool IsUnderWater()
-        {
-            return GetMap().IsUnderWater(GetPhaseShift(), GetPositionX(), GetPositionY(), GetPositionZ());
-        }
+        public virtual bool IsInWater() => GetMap().IsInWater(GetPhaseShift(), GetPositionX(), GetPositionY(), GetPositionZ());
+        public virtual bool IsUnderWater() => GetMap().IsUnderWater(GetPhaseShift(), GetPositionX(), GetPositionY(), GetPositionZ());
 
-        void PropagateSpeedChange() { GetMotionMaster().PropagateSpeedChange(); }
+        void PropagateSpeedChange() => GetMotionMaster().PropagateSpeedChange();
 
-        public float GetSpeed(UnitMoveType mtype)
-        {
-            return m_speed_rate[(int)mtype] * (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
-        }
-
-        public void SetSpeed(UnitMoveType mtype, float newValue)
-        {
-            SetSpeedRate(mtype, newValue / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]));
-        }
+        public float GetSpeed(UnitMoveType mtype) => m_speed_rate[(int)mtype] * (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
+        public void SetSpeed(UnitMoveType mtype, float newValue) => SetSpeedRate(mtype, newValue / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]));
 
         public void SetSpeedRate(UnitMoveType mtype, float rate)
         {
@@ -148,7 +126,7 @@ namespace Game.Entities
             }
         }
 
-        public float GetSpeedRate(UnitMoveType mtype) { return m_speed_rate[(int)mtype]; }
+        public float GetSpeedRate(UnitMoveType mtype) => m_speed_rate[(int)mtype];
 
         public void StopMoving()
         {
@@ -239,8 +217,7 @@ namespace Game.Entities
                 GetMotionMaster().MoveKnockbackFrom(x, y, speedXY, speedZ, spellEffectExtraData);
             else
             {
-                float vcos, vsin;
-                GetSinCos(x, y, out vsin, out vcos);
+                GetSinCos(x, y, out float vsin, out float vcos);
                 SendMoveKnockBack(player, speedXY, -speedZ, vcos, vsin);
             }
         }
@@ -384,8 +361,7 @@ namespace Game.Entities
 
         public void JumpTo(WorldObject obj, float speedZ, bool withOrientation = false)
         {
-            float x, y, z;
-            obj.GetContactPoint(this, out x, out y, out z);
+            obj.GetContactPoint(this, out float x, out float y, out float z);
             float speedXY = GetExactDist2d(x, y) * 10.0f / speedZ;
             GetMotionMaster().MoveJump(x, y, z, GetAngle(obj), speedXY, speedZ, EventId.Jump, withOrientation);
         }
@@ -406,57 +382,57 @@ namespace Game.Entities
                 case UnitMoveType.Walk:
                     return;
                 case UnitMoveType.Run:
+                {
+                    if (IsMounted()) // Use on mount auras
                     {
-                        if (IsMounted()) // Use on mount auras
-                        {
-                            main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseMountedSpeed);
-                            stack_bonus = GetTotalAuraMultiplier(AuraType.ModMountedSpeedAlways);
-                            non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModMountedSpeedNotStack) / 100.0f;
-                        }
-                        else
-                        {
-                            main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseSpeed);
-                            stack_bonus = GetTotalAuraMultiplier(AuraType.ModSpeedAlways);
-                            non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModSpeedNotStack) / 100.0f;
-                        }
-                        break;
+                        main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseMountedSpeed);
+                        stack_bonus = GetTotalAuraMultiplier(AuraType.ModMountedSpeedAlways);
+                        non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModMountedSpeedNotStack) / 100.0f;
                     }
+                    else
+                    {
+                        main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseSpeed);
+                        stack_bonus = GetTotalAuraMultiplier(AuraType.ModSpeedAlways);
+                        non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModSpeedNotStack) / 100.0f;
+                    }
+                    break;
+                }
                 case UnitMoveType.Swim:
-                    {
-                        main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseSwimSpeed);
-                        break;
-                    }
+                {
+                    main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseSwimSpeed);
+                    break;
+                }
                 case UnitMoveType.Flight:
+                {
+                    if (IsTypeId(TypeId.Unit) && IsControlledByPlayer()) // not sure if good for pet
                     {
-                        if (IsTypeId(TypeId.Unit) && IsControlledByPlayer()) // not sure if good for pet
-                        {
-                            main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
-                            stack_bonus = GetTotalAuraMultiplier(AuraType.ModVehicleSpeedAlways);
+                        main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
+                        stack_bonus = GetTotalAuraMultiplier(AuraType.ModVehicleSpeedAlways);
 
-                            // for some spells this mod is applied on vehicle owner
-                            int owner_speed_mod = 0;
+                        // for some spells this mod is applied on vehicle owner
+                        int owner_speed_mod = 0;
 
-                            Unit owner = GetCharmer();
-                            if (owner != null)
-                                owner_speed_mod = owner.GetMaxPositiveAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
+                        Unit owner = GetCharmer();
+                        if (owner != null)
+                            owner_speed_mod = owner.GetMaxPositiveAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
 
-                            main_speed_mod = Math.Max(main_speed_mod, owner_speed_mod);
-                        }
-                        else if (IsMounted())
-                        {
-                            main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseMountedFlightSpeed);
-                            stack_bonus = GetTotalAuraMultiplier(AuraType.ModMountedFlightSpeedAlways);
-                        }
-                        else             // Use not mount (shapeshift for example) auras (should stack)
-                            main_speed_mod = GetTotalAuraModifier(AuraType.ModIncreaseFlightSpeed) + GetTotalAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
-
-                        non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModFlightSpeedNotStack) / 100.0f;
-
-                        // Update speed for vehicle if available
-                        if (IsTypeId(TypeId.Player) && GetVehicle() != null)
-                            GetVehicleBase().UpdateSpeed(UnitMoveType.Flight);
-                        break;
+                        main_speed_mod = Math.Max(main_speed_mod, owner_speed_mod);
                     }
+                    else if (IsMounted())
+                    {
+                        main_speed_mod = GetMaxPositiveAuraModifier(AuraType.ModIncreaseMountedFlightSpeed);
+                        stack_bonus = GetTotalAuraMultiplier(AuraType.ModMountedFlightSpeedAlways);
+                    }
+                    else             // Use not mount (shapeshift for example) auras (should stack)
+                        main_speed_mod = GetTotalAuraModifier(AuraType.ModIncreaseFlightSpeed) + GetTotalAuraModifier(AuraType.ModIncreaseVehicleFlightSpeed);
+
+                    non_stack_bonus += GetMaxPositiveAuraModifier(AuraType.ModFlightSpeedNotStack) / 100.0f;
+
+                    // Update speed for vehicle if available
+                    if (IsTypeId(TypeId.Player) && GetVehicle() != null)
+                        GetVehicleBase().UpdateSpeed(UnitMoveType.Flight);
+                    break;
+                }
                 default:
                     Log.outError(LogFilter.Unit, "Unit.UpdateSpeed: Unsupported move type ({0})", mtype);
                     return;
@@ -472,62 +448,62 @@ namespace Game.Entities
                 case UnitMoveType.Run:
                 case UnitMoveType.Swim:
                 case UnitMoveType.Flight:
+                {
+                    // Set creature speed rate
+                    if (IsTypeId(TypeId.Unit))
                     {
-                        // Set creature speed rate
-                        if (IsTypeId(TypeId.Unit))
+                        Unit pOwner = GetCharmerOrOwner();
+                        if ((IsPet() || IsGuardian()) && !IsInCombat() && pOwner != null) // Must check for owner or crash on "Tame Beast"
                         {
-                            Unit pOwner = GetCharmerOrOwner();
-                            if ((IsPet() || IsGuardian()) && !IsInCombat() && pOwner != null) // Must check for owner or crash on "Tame Beast"
-                            {
-                                // For every yard over 5, increase speed by 0.01
-                                //  to help prevent pet from lagging behind and despawning
-                                float dist = GetDistance(pOwner);
-                                float base_rate = 1.00f; // base speed is 100% of owner speed
+                            // For every yard over 5, increase speed by 0.01
+                            //  to help prevent pet from lagging behind and despawning
+                            float dist = GetDistance(pOwner);
+                            float base_rate = 1.00f; // base speed is 100% of owner speed
 
-                                if (dist < 5)
-                                    dist = 5;
+                            if (dist < 5)
+                                dist = 5;
 
-                                float mult = base_rate + ((dist - 5) * 0.01f);
+                            float mult = base_rate + ((dist - 5) * 0.01f);
 
-                                speed *= pOwner.GetSpeedRate(mtype) * mult; // pets derive speed from owner when not in combat
-                            }
-                            else
-                                speed *= ToCreature().GetCreatureTemplate().SpeedRun;    // at this point, MOVE_WALK is never reached
+                            speed *= pOwner.GetSpeedRate(mtype) * mult; // pets derive speed from owner when not in combat
                         }
-
-                        // Normalize speed by 191 aura SPELL_AURA_USE_NORMAL_MOVEMENT_SPEED if need
-                        // @todo possible affect only on MOVE_RUN
-                        int normalization = GetMaxPositiveAuraModifier(AuraType.UseNormalMovementSpeed);
-                        if (normalization != 0)
-                        {
-                            Creature creature = ToCreature();
-                            if (creature)
-                            {
-                                uint immuneMask = creature.GetCreatureTemplate().MechanicImmuneMask;
-                                if (Convert.ToBoolean(immuneMask & (1 << ((int)Mechanics.Snare - 1))) || Convert.ToBoolean(immuneMask & (1 << ((int)Mechanics.Daze - 1))))
-                                    break;
-                            }
-
-                            // Use speed from aura
-                            float max_speed = normalization / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
-                            if (speed > max_speed)
-                                speed = max_speed;
-                        }
-
-                        if (mtype == UnitMoveType.Run)
-                        {
-                            // force minimum speed rate @ aura 437 SPELL_AURA_MOD_MINIMUM_SPEED_RATE
-                            int minSpeedMod1 = GetMaxPositiveAuraModifier(AuraType.ModMinimumSpeedRate);
-                            if (minSpeedMod1 != 0)
-                            {
-                                float minSpeed = minSpeedMod1 / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
-                                if (speed < minSpeed)
-                                    speed = minSpeed;
-                            }
-                        }
-
-                        break;
+                        else
+                            speed *= ToCreature().GetCreatureTemplate().SpeedRun;    // at this point, MOVE_WALK is never reached
                     }
+
+                    // Normalize speed by 191 aura SPELL_AURA_USE_NORMAL_MOVEMENT_SPEED if need
+                    // @todo possible affect only on MOVE_RUN
+                    int normalization = GetMaxPositiveAuraModifier(AuraType.UseNormalMovementSpeed);
+                    if (normalization != 0)
+                    {
+                        Creature creature = ToCreature();
+                        if (creature)
+                        {
+                            uint immuneMask = creature.GetCreatureTemplate().MechanicImmuneMask;
+                            if (Convert.ToBoolean(immuneMask & (1 << ((int)Mechanics.Snare - 1))) || Convert.ToBoolean(immuneMask & (1 << ((int)Mechanics.Daze - 1))))
+                                break;
+                        }
+
+                        // Use speed from aura
+                        float max_speed = normalization / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
+                        if (speed > max_speed)
+                            speed = max_speed;
+                    }
+
+                    if (mtype == UnitMoveType.Run)
+                    {
+                        // force minimum speed rate @ aura 437 SPELL_AURA_MOD_MINIMUM_SPEED_RATE
+                        int minSpeedMod1 = GetMaxPositiveAuraModifier(AuraType.ModMinimumSpeedRate);
+                        if (minSpeedMod1 != 0)
+                        {
+                            float minSpeed = minSpeedMod1 / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
+                            if (speed < minSpeed)
+                                speed = minSpeed;
+                        }
+                    }
+
+                    break;
+                }
                 default:
                     break;
             }
@@ -559,10 +535,7 @@ namespace Game.Entities
             SetSpeedRate(mtype, speed);
         }
 
-        public virtual bool UpdatePosition(Position obj, bool teleport = false)
-        {
-            return UpdatePosition(obj.posX, obj.posY, obj.posZ, obj.Orientation, teleport);
-        }
+        public virtual bool UpdatePosition(Position obj, bool teleport = false) => UpdatePosition(obj.posX, obj.posY, obj.posZ, obj.Orientation, teleport);
 
         public virtual bool UpdatePosition(float x, float y, float z, float orientation, bool teleport = false)
         {
@@ -636,7 +609,7 @@ namespace Game.Entities
             if (attacker_number > 0)
                 --attacker_number;
             GetNearPoint(obj, out x, out y, out z, obj.GetCombatReach(), distance2dMin + (distance2dMax - distance2dMin) * (float)RandomHelper.NextDouble()
-                , GetAngle(obj.GetPosition()) + (attacker_number != 0 ? MathFunctions.PiOver2 - MathFunctions.PI * (float)RandomHelper.NextDouble() * (float)attacker_number / combat_reach * 0.3f : 0.0f));
+                , GetAngle(obj.GetPosition()) + (attacker_number != 0 ? MathFunctions.PiOver2 - MathFunctions.PI * (float)RandomHelper.NextDouble() * attacker_number / combat_reach * 0.3f : 0.0f));
         }
 
         public bool SetDisableGravity(bool disable)
@@ -972,7 +945,7 @@ namespace Game.Entities
             if (enable == HasUnitMovementFlag(MovementFlag.Hover))
                 return false;
 
-            float hoverHeight = m_unitData.HoverHeight;
+            float hoverHeight = GetHoverHeight();
 
             if (enable)
             {
@@ -1029,15 +1002,9 @@ namespace Game.Entities
             return distsq < maxdist * maxdist;
         }
 
-        public bool IsInFrontInMap(Unit target, float distance, float arc = MathFunctions.PI)
-        {
-            return IsWithinDistInMap(target, distance) && HasInArc(arc, target);
-        }
+        public bool IsInFrontInMap(Unit target, float distance, float arc = MathFunctions.PI) => IsWithinDistInMap(target, distance) && HasInArc(arc, target);
 
-        public bool IsInBackInMap(Unit target, float distance, float arc = MathFunctions.PI)
-        {
-            return IsWithinDistInMap(target, distance) && !HasInArc(MathFunctions.TwoPi - arc, target);
-        }
+        public bool IsInBackInMap(Unit target, float distance, float arc = MathFunctions.PI) => IsWithinDistInMap(target, distance) && !HasInArc(MathFunctions.TwoPi - arc, target);
         public bool IsInAccessiblePlaceFor(Creature c)
         {
             if (IsInWater())
@@ -1046,7 +1013,7 @@ namespace Game.Entities
                 return c.CanWalk() || c.CanFly();
         }
 
-        public void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false) { NearTeleportTo(new Position(x, y, z, orientation), casting); }
+        public void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false) => NearTeleportTo(new Position(x, y, z, orientation), casting);
         public void NearTeleportTo(Position pos, bool casting = false)
         {
             DisableSpline();
@@ -1054,7 +1021,7 @@ namespace Game.Entities
             {
                 WorldLocation target = new(GetMapId(), pos);
                 ToPlayer().TeleportTo(target, (TeleportToOptions.NotLeaveTransport | TeleportToOptions.NotLeaveCombat | TeleportToOptions.NotUnSummonPet | (casting ? TeleportToOptions.Spell : 0)));
-            }                
+            }
             else
             {
                 SendTeleportPacket(pos);
@@ -1288,11 +1255,7 @@ namespace Game.Entities
             }
         }
 
-        public bool CanFreeMove()
-        {
-            return !HasUnitState(UnitState.Confused | UnitState.Fleeing | UnitState.InFlight |
-                 UnitState.Root | UnitState.Stunned | UnitState.Distracted) && GetOwnerGUID().IsEmpty();
-        }
+        public bool CanFreeMove() => !HasUnitState(UnitState.Confused | UnitState.Fleeing | UnitState.InFlight | UnitState.Root | UnitState.Stunned | UnitState.Distracted) && GetOwnerGUID().IsEmpty();
 
         public void Mount(uint mount, uint VehicleId = 0, uint creatureEntry = 0)
         {
@@ -1435,7 +1398,7 @@ namespace Game.Entities
             SendMessageToSet(setVehicleRec, true);
         }
 
-        public MovementForces GetMovementForces() { return _movementForces; }
+        public MovementForces GetMovementForces() => _movementForces;
 
         void ApplyMovementForce(ObjectGuid id, Vector3 origin, float magnitude, byte type, Vector3 direction, ObjectGuid transportGuid = default)
         {
@@ -1580,7 +1543,7 @@ namespace Game.Entities
         {
             float offset = 0.0f;
             if (HasUnitMovementFlag(MovementFlag.Hover))
-                offset = m_unitData.HoverHeight;
+                offset = GetHoverHeight();
 
             return GetPositionZ() - offset;
         }
@@ -1603,55 +1566,21 @@ namespace Game.Entities
             return null;
         }
 
-        public Player GetPlayerMovingMe() { return m_playerMovingMe; }
+        public Player GetPlayerMovingMe() => m_playerMovingMe;
 
-        public void AddUnitMovementFlag(MovementFlag f)
-        {
-            m_movementInfo.AddMovementFlag(f);
-        }
-        public void RemoveUnitMovementFlag(MovementFlag f)
-        {
-            m_movementInfo.RemoveMovementFlag(f);
-        }
-        public bool HasUnitMovementFlag(MovementFlag f)
-        {
-            return m_movementInfo.HasMovementFlag(f);
-        }
-        public MovementFlag GetUnitMovementFlags()
-        {
-            return m_movementInfo.GetMovementFlags();
-        }
-        public void SetUnitMovementFlags(MovementFlag f)
-        {
-            m_movementInfo.SetMovementFlags(f);
-        }
-
-        public void AddUnitMovementFlag2(MovementFlag2 f)
-        {
-            m_movementInfo.AddMovementFlag2(f);
-        }
-        void RemoveUnitMovementFlag2(MovementFlag2 f)
-        {
-            m_movementInfo.RemoveMovementFlag2(f);
-        }
-        public bool HasUnitMovementFlag2(MovementFlag2 f)
-        {
-            return m_movementInfo.HasMovementFlag2(f);
-        }
-        public MovementFlag2 GetUnitMovementFlags2()
-        {
-            return m_movementInfo.GetMovementFlags2();
-        }
-        public void SetUnitMovementFlags2(MovementFlag2 f)
-        {
-            m_movementInfo.SetMovementFlags2(f);
-        }
+        public void AddUnitMovementFlag(MovementFlag f) => m_movementInfo.AddMovementFlag(f);
+        public void RemoveUnitMovementFlag(MovementFlag f) => m_movementInfo.RemoveMovementFlag(f);
+        public bool HasUnitMovementFlag(MovementFlag f) => m_movementInfo.HasMovementFlag(f);
+        public MovementFlag GetUnitMovementFlags() => m_movementInfo.GetMovementFlags();
+        public void SetUnitMovementFlags(MovementFlag f) => m_movementInfo.SetMovementFlags(f);
+        public void AddUnitMovementFlag2(MovementFlag2 f) => m_movementInfo.AddMovementFlag2(f);
+        void RemoveUnitMovementFlag2(MovementFlag2 f) => m_movementInfo.RemoveMovementFlag2(f);
+        public bool HasUnitMovementFlag2(MovementFlag2 f) => m_movementInfo.HasMovementFlag2(f);
+        public MovementFlag2 GetUnitMovementFlags2() => m_movementInfo.GetMovementFlags2();
+        public void SetUnitMovementFlags2(MovementFlag2 f) => m_movementInfo.SetMovementFlags2(f);
 
         //Spline
-        public bool IsSplineEnabled()
-        {
-            return MoveSpline.Initialized() && !MoveSpline.Finalized();
-        }
+        public bool IsSplineEnabled() => MoveSpline.Initialized() && !MoveSpline.Finalized();
         void UpdateSplineMovement(uint diff)
         {
             int positionUpdateDelay = 400;
@@ -1721,8 +1650,7 @@ namespace Game.Entities
             Player playerMover = GetPlayerBeingMoved();
             if (playerMover)
             {
-                float x, y, z, o;
-                pos.GetPosition(out x, out y, out z, out o);
+                pos.GetPosition(out float x, out float y, out float z, out float o);
 
                 ITransport transportBase = GetDirectTransport();
                 if (transportBase != null)

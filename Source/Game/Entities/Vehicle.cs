@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -188,7 +188,7 @@ namespace Game.Entities
 
         public void RemoveAllPassengers()
         {
-            Log.outDebug(LogFilter.Vehicle, "Vehicle.RemoveAllPassengers. Entry: {0}, GuidLow: {1}", _creatureEntry, _me.GetGUID().ToString());
+            Log.outDebug(LogFilter.Vehicle, $"Vehicle.RemoveAllPassengers. Entry: {_creatureEntry}, GuidLow: {_me.GetGUID()}");
 
             // Setting to_Abort to true will cause @VehicleJoinEvent.Abort to be executed on next @Unit.UpdateEvents call
             // This will properly "reset" the pending join process for the passenger.
@@ -248,15 +248,14 @@ namespace Game.Entities
         void InstallAccessory(uint entry, sbyte seatId, bool minion, byte type, uint summonTime)
         {
             // @Prevent adding accessories when vehicle is uninstalling. (Bad script in OnUninstall/OnRemovePassenger/PassengerBoarded hook.)
-            
             if (_status == Status.UnInstalling)
             {
-                Log.outError(LogFilter.Vehicle, "Vehicle ({0}, Entry: {1}) attempts to install accessory (Entry: {2}) on seat {3} with STATUS_UNINSTALLING! " +
-            "Check Uninstall/PassengerBoarded script hooks for errors.", _me.GetGUID().ToString(), GetCreatureEntry(), entry, seatId);
+                Log.outError(LogFilter.Vehicle, $"Vehicle ({_me.GetGUID()}, Entry: {GetCreatureEntry()}) attempts to install accessory (Entry: {entry}) on seat {seatId} with STATUS_UNINSTALLING! " +
+                    "Check Uninstall/PassengerBoarded script hooks for errors.");
                 return;
             }
 
-            Log.outDebug(LogFilter.Vehicle, "Vehicle ({0}, Entry {1}): installing accessory (Entry: {2}) on seat: {3}", _me.GetGUID().ToString(), GetCreatureEntry(), entry, seatId);
+            Log.outDebug(LogFilter.Vehicle, $"Vehicle ({_me.GetGUID()}, Entry {GetCreatureEntry()}): installing accessory (Entry: {entry}) on seat: {seatId}");
 
             TempSummon accessory = _me.SummonCreature(entry, _me, (TempSummonType)type, summonTime);
             Cypher.Assert(accessory);
@@ -275,14 +274,11 @@ namespace Game.Entities
             // @Prevent adding passengers when vehicle is uninstalling. (Bad script in OnUninstall/OnRemovePassenger/PassengerBoarded hook.)
             if (_status == Status.UnInstalling)
             {
-                Log.outError(LogFilter.Vehicle, "Passenger GuidLow: {0}, Entry: {1}, attempting to board vehicle GuidLow: {2}, Entry: {3} during uninstall! SeatId: {4}",
-                    unit.GetGUID().ToString(), unit.GetEntry(), _me.GetGUID().ToString(), _me.GetEntry(), seatId);
+                Log.outError(LogFilter.Vehicle, $"Passenger GuidLow: {unit.GetGUID()}, Entry: {unit.GetEntry()}, attempting to board vehicle GuidLow: {_me.GetGUID()}, Entry: {_me.GetEntry()} during uninstall! SeatId: {seatId}");
                 return false;
             }
 
-            Log.outDebug(LogFilter.Vehicle, "Unit {0} scheduling enter vehicle (entry: {1}, vehicleId: {2}, guid: {3} (dbguid: {4}) on seat {5}",
-                unit.GetName(), _me.GetEntry(), _vehicleInfo.Id, _me.GetGUID().ToString(),
-                (_me.IsTypeId(TypeId.Unit) ? _me.ToCreature().GetSpawnId() : 0), seatId);
+            Log.outDebug(LogFilter.Vehicle, $"Unit {unit.GetName()} scheduling enter vehicle (entry: {_me.GetEntry()}, vehicleId: {_vehicleInfo.Id}, guid: {_me.GetGUID()} (dbguid: {(_me.IsTypeId(TypeId.Unit) ? _me.ToCreature().GetSpawnId() : 0)} on seat {seatId}");
 
             // The seat selection code may kick other passengers off the vehicle.
             // While the validity of the following may be arguable, it is possible that when such a passenger
@@ -342,8 +338,7 @@ namespace Game.Entities
             var seat = GetSeatKeyValuePairForPassenger(unit);
             Cypher.Assert(seat.Value != null);
 
-            Log.outDebug( LogFilter.Vehicle, "Unit {0} exit vehicle entry {1} id {2} dbguid {3} seat {4}",
-                unit.GetName(), _me.GetEntry(), _vehicleInfo.Id, _me.GetGUID().ToString(), seat.Key);
+            Log.outDebug(LogFilter.Vehicle, $"Unit {unit.GetName()} exit vehicle entry {_me.GetEntry()} id {_vehicleInfo.Id} dbguid {_me.GetGUID()} seat {seat.Key}");
 
             if (seat.Value.SeatInfo.CanEnterOrExit() && ++UsableSeatNum != 0)
                 _me.AddNpcFlag(_me.IsTypeId(TypeId.Player) ? NPCFlags.PlayerVehicle : NPCFlags.SpellClick);
@@ -392,8 +387,7 @@ namespace Game.Entities
                 {
                     Cypher.Assert(passenger.IsInWorld);
 
-                    float px, py, pz, po;
-                    passenger.m_movementInfo.transport.pos.GetPosition(out px, out py, out pz, out po);
+                    passenger.m_movementInfo.transport.pos.GetPosition(out float px, out float py, out float pz, out float po);
                     CalculatePassengerPosition(ref px, ref py, ref pz, ref po);
 
                     seatRelocation.Add(Tuple.Create(passenger, new Position(px, py, pz, po)));
@@ -415,7 +409,7 @@ namespace Game.Entities
 
         void InitMovementInfoForBase()
         {
-            VehicleFlags vehicleFlags = (VehicleFlags)GetVehicleInfo().Flags;
+            VehicleFlags vehicleFlags = GetVehicleInfo().Flags;
 
             if (vehicleFlags.HasAnyFlag(VehicleFlags.NoStrafe))
                 _me.AddUnitMovementFlag2(MovementFlag2.NoStrafe);
@@ -459,8 +453,8 @@ namespace Game.Entities
 
         public void CalculatePassengerPosition(ref float x, ref float y, ref float z, ref float o)
         {
-            TransportPosHelper.CalculatePassengerPosition(ref x, ref y, ref z, ref o, 
-                GetBase().GetPositionX(), GetBase().GetPositionY(), 
+            TransportPosHelper.CalculatePassengerPosition(ref x, ref y, ref z, ref o,
+                GetBase().GetPositionX(), GetBase().GetPositionY(),
                 GetBase().GetPositionZ(), GetBase().GetOrientation());
         }
 
@@ -518,12 +512,11 @@ namespace Game.Entities
             return TimeSpan.FromMilliseconds(1);
         }
 
-        public Unit GetBase() { return _me; }
-        public VehicleRecord GetVehicleInfo() { return _vehicleInfo; }
-        public uint GetCreatureEntry() { return _creatureEntry; }
+        public Unit GetBase() => _me;
+        public VehicleRecord GetVehicleInfo() => _vehicleInfo;
+        public uint GetCreatureEntry() => _creatureEntry;
 
-        public void SetLastShootPos(Position pos) { _lastShootPos.Relocate(pos); }
-        Position GetLastShootPos() { return _lastShootPos; }
+        public void SetLastShootPos(Position pos) => _lastShootPos.Relocate(pos);
 
         Unit _me;
         VehicleRecord _vehicleInfo;                   //< DBC data for vehicle
@@ -536,10 +529,7 @@ namespace Game.Entities
         public Dictionary<sbyte, VehicleSeat> Seats = new();
         public uint UsableSeatNum;    //< Number of seats that match VehicleSeatEntry.UsableByPlayer, used for proper display flags
 
-        public static implicit operator bool(Vehicle vehicle)
-        {
-            return vehicle != null;
-        }
+        public static implicit operator bool(Vehicle vehicle) => vehicle != null;
 
         public enum Status
         {
@@ -658,8 +648,7 @@ namespace Game.Entities
             // Check if the Vehicle was already uninstalled, in which case all auras were removed already
             if (Target != null)
             {
-                Log.outDebug(LogFilter.Vehicle, "Passenger GuidLow: {0}, Entry: {1}, board on vehicle GuidLow: {2}, Entry: {3} SeatId: {4} cancelled",
-                    Passenger.GetGUID().ToString(), Passenger.GetEntry(), Target.GetBase().GetGUID().ToString(), Target.GetBase().GetEntry(), Seat.Key);
+                Log.outDebug(LogFilter.Vehicle, $"Passenger GuidLow: {Passenger.GetGUID()}, Entry: {Passenger.GetEntry()}, board on vehicle GuidLow: {Target.GetBase().GetGUID()}, Entry: {Target.GetBase().GetEntry()} SeatId: {Seat.Key} cancelled");
 
                 // Remove the pending event when Abort was called on the event directly
                 Target.RemovePendingEvent(this);
@@ -670,8 +659,7 @@ namespace Game.Entities
                 Target.GetBase().RemoveAurasByType(AuraType.ControlVehicle, Passenger.GetGUID());
             }
             else
-                Log.outDebug(LogFilter.Vehicle, "Passenger GuidLow: {0}, Entry: {1}, board on uninstalled vehicle SeatId: {2} cancelled",
-                    Passenger.GetGUID().ToString(), Passenger.GetEntry(), Seat.Key);
+                Log.outDebug(LogFilter.Vehicle, $"Passenger GuidLow: {Passenger.GetGUID()}, Entry: {Passenger.GetEntry()}, board on uninstalled vehicle SeatId: {Seat.Key} cancelled");
 
             if (Passenger.IsInWorld && Passenger.HasUnitTypeMask(UnitTypeMask.Accessory))
                 Passenger.ToCreature().DespawnOrUnsummon();
@@ -704,7 +692,7 @@ namespace Game.Entities
             Passenger.Reset();
         }
 
-        public bool IsEmpty() { return Passenger.Guid.IsEmpty(); }
+        public bool IsEmpty() => Passenger.Guid.IsEmpty();
 
         public VehicleSeatRecord SeatInfo;
         public PassengerInfo Passenger;

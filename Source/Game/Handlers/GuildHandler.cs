@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -210,13 +210,6 @@ namespace Game
                 Guild.SendSaveEmblemResult(this, GuildEmblemError.InvalidVendor); // "That's not an emblem vendor!"
         }
 
-        [WorldPacketHandler(ClientOpcodes.GuildEventLogQuery)]
-        void HandleGuildEventLogQuery(GuildEventLogQuery packet)
-        {
-            Guild guild = GetPlayer().GetGuild();
-            if (guild)
-                guild.SendEventLog(this);
-        }
 
         [WorldPacketHandler(ClientOpcodes.GuildBankRemainingWithdrawMoneyQuery)]
         void HandleGuildBankMoneyWithdrawn(GuildBankRemainingWithdrawMoneyQuery packet)
@@ -287,7 +280,8 @@ namespace Game
             }
         }
 
-        [WorldPacketHandler(ClientOpcodes.DepositGuildBankItem)]
+        // For now we don't want to handle this packet, I have no clue what this packet even is now.
+        // Will see when testing world.
         void HandleDepositGuildBankItem(DepositGuildBankItem depositGuildBankItem)
         {
             if (!GetPlayer().GetGameObjectIfCanInteractWith(depositGuildBankItem.Banker, GameObjectTypes.GuildBank))
@@ -597,14 +591,6 @@ namespace Game
                     guild.SendNewsUpdate(this);
         }
 
-        [WorldPacketHandler(ClientOpcodes.GuildNewsUpdateSticky)]
-        void HandleGuildNewsUpdateSticky(GuildNewsUpdateSticky packet)
-        {
-            Guild guild = GetPlayer().GetGuild();
-            if (guild)
-                guild.HandleNewsSetSticky(this, (uint)packet.NewsID, packet.Sticky);
-        }
-
         [WorldPacketHandler(ClientOpcodes.GuildReplaceGuildMaster)]
         void HandleGuildReplaceGuildMaster(GuildReplaceGuildMaster replaceGuildMaster)
         {
@@ -627,14 +613,6 @@ namespace Game
             Guild guild = GetPlayer().GetGuild();
             if (guild)
                 guild.HandleSetAchievementTracking(this, packet.AchievementIDs);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.GuildGetAchievementMembers)]
-        void HandleGuildGetAchievementMembers(GuildGetAchievementMembers getAchievementMembers)
-        {
-            Guild guild = GetPlayer().GetGuild();
-            if (guild)
-                guild.HandleGetAchievementMembers(this, getAchievementMembers.AchievementID);
         }
     }
 }

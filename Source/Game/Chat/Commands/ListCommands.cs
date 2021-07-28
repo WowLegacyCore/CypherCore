@@ -370,10 +370,9 @@ namespace Game.Chat.Commands
                 return false;
 
             ObjectGuid targetGuid;
-            string targetName;
 
             ObjectGuid parseGUID = ObjectGuid.Create(HighGuid.Player, args.NextUInt64());
-            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out targetName))
+            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out string targetName))
             {
                 targetGuid = parseGUID;
             }

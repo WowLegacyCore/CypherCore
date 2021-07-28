@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +16,6 @@
  */
 
 using Framework.Constants;
-using Game.BlackMarket;
 using Game.Entities;
 using System.Collections.Generic;
 
@@ -45,7 +44,7 @@ namespace Game.Mails
             return false;
         }
 
-        public bool HasItems() { return !items.Empty(); }
+        public bool HasItems() => !items.Empty();
 
         public uint messageID;
         public MailMessageType messageType;
@@ -82,7 +81,7 @@ namespace Game.Mails
         public MailReceiver(Player receiver)
         {
             m_receiver = receiver;
-            m_receiver_lowguid = receiver.GetGUID().GetCounter();            
+            m_receiver_lowguid = receiver.GetGUID().GetCounter();
         }
 
         public MailReceiver(Player receiver, ulong receiver_lowguid)
@@ -101,8 +100,8 @@ namespace Game.Mails
             Cypher.Assert(!receiver || receiver.GetGUID() == receiverGuid);
         }
 
-        public Player GetPlayer() { return m_receiver; }
-        public ulong GetPlayerGUIDLow() { return m_receiver_lowguid; }
+        public Player GetPlayer() => m_receiver;
+        public ulong GetPlayerGUIDLow() => m_receiver_lowguid;
 
         Player m_receiver;
         ulong m_receiver_lowguid;
@@ -146,20 +145,13 @@ namespace Game.Mails
         {
             m_messageType = MailMessageType.Calendar;
             m_senderId = (uint)sender.EventId;
-            m_stationery = MailStationery.Default; 
+            m_stationery = MailStationery.Default;
         }
 
         public MailSender(AuctionHouseObject sender)
         {
             m_messageType = MailMessageType.Auction;
             m_senderId = sender.GetAuctionHouseId();
-            m_stationery = MailStationery.Auction;
-        }
-
-        public MailSender(BlackMarketEntry sender)
-        {
-            m_messageType = MailMessageType.Blackmarket;
-            m_senderId = sender.GetTemplate().SellerNPC;
             m_stationery = MailStationery.Auction;
         }
 
@@ -177,9 +169,9 @@ namespace Game.Mails
             m_stationery = MailStationery.Default;
         }
 
-        public MailMessageType GetMailMessageType() { return m_messageType; }
-        public ulong GetSenderId() { return m_senderId; }
-        public MailStationery GetStationery() { return m_stationery; }
+        public MailMessageType GetMailMessageType() => m_messageType;
+        public ulong GetSenderId() => m_senderId;
+        public MailStationery GetStationery() => m_stationery;
 
         MailMessageType m_messageType;
         ulong m_senderId;                                  // player low guid or other object entry

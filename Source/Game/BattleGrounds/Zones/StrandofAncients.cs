@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +16,6 @@
  */
 
 using Framework.Constants;
-using Game.DataStorage;
 using Game.Entities;
 using Game.Networking.Packets;
 using System.Collections.Generic;
@@ -301,8 +300,7 @@ namespace Game.BattleGrounds.Zones
                         UpdateData data = new(p.GetMapId());
                         GetBGObject(i).BuildValuesUpdateBlockForPlayer(data, p);
 
-                        UpdateObject pkt;
-                        data.BuildPacket(out pkt);
+                        data.BuildPacket(out UpdateObject pkt);
                         p.SendPacket(pkt);
                     }
                 }
@@ -344,7 +342,6 @@ namespace Game.BattleGrounds.Zones
                     ToggleTimer();
                     DemolisherStartState(false);
                     Status = SAStatus.RoundOne;
-                    StartCriteriaTimer(CriteriaStartEvent.SendEvent, (Attackers == TeamId.Alliance) ? 23748 : 21702u);
                 }
                 if (TotalTime >= SATimers.BoatStart)
                     StartShips();
@@ -367,7 +364,6 @@ namespace Game.BattleGrounds.Zones
                     ToggleTimer();
                     DemolisherStartState(false);
                     Status = SAStatus.RoundTwo;
-                    StartCriteriaTimer(CriteriaStartEvent.SendEvent, (Attackers == TeamId.Alliance) ? 23748 : 21702u);
                     // status was set to STATUS_WAIT_JOIN manually for Preparation, set it back now
                     SetStatus(BattlegroundStatus.InProgress);
                     foreach (var pair in GetPlayers())
@@ -768,9 +764,9 @@ namespace Game.BattleGrounds.Zones
             if (go)
             {
                 if (CanInteractWithObject(objectId))
-                    go.RemoveFlag(GameObjectFlags.NotSelectable);
+                    go.RemoveGameObjectFlag(GameObjectFlags.NotSelectable);
                 else
-                    go.AddFlag(GameObjectFlags.NotSelectable);
+                    go.AddGameObjectFlag(GameObjectFlags.NotSelectable);
             }
         }
 
@@ -921,14 +917,6 @@ namespace Game.BattleGrounds.Zones
                     {
                         RoundScores[0].winner = (uint)Attackers;
                         RoundScores[0].time = TotalTime;
-                        // Achievement Storm the Beach (1310)
-                        foreach (var pair in GetPlayers())
-                        {
-                            Player player = Global.ObjAccessor.FindPlayer(pair.Key);
-                            if (player)
-                                if (player.GetTeamId() == Attackers)
-                                    player.UpdateCriteria(CriteriaTypes.BeSpellTarget, 65246);
-                        }
 
                         Attackers = (Attackers == TeamId.Alliance) ? TeamId.Horde : TeamId.Alliance;
                         Status = SAStatus.SecondWarmup;
@@ -953,14 +941,6 @@ namespace Game.BattleGrounds.Zones
                         RoundScores[1].winner = (uint)Attackers;
                         RoundScores[1].time = TotalTime;
                         ToggleTimer();
-                        // Achievement Storm the Beach (1310)
-                        foreach (var pair in GetPlayers())
-                        {
-                            Player player = Global.ObjAccessor.FindPlayer(pair.Key);
-                            if (player)
-                                if (player.GetTeamId() == Attackers && RoundScores[1].winner == Attackers)
-                                    player.UpdateCriteria(CriteriaTypes.BeSpellTarget, 65246);
-                        }
 
                         if (RoundScores[0].time == RoundScores[1].time)
                             EndBattleground(0);
@@ -1036,8 +1016,7 @@ namespace Game.BattleGrounds.Zones
                 if (!BgObjects[SAObjectTypes.BoatTwo].IsEmpty())
                     GetBGObject(SAObjectTypes.BoatTwo).BuildCreateUpdateBlockForPlayer(transData, player);
 
-                UpdateObject packet;
-                transData.BuildPacket(out packet);
+                transData.BuildPacket(out UpdateObject packet);
                 player.SendPacket(packet);
             }
         }
@@ -1052,8 +1031,7 @@ namespace Game.BattleGrounds.Zones
                 if (!BgObjects[SAObjectTypes.BoatTwo].IsEmpty())
                     GetBGObject(SAObjectTypes.BoatTwo).BuildOutOfRangeUpdateBlock(transData);
 
-                UpdateObject packet;
-                transData.BuildPacket(out packet);
+                transData.BuildPacket(out UpdateObject packet);
                 player.SendPacket(packet);
             }
         }
@@ -1090,21 +1068,7 @@ namespace Game.BattleGrounds.Zones
 
         public override bool UpdatePlayerScore(Player player, ScoreType type, uint value, bool doAddHonor = true)
         {
-            if (!base.UpdatePlayerScore(player, type, value, doAddHonor))
-                return false;
-
-            switch (type)
-            {
-                case ScoreType.DestroyedDemolisher:
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)SAObjectives.DemolishersDestroyed);
-                    break;
-                case ScoreType.DestroyedWall:
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)SAObjectives.GatesDestroyed);
-                    break;
-                default:
-                    break;
-            }
-            return true;
+            return base.UpdatePlayerScore(player, type, value, doAddHonor);
         }
 
         SAGateInfo GetGate(uint entry)

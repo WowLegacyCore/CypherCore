@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,7 +33,7 @@ namespace Game.Networking.Packets
 
     public class GMTicketSystemStatusPkt : ServerPacket
     {
-        public GMTicketSystemStatusPkt() : base(ServerOpcodes.GmTicketSystemStatus) { }
+        public GMTicketSystemStatusPkt() : base(ServerOpcodes.GMTicketSystemStatus) { }
 
         public override void Write()
         {
@@ -52,7 +52,7 @@ namespace Game.Networking.Packets
 
     public class GMTicketCaseStatus : ServerPacket
     {
-        public GMTicketCaseStatus() : base(ServerOpcodes.GmTicketCaseStatus) { }
+        public GMTicketCaseStatus() : base(ServerOpcodes.GMTicketCaseStatus) { }
 
         public override void Write()
         {

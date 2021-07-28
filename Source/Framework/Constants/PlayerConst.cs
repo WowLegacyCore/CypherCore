@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -31,6 +31,9 @@ namespace Framework.Constants
         public const int MaxSpecializations = 5;
         public const int InitialSpecializationIndex = 4;
         public const int MaxMasterySpells = 2;
+
+        public const uint KnowTitlesSize = 6;
+        public const uint MaxTitleIndex = KnowTitlesSize * 64;
 
         public const int ReqPrimaryTreeTalents = 31;
         public const int ExploredZonesSize = 192;
@@ -68,12 +71,7 @@ namespace Framework.Constants
         public const byte LevelMinHonor = 20;
         public const uint SpellPvpRulesEnabled = 134735;
 
-        //Azerite
-        public const uint ItemIdHeartOfAzeroth = 158075;
-        public const uint MaxAzeriteItemLevel = 129;
-        public const uint MaxAzeriteItemKnowledgeLevel = 30;
-        public const uint PlayerConditionIdUnlockedAzeriteEssences = 69048;
-        public const uint SpellIdHeartEssenceActionBarOverride = 298554;
+        public const int MaxChrCustomizationChoices = 32;
     }
 
     public struct MoneyConstants
@@ -134,6 +132,7 @@ namespace Framework.Constants
         NotEnoughCurrency = 25,
     }
 
+    [Flags]
     public enum RestFlag
     {
         Tavern = 0x01,
@@ -302,16 +301,17 @@ namespace Framework.Constants
         Max = 3
     }
 
+    [Flags]
     public enum CorpseFlags
     {
-        None = 0x00,
-        Bones = 0x01,
-        Unk1 = 0x02,
-        PvP = 0x04,
-        HideHelm = 0x08,
-        HideCloak = 0x10,
-        Skinnable = 0x20,
-        FFAPvP = 0x40
+        None        = 0x00,
+        Bones       = 0x01,
+        Unk1        = 0x02,
+        PvP         = 0x04,
+        HideHelm    = 0x08,
+        HideCloak   = 0x10,
+        Skinnable   = 0x20,
+        FFAPvP      = 0x40
     }
 
     public enum ActionButtonUpdateState
@@ -783,5 +783,37 @@ namespace Framework.Constants
         Hostile = 2,
         Contested = 3,
         Combat = 4
+    }
+
+    public enum ActivePlayerBytes1Offset
+    {
+        GrantableLevels,
+        MultiActionBars,
+        LifetimeMaxRank,
+        NumRespecs,
+    }
+
+    public enum ActivePlayerBytes2Offset
+    {
+        TodayHonorableKills,
+        YesterdayHonorableKills,
+    }
+
+    public enum ActivePlayerBytes4Offset
+    {
+        LocalRegenFlags,
+        AuraVision,
+        NumBackpackSlots
+    }
+
+    public enum ActivePlayerSkillOffset
+    {
+        SkillLineId         = 0,
+        SkillLineStep       = SkillLineId + 128,
+        SkillLineRank       = SkillLineStep + 128,
+        SkillLineStartRank  = SkillLineRank + 128,
+        SkillLineMaxRank    = SkillLineStartRank + 128,
+        SkillLineTempBonus  = SkillLineMaxRank + 128,
+        SkillLinePermBonus  = SkillLineTempBonus + 128,
     }
 }

@@ -89,7 +89,7 @@ namespace Game.Movement
                 return;
 
             Cypher.Assert(_currentNode < _path.nodes.Count, $"WaypointMovementGenerator.OnArrived: tried to reference a node id ({_currentNode}) which is not included in path ({_path.id})");
-            WaypointNode waypoint = _path.nodes.ElementAt((int)_currentNode);
+            WaypointNode waypoint = _path.nodes.ElementAt(_currentNode);
             if (waypoint.delay != 0)
             {
                 creature.ClearUnitState(UnitState.RoamingMove);

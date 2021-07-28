@@ -1,7 +1,7 @@
 ﻿
 /*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -60,48 +60,20 @@ namespace Game
             {
                 inspectResult.GuildData.HasValue = true;
 
-                InspectGuildData guildData;
+                InspectGuildData guildData = new();
                 guildData.GuildGUID = guild.GetGUID();
                 guildData.NumGuildMembers = guild.GetMembersCount();
-                guildData.AchievementPoints = (int)guild.GetAchievementMgr().GetAchievementPoints();
                 inspectResult.GuildData.Set(guildData);
             }
 
-            Item heartOfAzeroth = player.GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.Everywhere);
-            if (heartOfAzeroth != null)
-            {
-                AzeriteItem azeriteItem = heartOfAzeroth.ToAzeriteItem();
-                if (azeriteItem != null)
-                    inspectResult.AzeriteLevel = azeriteItem.GetEffectiveLevel();
-            }
-
             inspectResult.ItemLevel = (int)player.GetAverageItemLevel();
-            inspectResult.LifetimeMaxRank = player.m_activePlayerData.LifetimeMaxRank;
-            inspectResult.TodayHK = player.m_activePlayerData.TodayHonorableKills;
-            inspectResult.YesterdayHK = player.m_activePlayerData.YesterdayHonorableKills;
-            inspectResult.LifetimeHK = player.m_activePlayerData.LifetimeHonorableKills;
-            inspectResult.HonorLevel = player.m_playerData.HonorLevel;
+            inspectResult.LifetimeMaxRank = player.GetUpdateField<byte>(ActivePlayerFields.Bytes1, (byte)ActivePlayerBytes1Offset.LifetimeMaxRank);
+            inspectResult.TodayHK = player.GetUpdateField<byte>(ActivePlayerFields.Bytes2, (byte)ActivePlayerBytes2Offset.TodayHonorableKills);
+            inspectResult.YesterdayHK = player.GetUpdateField<byte>(ActivePlayerFields.Bytes2, (byte)ActivePlayerBytes2Offset.YesterdayHonorableKills);
+            inspectResult.LifetimeHK = player.GetUpdateField<uint>(ActivePlayerFields.LifetimeHonorableKills);
+            inspectResult.HonorLevel = player.GetUpdateField<uint>(PlayerFields.HonorLevel);
 
             SendPacket(inspectResult);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.QueryInspectAchievements, Processing = PacketProcessing.Inplace)]
-        void HandleQueryInspectAchievements(QueryInspectAchievements inspect)
-        {
-            Player player = Global.ObjAccessor.GetPlayer(_player, inspect.Guid);
-            if (!player)
-            {
-                Log.outDebug(LogFilter.Network, "WorldSession.HandleQueryInspectAchievements: [{0}] inspected unknown Player [{1}]", GetPlayer().GetGUID().ToString(), inspect.Guid.ToString());
-                return;
-            }
-
-            if (!GetPlayer().IsWithinDistInMap(player, SharedConst.InspectDistance, false))
-                return;
-
-            if (GetPlayer().IsValidAttackTarget(player))
-                return;
-
-            player.SendRespondInspectAchievements(GetPlayer());
         }
     }
 }

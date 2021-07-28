@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -30,15 +30,9 @@ namespace Game.Entities
             m_serverStateIndex = 1;
         }
 
-        public TradeData GetTraderData()
-        {
-            return m_trader.GetTradeData();
-        }
+        public TradeData GetTraderData() => m_trader.GetTradeData();
 
-        public Item GetItem(TradeSlots slot)
-        {
-            return !m_items[(int)slot].IsEmpty() ? m_player.GetItemByGuid(m_items[(int)slot]) : null;
-        }
+        public Item GetItem(TradeSlots slot) => !m_items[(int)slot].IsEmpty() ? m_player.GetItemByGuid(m_items[(int)slot]) : null;
 
         public bool HasItem(ObjectGuid itemGuid)
         {
@@ -58,10 +52,7 @@ namespace Game.Entities
             return TradeSlots.Invalid;
         }
 
-        public Item GetSpellCastItem()
-        {
-            return !m_spellCastItem.IsEmpty() ? m_player.GetItemByGuid(m_spellCastItem) : null;
-        }
+        public Item GetSpellCastItem() => !m_spellCastItem.IsEmpty() ? m_player.GetItemByGuid(m_spellCastItem) : null;
 
         public void SetItem(TradeSlots slot, Item item, bool update = false)
         {
@@ -87,7 +78,7 @@ namespace Game.Entities
             SetSpell(0);
         }
 
-        public uint GetSpell() { return m_spell; }
+        public uint GetSpell() => m_spell;
 
         public void SetSpell(uint spell_id, Item castItem = null)
         {
@@ -154,23 +145,23 @@ namespace Game.Entities
             }
         }
 
-        public Player GetTrader() { return m_trader; }
+        public Player GetTrader() => m_trader;
 
-        public bool HasSpellCastItem() { return !m_spellCastItem.IsEmpty(); }
+        public bool HasSpellCastItem() => !m_spellCastItem.IsEmpty();
 
-        public ulong GetMoney() { return m_money; }
+        public ulong GetMoney() => m_money;
 
-        public bool IsAccepted() { return m_accepted; }
+        public bool IsAccepted() => m_accepted;
 
-        public bool IsInAcceptProcess() { return m_acceptProccess; }
+        public bool IsInAcceptProcess() => m_acceptProccess;
 
-        public void SetInAcceptProcess(bool state) { m_acceptProccess = state; }
+        public void SetInAcceptProcess(bool state) => m_acceptProccess = state;
 
-        public uint GetClientStateIndex() { return m_clientStateIndex; }
-        public void UpdateClientStateIndex() { ++m_clientStateIndex; }
+        public uint GetClientStateIndex() => m_clientStateIndex;
+        public void UpdateClientStateIndex() => ++m_clientStateIndex;
 
-        public uint GetServerStateIndex() { return m_serverStateIndex; }
-        public void UpdateServerStateIndex() { m_serverStateIndex = RandomHelper.Rand32(); }
+        public uint GetServerStateIndex() => m_serverStateIndex;
+        public void UpdateServerStateIndex() => m_serverStateIndex = RandomHelper.Rand32();
 
         Player m_player;
         Player m_trader;

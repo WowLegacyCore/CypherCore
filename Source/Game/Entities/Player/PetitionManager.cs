@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -113,15 +113,9 @@ namespace Game.Entities
             DB.Characters.CommitTransaction(trans);
         }
 
-        public Petition GetPetition(ObjectGuid petitionGuid)
-        {
-            return _petitionStorage.LookupByKey(petitionGuid);
-        }
+        public Petition GetPetition(ObjectGuid petitionGuid) => _petitionStorage.LookupByKey(petitionGuid);
 
-        public Petition GetPetitionByOwner(ObjectGuid ownerGuid)
-        {
-            return _petitionStorage.FirstOrDefault(p => p.Value.ownerGuid == ownerGuid).Value;
-        }
+        public Petition GetPetitionByOwner(ObjectGuid ownerGuid) => _petitionStorage.FirstOrDefault(p => p.Value.ownerGuid == ownerGuid).Value;
 
         public void RemovePetitionsByOwner(ObjectGuid ownerGuid)
         {

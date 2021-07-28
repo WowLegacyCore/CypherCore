@@ -183,8 +183,7 @@ namespace Game.Chat
             if (delayStr.IsEmpty())
                 return false;
 
-            int delay;
-            if (int.TryParse(delayStr, out delay))
+            if (int.TryParse(delayStr, out int delay))
             {
                 //  Prevent interpret wrong arg value as 0 secs shutdown time
                 if ((delay == 0 && (delayStr[0] != '0' || delayStr.Length > 1 && delayStr[1] != '\0')) || delay < 0)

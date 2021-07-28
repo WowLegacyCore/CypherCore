@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,6 @@
 
 using Framework.Constants;
 using Framework.Database;
-using Game.BattlePets;
 using Game.DataStorage;
 using Game.Entities;
 using Game.Networking;
@@ -182,8 +181,7 @@ namespace Game
             if (srcItem == null)
                 return;                                             // only at cheat
 
-            ushort dest;
-            InventoryResult msg = pl.CanEquipItem(ItemConst.NullSlot, out dest, srcItem, !srcItem.IsBag());
+            InventoryResult msg = pl.CanEquipItem(ItemConst.NullSlot, out ushort dest, srcItem, !srcItem.IsBag());
             if (msg != InventoryResult.Ok)
             {
                 pl.SendEquipError(msg, srcItem);
@@ -450,9 +448,6 @@ namespace Game
                             return;
                         }
 
-                        _player.UpdateCriteria(CriteriaTypes.MoneyFromVendors, money);
-                        _player.UpdateCriteria(CriteriaTypes.SoldItemToVendor, 1);
-
                         if (packet.Amount < pItem.GetCount())               // need split items
                         {
                             Item pNewItem = pItem.CloneItem(packet.Amount, pl);
@@ -508,7 +503,7 @@ namespace Game
             Item pItem = _player.GetItemFromBuyBackSlot(packet.Slot);
             if (pItem != null)
             {
-                uint price = _player.m_activePlayerData.BuybackPrice[(int)(packet.Slot - InventorySlots.BuyBackStart)];
+                uint price = _player.GetUpdateField<uint>(ActivePlayerFields.BuybackPrice + (int)(packet.Slot - InventorySlots.BuyBackStart));
                 if (!_player.HasEnoughMoney(price))
                 {
                     _player.SendBuyError(BuyResult.NotEnoughtMoney, creature, pItem.GetEntry());
@@ -616,7 +611,7 @@ namespace Game
 
         public void SendEnchantmentLog(ObjectGuid owner, ObjectGuid caster, ObjectGuid itemGuid, uint itemId, uint enchantId, uint enchantSlot)
         {
-            EnchantmentLog packet = new(); 
+            EnchantmentLog packet = new();
             packet.Owner = owner;
             packet.Caster = caster;
             packet.ItemGUID = itemGuid;
@@ -722,7 +717,7 @@ namespace Game
             stmt.AddValue(0, item.GetOwnerGUID().GetCounter());
             stmt.AddValue(1, item.GetGUID().GetCounter());
             stmt.AddValue(2, item.GetEntry());
-            stmt.AddValue(3, (uint)item.m_itemData.DynamicFlags);
+            stmt.AddValue(3, (uint)item.GetUpdateField<uint>(ItemFields.DynamicFlags));
             trans.Append(stmt);
 
             item.SetEntry(gift.GetEntry());
@@ -788,9 +783,9 @@ namespace Game
             byte slot = itemTarget.IsEquipped() ? itemTarget.GetSlot() : ItemConst.NullSlot;
 
             Item[] gems = new Item[ItemConst.MaxGemSockets];
-            ItemDynamicFieldGems[] gemData = new ItemDynamicFieldGems[ItemConst.MaxGemSockets];
             GemPropertiesRecord[] gemProperties = new GemPropertiesRecord[ItemConst.MaxGemSockets];
-            SocketedGem[] oldGemData = new SocketedGem[ItemConst.MaxGemSockets];
+            ItemDynamicFieldGems[] gemData = new ItemDynamicFieldGems[ItemConst.MaxGemSockets];
+            ItemDynamicFieldGems[] oldGemData = new ItemDynamicFieldGems[ItemConst.MaxGemSockets];
 
 
             for (int i = 0; i < ItemConst.MaxGemSockets; ++i)
@@ -800,9 +795,9 @@ namespace Game
                 {
                     gems[i] = gem;
                     gemData[i].ItemId = gem.GetEntry();
-                    gemData[i].Context = (byte)gem.m_itemData.Context;
-                    for (int b = 0; b < ((List<uint>)gem.m_itemData.BonusListIDs).Count && b < 16; ++b)
-                        gemData[i].BonusListIDs[b] = (ushort)((List<uint>)gem.m_itemData.BonusListIDs)[b];
+                    gemData[i].Context = (byte)gem.GetUpdateField<uint>(ItemFields.Context);
+                    for (int b = 0; b < gem.GetDynamicValues(ItemDynamicFields.BonusListIDs).Length && b < 16; ++b)
+                        gemData[i].BonusListIDs[b] = (ushort)gem.GetDynamicValue(ItemDynamicFields.BonusListIDs, (ushort)b);
 
                     gemProperties[i] = CliDB.GemPropertiesStorage.LookupByKey(gem.GetTemplate().GetGemProperties());
                 }
@@ -829,7 +824,7 @@ namespace Game
 
                     if (i != firstPrismatic)
                         return;
-                }     
+                }
 
                 // Gem must match socket color
                 if (ItemConst.SocketColorToGemTypeMask[(int)itemTarget.GetSocketColor(i)] != gemProperties[i].Type)
@@ -958,7 +953,6 @@ namespace Game
             {
                 if (childItem.IsEquipped())
                     _player._ApplyItemMods(childItem, childItem.GetSlot(), false);
-                childItem.CopyArtifactDataFromParent(itemTarget);
                 if (childItem.IsEquipped())
                     _player._ApplyItemMods(childItem, childItem.GetSlot(), true);
             }
@@ -1056,40 +1050,7 @@ namespace Game
             if (item.GetBonus().EffectCount < 2)
                 return;
 
-            uint spellToLearn = (uint)item.GetEffect(1).SpellID;
-
-            var entry = Global.SpellMgr.GetBattlePetSpecies(spellToLearn);
-            if (entry != null)
-            {
-                GetBattlePetMgr().AddPet(entry.Id, entry.CreatureID, BattlePetMgr.RollPetBreed(entry.Id), BattlePetMgr.GetDefaultPetQuality(entry.Id));
-                _player.UpdateCriteria(CriteriaTypes.OwnBattlePetCount);
-            }
-
             GetPlayer().DestroyItem(item.GetBagSlot(), item.GetSlot(), true);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.SortBags, Processing = PacketProcessing.Inplace)]
-        void HandleSortBags(SortBags sortBags)
-        {
-            // TODO: Implement sorting
-            // Placeholder to prevent completely locking out bags clientside
-            SendPacket(new BagCleanupFinished());
-        }
-
-        [WorldPacketHandler(ClientOpcodes.SortBankBags, Processing = PacketProcessing.Inplace)]
-        void HandleSortBankBags(SortBankBags sortBankBags)
-        {
-            // TODO: Implement sorting
-            // Placeholder to prevent completely locking out bags clientside
-            SendPacket(new BagCleanupFinished());
-        }
-
-        [WorldPacketHandler(ClientOpcodes.SortReagentBankBags, Processing = PacketProcessing.Inplace)]
-        void HandleSortReagentBankBags(SortReagentBankBags sortReagentBankBags)
-        {
-            // TODO: Implement sorting
-            // Placeholder to prevent completely locking out bags clientside
-            SendPacket(new BagCleanupFinished());
         }
 
         [WorldPacketHandler(ClientOpcodes.RemoveNewItem, Processing = PacketProcessing.Inplace)]

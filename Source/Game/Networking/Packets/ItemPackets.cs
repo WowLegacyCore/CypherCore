@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -436,7 +436,7 @@ namespace Game.Networking.Packets
             _worldPacket.WriteBit(IsEncounterLoot);
             _worldPacket.FlushBits();
 
-            Item.Write(_worldPacket);            
+            Item.Write(_worldPacket);
         }
 
         public ObjectGuid PlayerGUID;
@@ -501,7 +501,7 @@ namespace Game.Networking.Packets
 
     class ReadItemResultOK : ServerPacket
     {
-        public ReadItemResultOK() : base(ServerOpcodes.ReadItemResultOk) { }
+        public ReadItemResultOK() : base(ServerOpcodes.ReadItemResultOK) { }
 
         public override void Write()
         {
@@ -528,7 +528,7 @@ namespace Game.Networking.Packets
         public EnchantmentLog() : base(ServerOpcodes.EnchantmentLog, ConnectionType.Instance) { }
 
         public override void Write()
-        {    
+        {
             _worldPacket.WritePackedGuid(Owner);
             _worldPacket.WritePackedGuid(Caster);
             _worldPacket.WritePackedGuid(ItemGUID);
@@ -572,7 +572,7 @@ namespace Game.Networking.Packets
         public uint SpellID;
         public uint Cooldown;
     }
-    
+
     class ItemEnchantTimeUpdate : ServerPacket
     {
         public ItemEnchantTimeUpdate() : base(ServerOpcodes.ItemEnchantTimeUpdate, ConnectionType.Instance) { }
@@ -701,18 +701,9 @@ namespace Game.Networking.Packets
             }
         }
 
-        public override int GetHashCode()
-        {
-            return Context.GetHashCode() ^ BonusListIDs.GetHashCode();
-        }
+        public override int GetHashCode() => Context.GetHashCode() ^ BonusListIDs.GetHashCode();
 
-        public override bool Equals(object obj)
-        {
-            if (obj is ItemBonuses)
-                return (ItemBonuses)obj == this;
-
-            return false;
-        }
+        public override bool Equals(object obj) => obj is ItemBonuses bonuses && bonuses == this;
 
         public static bool operator ==(ItemBonuses left, ItemBonuses right)
         {
@@ -725,17 +716,14 @@ namespace Game.Networking.Packets
             return left.BonusListIDs.SequenceEqual(right.BonusListIDs);
         }
 
-        public static bool operator !=(ItemBonuses left, ItemBonuses right)
-        {
-            return !(left == right);
-        }
+        public static bool operator !=(ItemBonuses left, ItemBonuses right) => !(left == right);
 
         public ItemContext Context;
         public List<uint> BonusListIDs = new();
     }
 
     public class ItemMod
-    {  
+    {
         public uint Value;
         public ItemModifier Type;
 
@@ -761,18 +749,9 @@ namespace Game.Networking.Packets
             data.WriteUInt8((byte)Type);
         }
 
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode() ^ Type.GetHashCode();
-        }
+        public override int GetHashCode() => Value.GetHashCode() ^ Type.GetHashCode();
 
-        public override bool Equals(object obj)
-        {
-            if (obj is ItemMod)
-                return (ItemMod)obj == this;
-
-            return false;
-        }
+        public override bool Equals(object obj) => obj is ItemMod mod && mod == this;
 
         public static bool operator ==(ItemMod left, ItemMod right)
         {
@@ -782,10 +761,7 @@ namespace Game.Networking.Packets
             return left.Type != right.Type;
         }
 
-        public static bool operator !=(ItemMod left, ItemMod right)
-        {
-            return !(left == right);
-        }
+        public static bool operator !=(ItemMod left, ItemMod right) => !(left == right);
     }
 
     public class ItemModList
@@ -814,18 +790,9 @@ namespace Game.Networking.Packets
                 itemMod.Write(data);
         }
 
-        public override int GetHashCode()
-        {
-            return Values.GetHashCode();
-        }
+        public override int GetHashCode() => Values.GetHashCode();
 
-        public override bool Equals(object obj)
-        {
-            if (obj is ItemModList)
-                return (ItemModList)obj == this;
-
-            return false;
-        }
+        public override bool Equals(object obj) => obj is ItemModList list && list == this;
 
         public static bool operator ==(ItemModList left, ItemModList right)
         {
@@ -835,10 +802,7 @@ namespace Game.Networking.Packets
             return !left.Values.Except(right.Values).Any();
         }
 
-        public static bool operator !=(ItemModList left, ItemModList right)
-        {
-            return !(left == right);
-        }
+        public static bool operator !=(ItemModList left, ItemModList right) => !(left == right);
     }
 
     public class ItemInstance
@@ -852,7 +816,7 @@ namespace Game.Networking.Packets
         public ItemInstance(Item item)
         {
             ItemID = item.GetEntry();
-            List<uint> bonusListIds = item.m_itemData.BonusListIDs;
+            uint[] bonusListIds = item.GetDynamicValues(ItemDynamicFields.BonusListIDs);
             if (!bonusListIds.Empty())
             {
                 ItemBonus.HasValue = true;
@@ -860,8 +824,8 @@ namespace Game.Networking.Packets
                 ItemBonus.Value.Context = item.GetContext();
             }
 
-            foreach (var mod in item.m_itemData.Modifiers.GetValue().Values)
-                Modifications.Values.Add(new ItemMod(mod.Value, (ItemModifier)mod.Type));
+            // foreach (var mod in item.GetDynamicValues(ItemDynamicFields.Modifiers))
+            //     Modifications.Values.Add(new ItemMod(mod.Value, (ItemModifier)mod.Type));
         }
 
         public ItemInstance(Loots.LootItem lootItem)
@@ -878,25 +842,7 @@ namespace Game.Networking.Packets
             }
         }
 
-        public ItemInstance(VoidStorageItem voidItem)
-        {
-            ItemID = voidItem.ItemEntry;
-
-            if (voidItem.FixedScalingLevel != 0)
-                Modifications.Values.Add(new ItemMod(voidItem.FixedScalingLevel, ItemModifier.TimewalkerLevel));
-
-            if (voidItem.ArtifactKnowledgeLevel != 0)
-                Modifications.Values.Add(new ItemMod(voidItem.ArtifactKnowledgeLevel, ItemModifier.ArtifactKnowledgeLevel));
-
-            if (!voidItem.BonusListIDs.Empty())
-            {
-                ItemBonus.HasValue = true;
-                ItemBonus.Value.Context = voidItem.Context;
-                ItemBonus.Value.BonusListIDs = voidItem.BonusListIDs;
-            }
-        }
-
-        public ItemInstance(SocketedGem gem)
+        public ItemInstance(ItemDynamicFieldGems gem)
         {
             ItemID = gem.ItemId;
 
@@ -967,9 +913,7 @@ namespace Game.Networking.Packets
         }
 
         public static bool operator !=(ItemInstance left, ItemInstance right)
-        {
-            return !(left == right);
-        }
+        => !(left == right);
     }
 
     public class ItemEnchantData

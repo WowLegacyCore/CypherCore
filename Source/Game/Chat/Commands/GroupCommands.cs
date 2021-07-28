@@ -35,8 +35,7 @@ namespace Game.Chat
         [Command("summon", RBACPermissions.CommandGroupSummon)]
         static bool HandleGroupSummonCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             // check online security
@@ -118,8 +117,7 @@ namespace Game.Chat
                     player.SaveRecallPosition();
 
                 // before GM
-                float x, y, z;
-                gmPlayer.GetClosePoint(out x, out y, out z, player.GetCombatReach());
+                gmPlayer.GetClosePoint(out float x, out float y, out float z, player.GetCombatReach());
                 player.TeleportTo(gmPlayer.GetMapId(), x, y, z, player.GetOrientation());
             }
 
@@ -129,11 +127,8 @@ namespace Game.Chat
         [Command("leader", RBACPermissions.CommandGroupLeader)]
         static bool HandleGroupLeaderCommand(StringArguments args, CommandHandler handler)
         {
-            Player player;
-            Group group;
-            ObjectGuid guid;
 
-            if (!handler.GetPlayerGroupAndGUIDByName(args.NextString(), out player, out group, out guid))
+            if (!handler.GetPlayerGroupAndGUIDByName(args.NextString(), out Player player, out Group group, out ObjectGuid guid))
                 return false;
 
             if (!group)
@@ -154,11 +149,9 @@ namespace Game.Chat
         [Command("disband", RBACPermissions.CommandGroupDisband)]
         static bool HandleGroupDisbandCommand(StringArguments args, CommandHandler handler)
         {
-            Player player;
-            Group group;
             string nameStr = args.NextString();
 
-            if (!handler.GetPlayerGroupAndGUIDByName(nameStr, out player, out group, out _))
+            if (!handler.GetPlayerGroupAndGUIDByName(nameStr, out Player player, out Group group, out _))
                 return false;
 
             if (!group)
@@ -174,12 +167,9 @@ namespace Game.Chat
         [Command("remove", RBACPermissions.CommandGroupRemove)]
         static bool HandleGroupRemoveCommand(StringArguments args, CommandHandler handler)
         {
-            Player player;
-            Group group;
-            ObjectGuid guid;
             string nameStr = args.NextString();
 
-            if (!handler.GetPlayerGroupAndGUIDByName(nameStr, out player, out group, out guid))
+            if (!handler.GetPlayerGroupAndGUIDByName(nameStr, out Player player, out Group group, out ObjectGuid guid))
                 return false;
 
             if (!group)
@@ -198,14 +188,10 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player playerSource;
-            Player playerTarget;
-            Group groupSource;
-            Group groupTarget;
             string nameplgrStr = args.NextString();
             string nameplStr = args.NextString();
 
-            if (!handler.GetPlayerGroupAndGUIDByName(nameplgrStr, out playerSource, out groupSource, out _, true))
+            if (!handler.GetPlayerGroupAndGUIDByName(nameplgrStr, out Player playerSource, out Group groupSource, out _, true))
                 return false;
 
             if (!groupSource)
@@ -214,7 +200,7 @@ namespace Game.Chat
                 return false;
             }
 
-            if (!handler.GetPlayerGroupAndGUIDByName(nameplStr, out playerTarget, out groupTarget, out _, true))
+            if (!handler.GetPlayerGroupAndGUIDByName(nameplStr, out Player playerTarget, out Group groupTarget, out _, true))
                 return false;
 
             if (groupTarget || playerTarget.GetGroup() == groupSource)
@@ -241,7 +227,6 @@ namespace Game.Chat
             // Get ALL the variables!
             Player playerTarget;
             ObjectGuid guidTarget;
-            string nameTarget;
             string zoneName = "";
             string onlineState;
 
@@ -249,7 +234,7 @@ namespace Game.Chat
             ObjectGuid parseGUID = ObjectGuid.Create(HighGuid.Player, args.NextUInt64());
 
             // ... and try to extract a player out of it.
-            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out nameTarget))
+            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out string nameTarget))
             {
                 playerTarget = Global.ObjAccessor.FindPlayer(parseGUID);
                 guidTarget = parseGUID;
@@ -376,11 +361,8 @@ namespace Game.Chat
 
             static bool GroupFlagCommand(StringArguments args, CommandHandler handler, GroupMemberFlags flag, string what)
             {
-                Player player;
-                Group group;
-                ObjectGuid guid;
 
-                if (!handler.GetPlayerGroupAndGUIDByName(args.NextString(), out player, out group, out guid))
+                if (!handler.GetPlayerGroupAndGUIDByName(args.NextString(), out Player player, out Group group, out ObjectGuid guid))
                     return false;
 
                 if (!group)

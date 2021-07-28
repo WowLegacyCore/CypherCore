@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -163,7 +163,7 @@ namespace Game.Entities
 
             return false;
         }
-        
+
         public void SetGroup(Group group, byte subgroup = 0)
         {
             if (!group)
@@ -180,10 +180,10 @@ namespace Game.Entities
         public void SetPartyType(GroupCategory category, GroupType type)
         {
             Cypher.Assert(category < GroupCategory.Max);
-            byte value = m_playerData.PartyType;
-            value &= (byte)~((byte)0xFF << ((byte)category * 4));
+            byte value = GetUpdateField<byte>(PlayerFields.Bytes1, 1);
+            value &= (byte)~(0xFF << ((byte)category * 4));
             value |= (byte)((byte)type << ((byte)category * 4));
-            SetUpdateFieldValue(m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.PartyType), value);
+            SetUpdateField<byte>(PlayerFields.Bytes1, value, 1);
         }
 
         public void ResetGroupUpdateSequenceIfNeeded(Group group)
@@ -219,46 +219,36 @@ namespace Game.Entities
             return pRewardSource.GetDistance(player) <= WorldConfig.GetFloatValue(WorldCfg.GroupXpDistance);
         }
 
-        public Group GetGroupInvite() { return m_groupInvite; }
+        public Group GetGroupInvite() => m_groupInvite;
         public void SetGroupInvite(Group group) { m_groupInvite = group; }
-        public Group GetGroup() { return m_group.GetTarget(); }
-        public GroupReference GetGroupRef() { return m_group; }
-        public byte GetSubGroup() { return m_group.GetSubGroup(); }
-        public GroupUpdateFlags GetGroupUpdateFlag() { return m_groupUpdateMask; }
+        public Group GetGroup() => m_group.GetTarget();
+        public GroupReference GetGroupRef() => m_group;
+        public byte GetSubGroup() => m_group.GetSubGroup();
+        public GroupUpdateFlags GetGroupUpdateFlag() => m_groupUpdateMask;
         public void SetGroupUpdateFlag(GroupUpdateFlags flag) { m_groupUpdateMask |= flag; }
         public void RemoveGroupUpdateFlag(GroupUpdateFlags flag) { m_groupUpdateMask &= ~flag; }
 
-        public Group GetOriginalGroup() { return m_originalGroup.GetTarget(); }
-        public GroupReference GetOriginalGroupRef() { return m_originalGroup; }
-        public byte GetOriginalSubGroup() { return m_originalGroup.GetSubGroup(); }
+        public Group GetOriginalGroup() => m_originalGroup.GetTarget();
+        public GroupReference GetOriginalGroupRef() => m_originalGroup;
+        public byte GetOriginalSubGroup() => m_originalGroup.GetSubGroup();
 
         public void SetPassOnGroupLoot(bool bPassOnGroupLoot) { m_bPassOnGroupLoot = bPassOnGroupLoot; }
-        public bool GetPassOnGroupLoot() { return m_bPassOnGroupLoot; }
+        public bool GetPassOnGroupLoot() => m_bPassOnGroupLoot;
 
         public bool IsGroupVisibleFor(Player p)
         {
-            switch (WorldConfig.GetIntValue(WorldCfg.GroupVisibility))
+            return WorldConfig.GetIntValue(WorldCfg.GroupVisibility) switch
             {
-                default: 
-                    return IsInSameGroupWith(p);
-                case 1: 
-                    return IsInSameRaidWith(p);
-                case 2: 
-                    return GetTeam() == p.GetTeam();
-                case 3:
-                    return false;
-            }
+                1 => IsInSameRaidWith(p),
+                2 => GetTeam() == p.GetTeam(),
+                3 => false,
+                _ => IsInSameGroupWith(p),
+            };
         }
-        public bool IsInSameGroupWith(Player p)
-        {
-            return p == this || (GetGroup() &&
+        public bool IsInSameGroupWith(Player p) => p == this || (GetGroup() &&
                 GetGroup() == p.GetGroup() && GetGroup().SameSubGroup(this, p));
-        }
 
-        public bool IsInSameRaidWith(Player p)
-        {
-            return p == this || (GetGroup() != null && GetGroup() == p.GetGroup());
-        }
+        public bool IsInSameRaidWith(Player p) => p == this || (GetGroup() != null && GetGroup() == p.GetGroup());
 
         public void UninviteFromGroup()
         {

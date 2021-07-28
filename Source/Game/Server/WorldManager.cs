@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,6 @@ using Framework.Configuration;
 using Framework.Constants;
 using Framework.Database;
 using Framework.Realm;
-using Game.BattlePets;
 using Game.Chat;
 using Game.Collision;
 using Game.DataStorage;
@@ -771,21 +770,6 @@ namespace Game
             Log.outInfo(LogFilter.ServerLoading, "Loading skill tier info...");
             Global.ObjectMgr.LoadSkillTiers();
 
-            Log.outInfo(LogFilter.ServerLoading, "Loading Criteria Modifier trees...");
-            Global.CriteriaMgr.LoadCriteriaModifiersTree();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Criteria Lists...");
-            Global.CriteriaMgr.LoadCriteriaList();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Criteria Data...");
-            Global.CriteriaMgr.LoadCriteriaData();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Achievements...");
-            Global.AchievementMgr.LoadAchievementReferenceList();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Achievement Rewards...");
-            Global.AchievementMgr.LoadRewards();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Achievement Reward Locales...");
-            Global.AchievementMgr.LoadRewardLocales();
-            Log.outInfo(LogFilter.ServerLoading, "Loading Completed Achievements...");
-            Global.AchievementMgr.LoadCompletedAchievements();
-
             // Load before guilds and arena teams
             Log.outInfo(LogFilter.ServerLoading, "Loading character cache store...");
             Global.CharacterCacheStorage.LoadCharacterCacheStorage();
@@ -794,22 +778,11 @@ namespace Game
             Log.outInfo(LogFilter.ServerLoading, "Loading Auctions...");
             Global.AuctionHouseMgr.LoadAuctions();
 
-            if (WorldConfig.GetBoolValue(WorldCfg.BlackmarketEnabled))
-            {
-                Log.outInfo(LogFilter.ServerLoading, "Loading Black Market Templates...");
-                Global.BlackMarketMgr.LoadTemplates();
-
-                Log.outInfo(LogFilter.ServerLoading, "Loading Black Market Auctions...");
-                Global.BlackMarketMgr.LoadAuctions();
-            }
-
             Log.outInfo(LogFilter.ServerLoading, "Loading Guild rewards...");
             Global.GuildMgr.LoadGuildRewards();
 
             Log.outInfo(LogFilter.ServerLoading, "Loading Guilds...");
             Global.GuildMgr.LoadGuilds();
-
-            Global.GuildFinderMgr.LoadFromDB();
 
             Log.outInfo(LogFilter.ServerLoading, "Loading ArenaTeams...");
             Global.ArenaTeamMgr.LoadArenaTeams();
@@ -894,9 +867,6 @@ namespace Game
             //Log.outInfo(LogFilter.ServerLoading, "Loading GM surveys...");
             //Global.SupportMgr.LoadSurveys();
 
-            Log.outInfo(LogFilter.ServerLoading, "Loading garrison info...");
-            Global.GarrisonMgr.Initialize();
-
             // Handle outdated emails (delete/return)
             Log.outInfo(LogFilter.ServerLoading, "Returning old mails...");
             Global.ObjectMgr.ReturnOrDeleteOldMails(false);
@@ -963,8 +933,6 @@ namespace Game
             // for AhBot
             m_timers[WorldTimers.AhBot].SetInterval(WorldConfig.GetIntValue(WorldCfg.AhbotUpdateInterval) * Time.InMilliseconds); // every 20 sec
             m_timers[WorldTimers.GuildSave].SetInterval(WorldConfig.GetIntValue(WorldCfg.GuildSaveInterval) * Time.Minute * Time.InMilliseconds);
-
-            m_timers[WorldTimers.Blackmarket].SetInterval(10 * Time.InMilliseconds);
 
             blackmarket_timer = 0;
 
@@ -1054,16 +1022,6 @@ namespace Game
 
             Log.outInfo(LogFilter.ServerLoading, "Loading realm names...");
             Global.ObjectMgr.LoadRealmNames();
-
-            Log.outInfo(LogFilter.ServerLoading, "Loading battle pets info...");
-            BattlePetMgr.Initialize();
-
-            Log.outInfo(LogFilter.ServerLoading, "Loading scenarios");
-            Global.ScenarioMgr.LoadDB2Data();
-            Global.ScenarioMgr.LoadDBData();
-
-            Log.outInfo(LogFilter.ServerLoading, "Loading scenario poi data");
-            Global.ScenarioMgr.LoadScenarioPOI();
 
             // Preload all cells, if required for the base maps
             if (WorldConfig.GetBoolValue(WorldCfg.BasemapLoadGrids))
@@ -1300,23 +1258,6 @@ namespace Game
                 m_timers[WorldTimers.AuctionsPending].Reset();
 
                 Global.AuctionHouseMgr.UpdatePendingAuctions();
-            }
-
-            if (m_timers[WorldTimers.Blackmarket].Passed())
-            {
-                m_timers[WorldTimers.Blackmarket].Reset();
-
-                //- Update blackmarket, refresh auctions if necessary
-                if ((blackmarket_timer * m_timers[WorldTimers.Blackmarket].GetInterval() >= WorldConfig.GetIntValue(WorldCfg.BlackmarketUpdatePeriod) * Time.Hour * Time.InMilliseconds) || blackmarket_timer == 0)
-                {
-                    Global.BlackMarketMgr.RefreshAuctions();
-                    blackmarket_timer = 1; // timer is 0 on startup
-                }
-                else
-                {
-                    ++blackmarket_timer;
-                    Global.BlackMarketMgr.Update();
-                }
             }
 
             //Handle session updates when the timer has passed
@@ -1847,13 +1788,11 @@ namespace Game
 
         public void UpdateSessions(uint diff)
         {
-            Tuple<WorldSocket, ulong> linkInfo;
-            while (_linkSocketQueue.TryDequeue(out linkInfo))
+            while (_linkSocketQueue.TryDequeue(out Tuple<WorldSocket, ulong> linkInfo))
                 ProcessLinkInstanceSocket(linkInfo);
 
             // Add new sessions
-            WorldSession sess;
-            while (addSessQueue.TryDequeue(out sess))
+            while (addSessQueue.TryDequeue(out WorldSession sess))
                 AddSession_(sess);
 
             // Then send an update signal to remaining ones
@@ -1903,7 +1842,7 @@ namespace Game
         }
 
         void UpdateRealmCharCount(SQLResult result)
-        { 
+        {
             if (!result.IsEmpty())
             {
                 uint Id = result.Read<uint>(0);
@@ -2039,10 +1978,6 @@ namespace Game
             Log.outInfo(LogFilter.Server, "Daily quests reset for all characters.");
 
             PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_RESET_CHARACTER_QUESTSTATUS_DAILY);
-            DB.Characters.Execute(stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.UPD_CHARACTER_GARRISON_FOLLOWER_ACTIVATIONS);
-            stmt.AddValue(0, 1);
             DB.Characters.Execute(stmt);
 
             foreach (var session in m_sessions.Values)
@@ -2482,7 +2417,6 @@ namespace Game
         AhBot,
         PingDB,
         GuildSave,
-        Blackmarket,
         WhoList,
         Max
     }

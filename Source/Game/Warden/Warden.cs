@@ -177,9 +177,8 @@ namespace Game
                 case WardenActions.Ban:
                     {
                         string duration = WorldConfig.GetIntValue(WorldCfg.WardenClientBanDuration) + "s";
-                        string accountName;
-                        Global.AccountMgr.GetName(_session.GetAccountId(), out accountName);
-                        string banReason = "Warden Anticheat Violation";
+                    Global.AccountMgr.GetName(_session.GetAccountId(), out string accountName);
+                    string banReason = "Warden Anticheat Violation";
                         // Check can be NULL, for example if the client sent a wrong signature in the warden packet (CHECKSUM FAIL)
                         if (check != null)
                             banReason += ": " + check.Comment + " (CheckId: " + check.CheckId + ")";

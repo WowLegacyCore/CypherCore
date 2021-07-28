@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -339,7 +339,7 @@ namespace Game
 
                 // Delete orphaned guild bank tab entries before loading the valid ones
                 DB.Characters.DirectExecute("DELETE gbt FROM guild_bank_tab gbt LEFT JOIN guild g ON gbt.guildId = g.guildId WHERE g.guildId IS NULL");
-                
+
                 //                                              0        1      2        3        4
                 SQLResult result = DB.Characters.Query("SELECT guildid, TabId, TabName, TabIcon, TabText FROM guild_bank_tab ORDER BY guildid ASC, TabId ASC");
                 if (result.IsEmpty())
@@ -395,28 +395,7 @@ namespace Game
                 }
             }
 
-            // 10. Load guild achievements
-            Log.outInfo(LogFilter.ServerLoading, "Loading guild achievements...");
-            {
-                uint oldMSTime = Time.GetMSTime();
-
-                foreach (var pair in GuildStore)
-                {
-                    PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_GUILD_ACHIEVEMENT);
-                    stmt.AddValue(0, pair.Key);
-                    SQLResult achievementResult = DB.Characters.Query(stmt);
-
-                    stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_GUILD_ACHIEVEMENT_CRITERIA);
-                    stmt.AddValue(0, pair.Key);
-                    SQLResult criteriaResult = DB.Characters.Query(stmt);
-
-                    pair.Value.GetAchievementMgr().LoadFromDB(achievementResult, criteriaResult);
-                }
-
-                Log.outInfo(LogFilter.ServerLoading, "Loaded guild achievements and criterias in {0} ms", Time.GetMSTimeDiffToNow(oldMSTime));
-            }
-
-            // 11. Validate loaded guild data
+            // 10. Validate loaded guild data
             Log.outInfo(LogFilter.Server, "Validating data of loaded guilds...");
             {
                 uint oldMSTime = Time.GetMSTime();

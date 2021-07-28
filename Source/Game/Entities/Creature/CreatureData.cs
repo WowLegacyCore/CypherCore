@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,6 @@ using Framework.Collections;
 using Framework.Constants;
 using System;
 using System.Collections.Generic;
-using Framework.Dynamic;
 using Game.Networking.Packets;
 using Game.Maps;
 
@@ -44,7 +43,8 @@ namespace Game.Entities
         public uint RequiredExpansion;
         public uint VignetteID; // @todo Read Vignette.db2
         public uint Faction;
-        public ulong Npcflag;
+        public NPCFlags NpcFlags;
+        public NPCFlags2 NpcFlags2;
         public float SpeedWalk;
         public float SpeedRun;
         public float Scale;
@@ -56,8 +56,8 @@ namespace Game.Entities
         public float RangeVariance;
         public uint UnitClass;
         public UnitFlags UnitFlags;
-        public uint UnitFlags2;
-        public uint UnitFlags3;
+        public UnitFlags2 UnitFlags2;
+        public UnitFlags3 UnitFlags3;
         public uint DynamicFlags;
         public CreatureFamily Family;
         public Class TrainerClass;
@@ -336,7 +336,8 @@ namespace Game.Entities
         public uint curhealth;
         public uint curmana;
         public byte movementType;
-        public ulong npcflag;
+        public uint npcflags;
+        public uint npcflags2;
         public uint unit_flags;                                  // enum UnitFlags mask values
         public uint unit_flags2;                                 // enum UnitFlags2 mask values
         public uint unit_flags3;                                 // enum UnitFlags3 mask values

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -36,7 +36,7 @@ namespace Game.Networking.Packets
             Serial = _worldPacket.ReadUInt32();
             Latency = _worldPacket.ReadUInt32();
         }
-        
+
         public uint Serial;
         public uint Latency;
     }
@@ -195,7 +195,7 @@ namespace Game.Networking.Packets
             }
 
             if (WaitInfo.HasValue)
-                WaitInfo.Value.Write(_worldPacket);            
+                WaitInfo.Value.Write(_worldPacket);
         }
 
         public Optional<AuthSuccessInfo> SuccessInfo; // contains the packet data in case that it has account information (It is never set when WaitInfo is set), otherwise its contents are undefined.
@@ -204,34 +204,34 @@ namespace Game.Networking.Packets
 
         public class AuthSuccessInfo
         {
-            public byte ActiveExpansionLevel; // the current server expansion, the possible values are in @ref Expansions
-            public byte AccountExpansionLevel; // the current expansion of this account, the possible values are in @ref Expansions
-            public uint TimeRested; // affects the return value of the GetBillingTimeRested() client API call, it is the number of seconds you have left until the experience points and loot you receive from creatures and quests is reduced. It is only used in the Asia region in retail, it's not implemented in TC and will probably never be.
+            public byte ActiveExpansionLevel;                       // the current server expansion, the possible values are in @ref Expansions
+            public byte AccountExpansionLevel;                      // the current expansion of this account, the possible values are in @ref Expansions
+            public uint TimeRested = 0;                             // affects the return value of the GetBillingTimeRested() client API call, it is the number of seconds you have left until the experience points and loot you receive from creatures and quests is reduced. It is only used in the Asia region in retail, it's not implemented in TC and will probably never be.
 
-            public uint VirtualRealmAddress; // a special identifier made from the Index, BattleGroup and Region. @todo implement
-            public uint TimeSecondsUntilPCKick; // @todo research
-            public uint CurrencyID; // this is probably used for the ingame shop. @todo implement
+            public uint VirtualRealmAddress;                        // a special identifier made from the Index, BattleGroup and Region. @todo implement
+            public uint TimeSecondsUntilPCKick = 0;                 // @todo research
+            public uint CurrencyID = 0;                             // this is probably used for the ingame shop. @todo implement
             public long Time;
 
-            public GameTime GameTimeInfo;
+            public GameTime GameTimeInfo = new();
 
-            public List<VirtualRealmInfo> VirtualRealms = new();     // list of realms connected to this one (inclusive) @todo implement
-            public List<CharacterTemplate> Templates = new(); // list of pre-made character templates. @todo implement
+            public List<VirtualRealmInfo> VirtualRealms = new();    // list of realms connected to this one (inclusive) @todo implement
+            public List<CharacterTemplate> Templates = new();       // list of pre-made character templates. @todo implement
 
-            public List<RaceClassAvailability> AvailableClasses; // the minimum AccountExpansion required to select the classes
+            public List<RaceClassAvailability> AvailableClasses;    // the minimum AccountExpansion required to select the classes
 
-            public bool IsExpansionTrial;
-            public bool ForceCharacterTemplate; // forces the client to always use a character template when creating a new character. @see Templates. @todo implement
-            public Optional<ushort> NumPlayersHorde; // number of horde players in this realm. @todo implement
-            public Optional<ushort> NumPlayersAlliance; // number of alliance players in this realm. @todo implement
-            public Optional<int> ExpansionTrialExpiration; // expansion trial expiration unix timestamp
+            public bool IsExpansionTrial = false;
+            public bool ForceCharacterTemplate = false;             // forces the client to always use a character template when creating a new character. @see Templates. @todo implement
+            public Optional<ushort> NumPlayersHorde;                // number of horde players in this realm. @todo implement
+            public Optional<ushort> NumPlayersAlliance;             // number of alliance players in this realm. @todo implement
+            public Optional<int> ExpansionTrialExpiration;          // expansion trial expiration unix timestamp
 
-            public struct GameTime
+            public class GameTime
             {
-                public uint BillingPlan;
-                public uint TimeRemain;
-                public uint Unknown735;
-                public bool InGameRoom;
+                public uint BillingPlan = 0;
+                public uint TimeRemain = 0;
+                public uint Unknown735 = 0;
+                public bool InGameRoom = false;
             }
         }
     }
@@ -275,9 +275,6 @@ namespace Game.Networking.Packets
                 case AddressType.IPv6:
                     whereBuffer.WriteBytes(Payload.Where.IPv6);
                     break;
-                case AddressType.NamedSocket:
-                    whereBuffer.WriteString(Payload.Where.NameSocket);
-                    break;
                 default:
                     break;
             }
@@ -315,7 +312,6 @@ namespace Game.Networking.Packets
 
             public byte[] IPv4;
             public byte[] IPv6;
-            public string NameSocket;
         }
 
         public enum AddressType

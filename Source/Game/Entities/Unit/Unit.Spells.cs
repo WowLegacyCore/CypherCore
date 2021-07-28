@@ -1,6 +1,6 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -28,11 +28,11 @@ namespace Game.Entities
 {
     public partial class Unit
     {
-        public virtual bool HasSpell(uint spellId) { return false; }
+        public virtual bool HasSpell(uint spellId) => false;
 
-        public void SetInstantCast(bool set) { _instantCast = set; }
-        public bool CanInstantCast() { return _instantCast; }
-        
+        public void SetInstantCast(bool set) => _instantCast = set;
+        public bool CanInstantCast() => _instantCast;
+
         // function uses real base points (typically value - 1)
         public int CalculateSpellDamage(Unit target, SpellInfo spellProto, uint effect_index, int? basePoints = null, uint castItemId = 0, int itemLevel = -1)
         {
@@ -51,7 +51,7 @@ namespace Game.Entities
             Player thisPlayer = ToPlayer();
             if (thisPlayer)
             {
-                float overrideSP = thisPlayer.m_activePlayerData.OverrideSpellPowerByAPPercent;
+                float overrideSP = thisPlayer.GetUpdateField<float>(ActivePlayerFields.OverrideSpellPowerByAPPercent);
                 if (overrideSP > 0.0f)
                     return (int)(MathFunctions.CalculatePct(GetTotalAttackPowerValue(WeaponAttackType.BaseAttack), overrideSP) + 0.5f);
             }
@@ -131,7 +131,7 @@ namespace Game.Entities
                 if (spellProto.HasAttribute(SpellAttr3.ReqOffhand) && !spellProto.HasAttribute(SpellAttr3.MainHand))
                     attType = WeaponAttackType.OffAttack;
 
-                float APbonus = (float)(victim.GetTotalAuraModifier(attType != WeaponAttackType.RangedAttack ? AuraType.MeleeAttackPowerAttackerBonus : AuraType.RangedAttackPowerAttackerBonus));
+                float APbonus = victim.GetTotalAuraModifier(attType != WeaponAttackType.RangedAttack ? AuraType.MeleeAttackPowerAttackerBonus : AuraType.RangedAttackPowerAttackerBonus);
                 APbonus += GetTotalAttackPowerValue(attType);
                 DoneTotal += (int)(stack * ApCoeffMod * APbonus);
             }
@@ -156,7 +156,7 @@ namespace Game.Entities
                 DoneTotal += (int)(DoneAdvertisedBenefit * coeff * stack);
             }
 
-            float tmpDamage = (float)((int)pdamage + DoneTotal) * DoneTotalMod;
+            float tmpDamage = ((int)pdamage + DoneTotal) * DoneTotalMod;
             // apply spellmod to Done damage (flat and pct)
             Player _modOwner = GetSpellModOwner();
             if (_modOwner != null)
@@ -187,16 +187,16 @@ namespace Game.Entities
             }
 
             // Done total percent damage auras
-            float DoneTotalMod = 1.0f;
+            float doneTotalMod = 1.0f;
 
             // Pet damage?
             if (IsTypeId(TypeId.Unit) && !IsPet())
-                DoneTotalMod *= ToCreature().GetSpellDamageMod(ToCreature().GetCreatureTemplate().Rank);
+                doneTotalMod *= ToCreature().GetSpellDamageMod(ToCreature().GetCreatureTemplate().Rank);
 
             // Versatility
             Player modOwner = GetSpellModOwner();
             if (modOwner)
-                MathFunctions.AddPct(ref DoneTotalMod, modOwner.GetRatingBonusValue(CombatRating.VersatilityDamageDone) + modOwner.GetTotalAuraModifier(AuraType.ModVersatility));
+                MathFunctions.AddPct(ref doneTotalMod, modOwner.GetRatingBonusValue(CombatRating.VersatilityDamageDone) + modOwner.GetTotalAuraModifier(AuraType.ModVersatility));
 
             float maxModDamagePercentSchool = 0.0f;
             Player thisPlayer = ToPlayer();
@@ -205,20 +205,20 @@ namespace Game.Entities
                 for (int i = 0; i < (int)SpellSchools.Max; ++i)
                 {
                     if (Convert.ToBoolean((int)spellProto.GetSchoolMask() & (1 << i)))
-                        maxModDamagePercentSchool = Math.Max(maxModDamagePercentSchool, thisPlayer.m_activePlayerData.ModDamageDonePercent[i]);
+                        maxModDamagePercentSchool = Math.Max(maxModDamagePercentSchool, thisPlayer.GetUpdateField<float>(ActivePlayerFields.ModDamageDonePercent + i));
                 }
             }
             else
                 maxModDamagePercentSchool = GetTotalAuraMultiplierByMiscMask(AuraType.ModDamagePercentDone, (uint)spellProto.GetSchoolMask());
 
-            DoneTotalMod *= maxModDamagePercentSchool;
+            doneTotalMod *= maxModDamagePercentSchool;
 
             uint creatureTypeMask = victim.GetCreatureTypeMask();
 
-            DoneTotalMod *= GetTotalAuraMultiplierByMiscMask(AuraType.ModDamageDoneVersus, creatureTypeMask);
+            doneTotalMod *= GetTotalAuraMultiplierByMiscMask(AuraType.ModDamageDoneVersus, creatureTypeMask);
 
             // bonus against aurastate
-            DoneTotalMod *= GetTotalAuraMultiplier(AuraType.ModDamageDoneVersusAurastate, aurEff =>
+            doneTotalMod *= GetTotalAuraMultiplier(AuraType.ModDamageDoneVersusAurastate, aurEff =>
             {
                 if (victim.HasAuraState((AuraStateType)aurEff.GetMiscValue()))
                     return true;
@@ -226,7 +226,7 @@ namespace Game.Entities
             });
 
             // Add SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC percent bonus
-            MathFunctions.AddPct(ref DoneTotalMod, GetTotalAuraModifierByMiscValue(AuraType.ModDamageDoneForMechanic, (int)spellProto.Mechanic));
+            MathFunctions.AddPct(ref doneTotalMod, GetTotalAuraModifierByMiscValue(AuraType.ModDamageDoneForMechanic, (int)spellProto.Mechanic));
 
             // Custom scripted damage
             switch (spellProto.SpellFamilyName)
@@ -235,7 +235,7 @@ namespace Game.Entities
                     // Ice Lance (no unique family flag)
                     if (spellProto.Id == 228598)
                         if (victim.HasAuraState(AuraStateType.Frozen, spellProto, this))
-                            DoneTotalMod *= 3.0f;
+                            doneTotalMod *= 3.0f;
 
                     break;
                 case SpellFamilyNames.Warlock:
@@ -244,17 +244,17 @@ namespace Game.Entities
                     {
                         uint count = victim.GetDoTsByCaster(GetOwnerGUID());
                         if (count != 0)
-                            MathFunctions.AddPct(ref DoneTotalMod, 30 * count);
+                            MathFunctions.AddPct(ref doneTotalMod, 30 * count);
                     }
 
                     // Drain Soul - increased damage for targets under 20% HP
                     if (spellProto.Id == 198590)
                         if (HasAuraState(AuraStateType.Wounded20Percent))
-                            DoneTotalMod *= 2;
+                            doneTotalMod *= 2;
                     break;
             }
 
-            return DoneTotalMod;
+            return doneTotalMod;
         }
 
         public uint SpellDamageBonusTaken(Unit caster, SpellInfo spellProto, uint pdamage, DamageEffectType damagetype)
@@ -340,7 +340,7 @@ namespace Game.Entities
             Player thisPlayer = ToPlayer();
             if (thisPlayer != null)
             {
-                float overrideSP = thisPlayer.m_activePlayerData.OverrideSpellPowerByAPPercent;
+                float overrideSP = thisPlayer.GetUpdateField<float>(ActivePlayerFields.OverrideSpellPowerByAPPercent);
                 if (overrideSP > 0.0f)
                     return (uint)(MathFunctions.CalculatePct(GetTotalAttackPowerValue(WeaponAttackType.BaseAttack), overrideSP) + 0.5f);
             }
@@ -445,7 +445,7 @@ namespace Game.Entities
             if (effect.BonusCoefficientFromAP > 0.0f)
             {
                 WeaponAttackType attType = (spellProto.IsRangedWeaponSpell() && spellProto.DmgClass != SpellDmgClass.Melee) ? WeaponAttackType.RangedAttack : WeaponAttackType.BaseAttack;
-                float APbonus = (float)victim.GetTotalAuraModifier(attType == WeaponAttackType.BaseAttack ? AuraType.MeleeAttackPowerAttackerBonus : AuraType.RangedAttackPowerAttackerBonus);
+                float APbonus = victim.GetTotalAuraModifier(attType == WeaponAttackType.BaseAttack ? AuraType.MeleeAttackPowerAttackerBonus : AuraType.RangedAttackPowerAttackerBonus);
                 APbonus += GetTotalAttackPowerValue(attType);
 
                 DoneTotal += (int)(effect.BonusCoefficientFromAP * stack * APbonus);
@@ -488,7 +488,7 @@ namespace Game.Entities
                     DoneTotal = 0;
             }
 
-            float heal = (float)((int)healamount + DoneTotal) * DoneTotalMod;
+            float heal = ((int)healamount + DoneTotal) * DoneTotalMod;
 
             // apply spellmod to Done amount
             Player _modOwner = GetSpellModOwner();
@@ -526,7 +526,7 @@ namespace Game.Entities
                 float maxModDamagePercentSchool = 0.0f;
                 for (int i = 0; i < (int)SpellSchools.Max; ++i)
                     if (((int)spellProto.GetSchoolMask() & (1 << i)) != 0)
-                        maxModDamagePercentSchool = Math.Max(maxModDamagePercentSchool, thisPlayer.m_activePlayerData.ModHealingDonePercent[i]);
+                        maxModDamagePercentSchool = Math.Max(maxModDamagePercentSchool, thisPlayer.GetUpdateField<float>(ActivePlayerFields.ModHealingDonePercent + i));
 
                 return maxModDamagePercentSchool;
             }
@@ -576,11 +576,11 @@ namespace Game.Entities
             if (damagetype == DamageEffectType.DOT)
             {
                 // Healing over time taken percent
-                float minval_hot = (float)GetMaxNegativeAuraModifier(AuraType.ModHotPct);
+                float minval_hot = GetMaxNegativeAuraModifier(AuraType.ModHotPct);
                 if (minval_hot != 0)
                     MathFunctions.AddPct(ref TakenTotalMod, minval_hot);
 
-                float maxval_hot = (float)GetMaxPositiveAuraModifier(AuraType.ModHotPct);
+                float maxval_hot = GetMaxPositiveAuraModifier(AuraType.ModHotPct);
                 if (maxval_hot != 0)
                     MathFunctions.AddPct(ref TakenTotalMod, maxval_hot);
             }
@@ -614,16 +614,16 @@ namespace Game.Entities
             switch (spellInfo.DmgClass)
             {
                 case SpellDmgClass.Magic:
-                    {
-                        if (schoolMask.HasAnyFlag(SpellSchoolMask.Normal))
-                            crit_chance = 0.0f;
-                        // For other schools
-                        else if (IsTypeId(TypeId.Player))
-                            crit_chance = ToPlayer().m_activePlayerData.SpellCritPercentage;
-                        else
-                            crit_chance = BaseSpellCritChance;
-                        break;
-                    }
+                {
+                    if (schoolMask.HasAnyFlag(SpellSchoolMask.Normal))
+                        crit_chance = 0.0f;
+                    // For other schools
+                    else if (IsTypeId(TypeId.Player))
+                        crit_chance = ToPlayer().GetUpdateField<float>(ActivePlayerFields.SpellCritPercentage);
+                    else
+                        crit_chance = BaseSpellCritChance;
+                    break;
+                }
                 case SpellDmgClass.Melee:
                 case SpellDmgClass.Ranged:
                     crit_chance += GetUnitCriticalChanceDone(attackType);
@@ -653,74 +653,74 @@ namespace Game.Entities
             switch (spellInfo.DmgClass)
             {
                 case SpellDmgClass.Magic:
+                {
+                    // taken
+                    if (!spellInfo.IsPositive())
                     {
-                        // taken
-                        if (!spellInfo.IsPositive())
-                        {
-                            // Modify critical chance by victim SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE
-                            crit_chance += GetTotalAuraModifier(AuraType.ModAttackerSpellAndWeaponCritChance);
-                        }
+                        // Modify critical chance by victim SPELL_AURA_MOD_ATTACKER_SPELL_AND_WEAPON_CRIT_CHANCE
+                        crit_chance += GetTotalAuraModifier(AuraType.ModAttackerSpellAndWeaponCritChance);
+                    }
 
-                        if (caster)
+                    if (caster)
+                    {
+                        // scripted (increase crit chance ... against ... target by x%
+                        var mOverrideClassScript = caster.GetAuraEffectsByType(AuraType.OverrideClassScripts);
+                        foreach (var eff in mOverrideClassScript)
                         {
-                            // scripted (increase crit chance ... against ... target by x%
-                            var mOverrideClassScript = caster.GetAuraEffectsByType(AuraType.OverrideClassScripts);
-                            foreach (var eff in mOverrideClassScript)
-                            {
-                                if (!eff.IsAffectingSpell(spellInfo))
-                                    continue;
+                            if (!eff.IsAffectingSpell(spellInfo))
+                                continue;
 
-                                switch (eff.GetMiscValue())
-                                {
-                                    case 911: // Shatter
-                                        if (HasAuraState(AuraStateType.Frozen, spellInfo, this))
-                                        {
-                                            crit_chance *= 1.5f;
-                                            AuraEffect _eff = eff.GetBase().GetEffect(1);
-                                            if (_eff != null)
-                                                crit_chance += _eff.GetAmount();
-                                        }
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                            // Custom crit by class
-                            switch (spellInfo.SpellFamilyName)
+                            switch (eff.GetMiscValue())
                             {
-                                case SpellFamilyNames.Rogue:
-                                    // Shiv-applied poisons can't crit
-                                    if (caster.FindCurrentSpellBySpellId(5938) != null)
-                                        crit_chance = 0.0f;
-                                    break;
-                                case SpellFamilyNames.Shaman:
-                                    // Lava Burst
-                                    if (spellInfo.SpellFamilyFlags[1].HasAnyFlag(0x00001000u))
+                                case 911: // Shatter
+                                    if (HasAuraState(AuraStateType.Frozen, spellInfo, this))
                                     {
-                                        if (GetAuraEffect(AuraType.PeriodicDamage, SpellFamilyNames.Shaman, new FlagArray128(0x10000000, 0, 0), caster.GetGUID()) != null)
-                                            if (GetTotalAuraModifier(AuraType.ModAttackerSpellAndWeaponCritChance) > -100)
-                                                return 100.0f;
-                                        break;
+                                        crit_chance *= 1.5f;
+                                        AuraEffect _eff = eff.GetBase().GetEffect(1);
+                                        if (_eff != null)
+                                            crit_chance += _eff.GetAmount();
                                     }
                                     break;
-                            }
-
-                            // Spell crit suppression
-                            if (IsCreature())
-                            {
-                                int levelDiff = (int)(GetLevelForTarget(this) - caster.GetLevel());
-                                crit_chance -= levelDiff * 1.0f;
+                                default:
+                                    break;
                             }
                         }
-                        break;
+                        // Custom crit by class
+                        switch (spellInfo.SpellFamilyName)
+                        {
+                            case SpellFamilyNames.Rogue:
+                                // Shiv-applied poisons can't crit
+                                if (caster.FindCurrentSpellBySpellId(5938) != null)
+                                    crit_chance = 0.0f;
+                                break;
+                            case SpellFamilyNames.Shaman:
+                                // Lava Burst
+                                if (spellInfo.SpellFamilyFlags[1].HasAnyFlag(0x00001000u))
+                                {
+                                    if (GetAuraEffect(AuraType.PeriodicDamage, SpellFamilyNames.Shaman, new FlagArray128(0x10000000, 0, 0), caster.GetGUID()) != null)
+                                        if (GetTotalAuraModifier(AuraType.ModAttackerSpellAndWeaponCritChance) > -100)
+                                            return 100.0f;
+                                    break;
+                                }
+                                break;
+                        }
+
+                        // Spell crit suppression
+                        if (IsCreature())
+                        {
+                            int levelDiff = (int)(GetLevelForTarget(this) - caster.GetLevel());
+                            crit_chance -= levelDiff * 1.0f;
+                        }
                     }
+                    break;
+                }
                 case SpellDmgClass.Melee:
                 case SpellDmgClass.Ranged:
-                    {
-                        if (caster != null)
-                            crit_chance += GetUnitCriticalChanceTaken(caster, attackType, crit_chance);
-                        break;
-                    }
+                {
+                    if (caster != null)
+                        crit_chance += GetUnitCriticalChanceTaken(caster, attackType, crit_chance);
+                    break;
+                }
                 case SpellDmgClass.None:
                 default:
                     return 0f;
@@ -1046,10 +1046,7 @@ namespace Game.Entities
             spell.Prepare(targets, args.TriggeringAura);
         }
 
-        public void CastSpell(WorldObject target, uint spellId, bool triggered)
-        {
-            CastSpell(target, spellId, new CastSpellExtraArgs(triggered));
-        }
+        public void CastSpell(WorldObject target, uint spellId, bool triggered) => CastSpell(target, spellId, new CastSpellExtraArgs(triggered));
 
         public void CastSpell(WorldObject target, uint spellId, CastSpellExtraArgs args = null)
         {
@@ -1237,7 +1234,7 @@ namespace Game.Entities
             return spellInfo.GetSpellXSpellVisualId(this);
         }
 
-        public SpellHistory GetSpellHistory() { return _spellHistory; }
+        public SpellHistory GetSpellHistory() => _spellHistory;
 
         public static ProcFlagsHit CreateProcHitMask(SpellNonMeleeDamage damageInfo, SpellMissInfo missCondition)
         {
@@ -1342,7 +1339,7 @@ namespace Game.Entities
             return 0;
         }
 
-        public virtual bool IsFocusing(Spell focusSpell = null, bool withDelay = false) { return false; }
+        public virtual bool IsFocusing(Spell focusSpell = null, bool withDelay = false) => false;
 
         /// <summary>
         /// Check if our current channel spell has attribute SPELL_ATTR5_CAN_CHANNEL_WHEN_MOVING
@@ -1371,7 +1368,7 @@ namespace Game.Entities
                     return true;
             return false;
         }
-        
+
         bool HasBreakableByDamageAuraType(AuraType type, uint excludeAura)
         {
             var auras = GetAuraEffectsByType(type);
@@ -1481,20 +1478,11 @@ namespace Game.Entities
             SendEnergizeSpellLog(victim, spellInfo.Id, gain, overEnergize, powerType);
         }
 
-        public void ApplySpellImmune(uint spellId, SpellImmunity op, SpellSchoolMask type, bool apply)
-        {
-            ApplySpellImmune(spellId, op, (uint)type, apply);
-        }
+        public void ApplySpellImmune(uint spellId, SpellImmunity op, SpellSchoolMask type, bool apply) => ApplySpellImmune(spellId, op, (uint)type, apply);
 
-        public void ApplySpellImmune(uint spellId, SpellImmunity op, AuraType type, bool apply)
-        {
-            ApplySpellImmune(spellId, op, (uint)type, apply);
-        }
+        public void ApplySpellImmune(uint spellId, SpellImmunity op, AuraType type, bool apply) => ApplySpellImmune(spellId, op, (uint)type, apply);
 
-        public void ApplySpellImmune(uint spellId, SpellImmunity op, SpellEffectName type, bool apply)
-        {
-            ApplySpellImmune(spellId, op, (uint)type, apply);
-        }
+        public void ApplySpellImmune(uint spellId, SpellImmunity op, SpellEffectName type, bool apply) => ApplySpellImmune(spellId, op, (uint)type, apply);
 
         public void ApplySpellImmune(uint spellId, SpellImmunity op, uint type, bool apply)
         {
@@ -1894,7 +1882,7 @@ namespace Game.Entities
 
             if (!(spellInfo.HasAttribute(SpellAttr0.Ability | SpellAttr0.Tradespell) || spellInfo.HasAttribute(SpellAttr3.NoDoneBonus))
                 && (IsTypeId(TypeId.Player) && spellInfo.SpellFamilyName != 0) || IsTypeId(TypeId.Unit))
-                castTime = CanInstantCast() ? 0 : (int)(castTime * m_unitData.ModCastingSpeed);
+                castTime = CanInstantCast() ? 0 : (int)(castTime * GetUpdateField<float>(UnitFields.ModCastingSpeed));
             else if (spellInfo.HasAttribute(SpellAttr0.ReqAmmo) && !spellInfo.HasAttribute(SpellAttr2.AutorepeatFlag))
                 castTime = (int)(castTime * m_modAttackSpeedPct[(int)WeaponAttackType.RangedAttack]);
             else if (Global.SpellMgr.IsPartOfSkillLine(SkillType.Cooking, spellInfo.Id) && HasAura(67556)) // cooking with Chef Hat.
@@ -1915,7 +1903,7 @@ namespace Game.Entities
 
             if (!(spellInfo.HasAttribute(SpellAttr0.Ability) || spellInfo.HasAttribute(SpellAttr0.Tradespell) || spellInfo.HasAttribute(SpellAttr3.NoDoneBonus)) &&
                 (IsTypeId(TypeId.Player) && spellInfo.SpellFamilyName != 0) || IsTypeId(TypeId.Unit))
-                duration = (int)(duration * m_unitData.ModCastingSpeed);
+                duration = (int)(duration * GetUpdateField<float>(UnitFields.ModCastingSpeed));
             else if (spellInfo.HasAttribute(SpellAttr0.ReqAmmo) && !spellInfo.HasAttribute(SpellAttr2.AutorepeatFlag))
                 duration = (int)(duration * m_modAttackSpeedPct[(int)WeaponAttackType.RangedAttack]);
         }
@@ -1947,10 +1935,7 @@ namespace Game.Entities
             return value;
         }
 
-        public ushort GetMaxSkillValueForLevel(Unit target = null)
-        {
-            return (ushort)(target != null ? GetLevelForTarget(target) : GetLevel() * 5);
-        }
+        public ushort GetMaxSkillValueForLevel(Unit target = null) => (ushort)(target != null ? GetLevelForTarget(target) : GetLevel() * 5);
         public Player GetSpellModOwner()
         {
             if (IsTypeId(TypeId.Player))
@@ -1965,10 +1950,7 @@ namespace Game.Entities
             return null;
         }
 
-        public Spell GetCurrentSpell(CurrentSpellTypes spellType)
-        {
-            return m_currentSpells.LookupByKey(spellType);
-        }
+        public Spell GetCurrentSpell(CurrentSpellTypes spellType) => m_currentSpells.LookupByKey(spellType);
         public void SetCurrentCastSpell(Spell pSpell)
         {
             Cypher.Assert(pSpell != null);                                         // NULL may be never passed here, use InterruptSpell or InterruptNonMeleeSpells
@@ -1985,51 +1967,51 @@ namespace Game.Entities
             switch (CSpellType)
             {
                 case CurrentSpellTypes.Generic:
+                {
+                    // generic spells always break channeled not delayed spells
+                    InterruptSpell(CurrentSpellTypes.Channeled, false);
+
+                    // autorepeat breaking
+                    if (GetCurrentSpell(CurrentSpellTypes.AutoRepeat) != null)
                     {
-                        // generic spells always break channeled not delayed spells
-                        InterruptSpell(CurrentSpellTypes.Channeled, false);
-
-                        // autorepeat breaking
-                        if (GetCurrentSpell(CurrentSpellTypes.AutoRepeat) != null)
-                        {
-                            // break autorepeat if not Auto Shot
-                            if (m_currentSpells[CurrentSpellTypes.AutoRepeat].m_spellInfo.Id != 75)
-                                InterruptSpell(CurrentSpellTypes.AutoRepeat);
-                            m_AutoRepeatFirstCast = true;
-                        }
-                        if (pSpell.m_spellInfo.CalcCastTime() > 0)
-                            AddUnitState(UnitState.Casting);
-
-                        break;
-                    }
-                case CurrentSpellTypes.Channeled:
-                    {
-                        // channel spells always break generic non-delayed and any channeled spells
-                        InterruptSpell(CurrentSpellTypes.Generic, false);
-                        InterruptSpell(CurrentSpellTypes.Channeled);
-
-                        // it also does break autorepeat if not Auto Shot
-                        if (GetCurrentSpell(CurrentSpellTypes.AutoRepeat) != null &&
-                            m_currentSpells[CurrentSpellTypes.AutoRepeat].m_spellInfo.Id != 75)
+                        // break autorepeat if not Auto Shot
+                        if (m_currentSpells[CurrentSpellTypes.AutoRepeat].m_spellInfo.Id != 75)
                             InterruptSpell(CurrentSpellTypes.AutoRepeat);
+                        m_AutoRepeatFirstCast = true;
+                    }
+                    if (pSpell.m_spellInfo.CalcCastTime() > 0)
                         AddUnitState(UnitState.Casting);
 
-                        break;
-                    }
-                case CurrentSpellTypes.AutoRepeat:
-                    {
-                        // only Auto Shoot does not break anything
-                        if (pSpell.m_spellInfo.Id != 75)
-                        {
-                            // generic autorepeats break generic non-delayed and channeled non-delayed spells
-                            InterruptSpell(CurrentSpellTypes.Generic, false);
-                            InterruptSpell(CurrentSpellTypes.Channeled, false);
-                        }
-                        // special action: set first cast flag
-                        m_AutoRepeatFirstCast = true;
+                    break;
+                }
+                case CurrentSpellTypes.Channeled:
+                {
+                    // channel spells always break generic non-delayed and any channeled spells
+                    InterruptSpell(CurrentSpellTypes.Generic, false);
+                    InterruptSpell(CurrentSpellTypes.Channeled);
 
-                        break;
+                    // it also does break autorepeat if not Auto Shot
+                    if (GetCurrentSpell(CurrentSpellTypes.AutoRepeat) != null &&
+                        m_currentSpells[CurrentSpellTypes.AutoRepeat].m_spellInfo.Id != 75)
+                        InterruptSpell(CurrentSpellTypes.AutoRepeat);
+                    AddUnitState(UnitState.Casting);
+
+                    break;
+                }
+                case CurrentSpellTypes.AutoRepeat:
+                {
+                    // only Auto Shoot does not break anything
+                    if (pSpell.m_spellInfo.Id != 75)
+                    {
+                        // generic autorepeats break generic non-delayed and channeled non-delayed spells
+                        InterruptSpell(CurrentSpellTypes.Generic, false);
+                        InterruptSpell(CurrentSpellTypes.Channeled, false);
                     }
+                    // special action: set first cast flag
+                    m_AutoRepeatFirstCast = true;
+
+                    break;
+                }
                 default:
                     break; // other spell types don't break anything now
             }
@@ -2091,11 +2073,6 @@ namespace Game.Entities
                 if (crit_bonus != 0)
                     MathFunctions.AddPct(ref crit_bonus, (int)crit_mod);
 
-                MathFunctions.AddPct(ref crit_bonus, victim.GetTotalAuraModifier(AuraType.ModCriticalDamageTakenFromCaster, aurEff =>
-                {
-                    return aurEff.GetCasterGUID() == caster.GetGUID();
-                }));
-
                 crit_bonus -= (int)damage;
 
                 // adds additional damage to critBonus (from talents)
@@ -2136,10 +2113,10 @@ namespace Game.Entities
             }
         }
 
-        public bool HasStealthAura() { return HasAuraType(AuraType.ModStealth); }
-        public bool HasInvisibilityAura() { return HasAuraType(AuraType.ModInvisibility); }
-        public bool IsFeared() { return HasAuraType(AuraType.ModFear); }
-        public bool IsFrozen() { return HasAuraState(AuraStateType.Frozen); }
+        public bool HasStealthAura() => HasAuraType(AuraType.ModStealth);
+        public bool HasInvisibilityAura() => HasAuraType(AuraType.ModInvisibility);
+        public bool IsFeared() => HasAuraType(AuraType.ModFear);
+        public bool IsFrozen() => HasAuraState(AuraStateType.Frozen);
         public bool IsPolymorphed()
         {
             uint transformId = GetTransForm();
@@ -2189,20 +2166,7 @@ namespace Game.Entities
                     Battleground bg = bgPlayer.GetBattleground();
                     if (bg)
                         bg.UpdatePlayerScore(bgPlayer, ScoreType.HealingDone, (uint)gain);
-
-                    // use the actual gain, as the overheal shall not be counted, skip gain 0 (it ignored anyway in to criteria)
-                    if (gain != 0)
-                        bgPlayer.UpdateCriteria(CriteriaTypes.HealingDone, (uint)gain, 0, 0, victim);
-
-                    bgPlayer.UpdateCriteria(CriteriaTypes.HighestHealCasted, addhealth);
                 }
-            }
-
-            Player player = victim.ToPlayer();
-            if (player != null)
-            {
-                player.UpdateCriteria(CriteriaTypes.TotalHealingReceived, (uint)gain);
-                player.UpdateCriteria(CriteriaTypes.HighestHealingReceived, addhealth);
             }
 
             if (gain != 0)
@@ -2240,15 +2204,15 @@ namespace Game.Entities
         {
             if (val > 0.0f)
             {
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModCastingSpeed), val, !apply);
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModSpellHaste), val, !apply);
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModHasteRegen), val, !apply);
+                ApplyModUpdateField<float>(UnitFields.ModCastingSpeed, val, !apply);
+                ApplyModUpdateField<float>(UnitFields.ModSpellHaste, val, !apply);
+                ApplyModUpdateField<float>(UnitFields.ModHasteRegen, val, !apply);
             }
             else
             {
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModCastingSpeed), -val, apply);
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModSpellHaste), -val, apply);
-                ApplyPercentModUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.ModHasteRegen), -val, apply);
+                ApplyModUpdateField<float>(UnitFields.ModCastingSpeed, -val, apply);
+                ApplyModUpdateField<float>(UnitFields.ModSpellHaste, -val, apply);
+                ApplyModUpdateField<float>(UnitFields.ModHasteRegen, -val, apply);
             }
         }
 
@@ -2305,74 +2269,74 @@ namespace Game.Entities
                     // Melee and Ranged Spells
                     case SpellDmgClass.Ranged:
                     case SpellDmgClass.Melee:
+                    {
+                        // Physical Damage
+                        if (damageSchoolMask.HasAnyFlag(SpellSchoolMask.Normal))
                         {
-                            // Physical Damage
-                            if (damageSchoolMask.HasAnyFlag(SpellSchoolMask.Normal))
+                            // Spells with this attribute were already calculated in MeleeSpellHitResult
+                            if (!spellInfo.HasAttribute(SpellAttr3.BlockableSpell))
                             {
-                                // Spells with this attribute were already calculated in MeleeSpellHitResult
-                                if (!spellInfo.HasAttribute(SpellAttr3.BlockableSpell))
-                                {
-                                    // Get blocked status
-                                    blocked = IsSpellBlocked(victim, spellInfo, attackType);
-                                }
+                                // Get blocked status
+                                blocked = IsSpellBlocked(victim, spellInfo, attackType);
                             }
-
-                            if (crit)
-                            {
-                                damageInfo.HitInfo |= HitInfo.CriticalHit;
-
-                                // Calculate crit bonus
-                                uint crit_bonus = (uint)damage;
-                                // Apply crit_damage bonus for melee spells
-                                Player modOwner = GetSpellModOwner();
-                                if (modOwner != null)
-                                    modOwner.ApplySpellMod(spellInfo, SpellModOp.CritDamageAndHealing, ref crit_bonus);
-                                damage += (int)crit_bonus;
-
-                                // Increase crit damage from SPELL_AURA_MOD_CRIT_DAMAGE_BONUS
-                                float critPctDamageMod = (GetTotalAuraMultiplierByMiscMask(AuraType.ModCritDamageBonus, (uint)spellInfo.GetSchoolMask()) - 1.0f) * 100;
-
-                                if (critPctDamageMod != 0)
-                                    MathFunctions.AddPct(ref damage, (int)critPctDamageMod);
-                            }
-
-                            // Spell weapon based damage CAN BE crit & blocked at same time
-                            if (blocked)
-                            {
-                                // double blocked amount if block is critical
-                                float value = victim.GetBlockPercent(GetLevel());
-                                if (victim.IsBlockCritical())
-                                    value *= 2; // double blocked percent
-                                damageInfo.blocked = (uint)MathFunctions.CalculatePct(damage, value);
-                                if (damage <= damageInfo.blocked)
-                                {
-                                    damageInfo.blocked = (uint)damage;
-                                    damageInfo.fullBlock = true;
-                                }
-                                damage -= (int)damageInfo.blocked;
-                            }
-
-                            if (CanApplyResilience())
-                                ApplyResilience(victim, ref damage);
-
-                            break;
                         }
+
+                        if (crit)
+                        {
+                            damageInfo.HitInfo |= HitInfo.CriticalHit;
+
+                            // Calculate crit bonus
+                            uint crit_bonus = (uint)damage;
+                            // Apply crit_damage bonus for melee spells
+                            Player modOwner = GetSpellModOwner();
+                            if (modOwner != null)
+                                modOwner.ApplySpellMod(spellInfo, SpellModOp.CritDamageAndHealing, ref crit_bonus);
+                            damage += (int)crit_bonus;
+
+                            // Increase crit damage from SPELL_AURA_MOD_CRIT_DAMAGE_BONUS
+                            float critPctDamageMod = (GetTotalAuraMultiplierByMiscMask(AuraType.ModCritDamageBonus, (uint)spellInfo.GetSchoolMask()) - 1.0f) * 100;
+
+                            if (critPctDamageMod != 0)
+                                MathFunctions.AddPct(ref damage, (int)critPctDamageMod);
+                        }
+
+                        // Spell weapon based damage CAN BE crit & blocked at same time
+                        if (blocked)
+                        {
+                            // double blocked amount if block is critical
+                            float value = victim.GetBlockPercent(GetLevel());
+                            if (victim.IsBlockCritical())
+                                value *= 2; // double blocked percent
+                            damageInfo.blocked = (uint)MathFunctions.CalculatePct(damage, value);
+                            if (damage <= damageInfo.blocked)
+                            {
+                                damageInfo.blocked = (uint)damage;
+                                damageInfo.fullBlock = true;
+                            }
+                            damage -= (int)damageInfo.blocked;
+                        }
+
+                        if (CanApplyResilience())
+                            ApplyResilience(victim, ref damage);
+
+                        break;
+                    }
                     // Magical Attacks
                     case SpellDmgClass.None:
                     case SpellDmgClass.Magic:
+                    {
+                        // If crit add critical bonus
+                        if (crit)
                         {
-                            // If crit add critical bonus
-                            if (crit)
-                            {
-                                damageInfo.HitInfo |= HitInfo.CriticalHit;
-                                damage = (int)SpellCriticalDamageBonus(this, spellInfo, (uint)damage, victim);
-                            }
-
-                            if (CanApplyResilience())
-                                ApplyResilience(victim, ref damage);
-
-                            break;
+                            damageInfo.HitInfo |= HitInfo.CriticalHit;
+                            damage = (int)SpellCriticalDamageBonus(this, spellInfo, (uint)damage, victim);
                         }
+
+                        if (CanApplyResilience())
+                            ApplyResilience(victim, ref damage);
+
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -2431,7 +2395,7 @@ namespace Game.Entities
             packet.CasterGUID = log.attacker.GetGUID();
             packet.CastID = log.castId;
             packet.SpellID = (int)(log.Spell != null ? log.Spell.Id : 0);
-            packet.Visual = log.SpellVisual;
+            packet.SpellXSpellVisualID = log.SpellXSpellVisualID;
             packet.Damage = (int)log.damage;
             packet.OriginalDamage = (int)log.originalDamage;
             if (log.damage > log.preHitHealth)
@@ -2467,7 +2431,7 @@ namespace Game.Entities
             spellLogEffect.Effect = (uint)aura.GetAuraType();
             spellLogEffect.Amount = info.damage;
             spellLogEffect.OriginalDamage = (int)info.originalDamage;
-            spellLogEffect.OverHealOrKill = (uint)info.overDamage;
+            spellLogEffect.OverHealOrKill = info.overDamage;
             spellLogEffect.SchoolMaskOrPower = (uint)aura.GetSpellInfo().GetSchoolMask();
             spellLogEffect.AbsorbedOrAmplitude = info.absorb;
             spellLogEffect.Resisted = info.resist;
@@ -2608,8 +2572,8 @@ namespace Game.Entities
             return null;
         }
 
-        public virtual bool IsAffectedByDiminishingReturns() { return (GetCharmerOrOwnerPlayerOrPlayerItself() != null); }
-        
+        public virtual bool IsAffectedByDiminishingReturns() => GetCharmerOrOwnerPlayerOrPlayerItself() != null;
+
         public DiminishingLevels GetDiminishing(DiminishingGroup group)
         {
             DiminishingReturn diminish = m_Diminishing[(int)group];
@@ -2837,15 +2801,9 @@ namespace Game.Entities
         }
 
         // Auras
-        public List<Aura> GetSingleCastAuras() { return m_scAuras; }
-        public List<KeyValuePair<uint, Aura>> GetOwnedAuras()
-        {
-            return m_ownedAuras.KeyValueList;
-        }
-        public List<KeyValuePair<uint, AuraApplication>> GetAppliedAuras()
-        {
-            return m_appliedAuras.KeyValueList;
-        }
+        public List<Aura> GetSingleCastAuras() => m_scAuras;
+        public List<KeyValuePair<uint, Aura>> GetOwnedAuras() => m_ownedAuras.KeyValueList;
+        public List<KeyValuePair<uint, AuraApplication>> GetAppliedAuras() => m_appliedAuras.KeyValueList;
 
         public Aura AddAura(uint spellId, Unit target)
         {
@@ -2974,16 +2932,11 @@ namespace Game.Entities
             return result;
         }
 
-        public bool HasAura(uint spellId, ObjectGuid casterGUID = default, ObjectGuid itemCasterGUID = default, uint reqEffMask = 0)
-        {
-            return GetAuraApplication(spellId, casterGUID, itemCasterGUID, reqEffMask) != null;
-        }
+        public bool HasAura(uint spellId, ObjectGuid casterGUID = default, ObjectGuid itemCasterGUID = default, uint reqEffMask = 0) =>
+            GetAuraApplication(spellId, casterGUID, itemCasterGUID, reqEffMask) != null;
 
-        public bool HasAura(Func<Aura, bool> predicate)
-        {
-            return GetAuraApplication(predicate) != null;
-        }
-        
+        public bool HasAura(Func<Aura, bool> predicate) => GetAuraApplication(predicate) != null;
+
         public bool HasAuraEffect(uint spellId, uint effIndex, ObjectGuid casterGUID = default)
         {
             var range = m_appliedAuras.LookupByKey(spellId);
@@ -3036,10 +2989,7 @@ namespace Game.Entities
             return spellInfo.GetMinRange(!IsHostileTo(target));
         }
 
-        public bool HasAuraType(AuraType auraType)
-        {
-            return !m_modAuras.LookupByKey(auraType).Empty();
-        }
+        public bool HasAuraType(AuraType auraType) => !m_modAuras.LookupByKey(auraType).Empty();
         public bool HasAuraTypeWithCaster(AuraType auratype, ObjectGuid caster)
         {
             var mTotalAuraList = GetAuraEffectsByType(auratype);
@@ -3120,7 +3070,7 @@ namespace Game.Entities
 
             return false;
         }
-        
+
         public uint GetAuraCount(uint spellId)
         {
             uint count = 0;
@@ -3195,15 +3145,10 @@ namespace Game.Entities
             return dispelList;
         }
 
-        bool IsInterruptFlagIgnoredForSpell(SpellAuraInterruptFlags2 flag, Unit unit, SpellInfo spellInfo)
-        {
-            return false;
-        }
-        bool IsInterruptFlagIgnoredForSpell(SpellAuraInterruptFlags flag, Unit unit, SpellInfo spellInfo)
-        {
-            return flag == SpellAuraInterruptFlags.Moving && unit.HasAuraTypeWithAffectMask(AuraType.CastWhileWalking, spellInfo);
-        }
-        
+        bool IsInterruptFlagIgnoredForSpell(SpellAuraInterruptFlags2 flag, Unit unit, SpellInfo spellInfo) => false;
+        bool IsInterruptFlagIgnoredForSpell(SpellAuraInterruptFlags flag, Unit unit, SpellInfo spellInfo) =>
+            flag == SpellAuraInterruptFlags.Moving && unit.HasAuraTypeWithAffectMask(AuraType.CastWhileWalking, spellInfo);
+
         public void RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags flag, uint except = 0)
         {
             if (!HasInterruptFlag(flag))
@@ -3785,9 +3730,9 @@ namespace Game.Entities
             uint mask = 1u << ((int)flag - 1);
             if (apply)
             {
-                if ((m_unitData.AuraState & mask) == 0)
+                if ((GetUpdateField<uint>(UnitFields.AuraState) & mask) == 0)
                 {
-                    SetUpdateFieldFlagValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.AuraState), mask);
+                    AddFlag(UnitFields.AuraState, mask);
                     if (IsTypeId(TypeId.Player))
                     {
                         var sp_list = ToPlayer().GetSpellMap();
@@ -3822,9 +3767,9 @@ namespace Game.Entities
             }
             else
             {
-                if ((m_unitData.AuraState & mask) != 0)
+                if ((GetUpdateField<uint>(UnitFields.AuraState) & mask) != 0)
                 {
-                    RemoveUpdateFieldFlagValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.AuraState), mask);
+                    RemoveFlag(UnitFields.AuraState, mask);
 
                     foreach (var app in GetAppliedAuras())
                     {
@@ -3860,37 +3805,19 @@ namespace Game.Entities
                 }
             }
 
-            return (m_unitData.AuraState & (1 << ((int)flag - 1))) != 0;
+            return (GetUpdateField<uint>(UnitFields.AuraState) & (1 << ((int)flag - 1))) != 0;
         }
 
-        SpellSchools GetSpellSchoolByAuraGroup(UnitMods unitMod)
+        SpellSchools GetSpellSchoolByAuraGroup(UnitMods unitMod) => unitMod switch
         {
-            SpellSchools school = SpellSchools.Normal;
-
-            switch (unitMod)
-            {
-                case UnitMods.ResistanceHoly:
-                    school = SpellSchools.Holy;
-                    break;
-                case UnitMods.ResistanceFire:
-                    school = SpellSchools.Fire;
-                    break;
-                case UnitMods.ResistanceNature:
-                    school = SpellSchools.Nature;
-                    break;
-                case UnitMods.ResistanceFrost:
-                    school = SpellSchools.Frost;
-                    break;
-                case UnitMods.ResistanceShadow:
-                    school = SpellSchools.Shadow;
-                    break;
-                case UnitMods.ResistanceArcane:
-                    school = SpellSchools.Arcane;
-                    break;
-            }
-
-            return school;
-        }
+            UnitMods.ResistanceHoly => SpellSchools.Holy,
+            UnitMods.ResistanceFire => SpellSchools.Fire,
+            UnitMods.ResistanceNature => SpellSchools.Nature,
+            UnitMods.ResistanceFrost => SpellSchools.Frost,
+            UnitMods.ResistanceShadow => SpellSchools.Shadow,
+            UnitMods.ResistanceArcane => SpellSchools.Arcane,
+            _ => SpellSchools.Normal,
+        };
 
         public void _ApplyAllAuraStatMods()
         {
@@ -3982,10 +3909,7 @@ namespace Game.Entities
                     // update for casters, some shouldn't 'see' the aura state
                     uint aStateMask = (1u << ((int)auraState - 1));
                     if ((aStateMask & (uint)AuraStateType.PerCasterAuraStateMask) != 0)
-                    {
-                        m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.AuraState);
-                        ForceUpdateFieldChange();
-                    }
+                        ForceValuesUpdateAtIndex(UnitFields.AuraState);
                 }
             }
 
@@ -4039,7 +3963,7 @@ namespace Game.Entities
             }
             return null;
         }
-        
+
         // spell mustn't have familyflags
         public AuraEffect GetAuraEffect(AuraType type, SpellFamilyNames family, FlagArray128 familyFlag, ObjectGuid casterGUID = default)
         {
@@ -4058,21 +3982,8 @@ namespace Game.Entities
 
         }
 
-        public AuraApplication GetAuraApplication(uint spellId, ObjectGuid casterGUID = default, ObjectGuid itemCasterGUID = default, uint reqEffMask = 0, AuraApplication except = null)
-        {
-            return GetAuraApplication(spellId, app =>
-            {
-                Aura aura = app.GetBase();
-
-                if (((aura.GetEffectMask() & reqEffMask) == reqEffMask) && (casterGUID.IsEmpty() || aura.GetCasterGUID() == casterGUID)
-                    && (itemCasterGUID.IsEmpty() || aura.GetCastItemGUID() == itemCasterGUID) && (except == null || except != app))
-                {
-                    return true;
-                }
-
-                return false;
-            });
-        }
+        public AuraApplication GetAuraApplication(uint spellId, ObjectGuid casterGUID = default, ObjectGuid itemCasterGUID = default, uint reqEffMask = 0, AuraApplication except = null) =>
+            GetAuraApplication(spellId, app => { Aura aura = app.GetBase(); if (((aura.GetEffectMask() & reqEffMask) == reqEffMask) && (casterGUID.IsEmpty() || aura.GetCasterGUID() == casterGUID) && (itemCasterGUID.IsEmpty() || aura.GetCastItemGUID() == itemCasterGUID) && (except == null || except != app)) { return true; } return false; });
 
         public AuraApplication GetAuraApplication(uint spellId, Func<AuraApplication, bool> predicate)
         {
@@ -4127,10 +4038,10 @@ namespace Game.Entities
             AuraApplication aurApp = GetAuraApplication(predicate);
             return aurApp?.GetBase();
         }
-        
+
         public uint BuildAuraStateUpdateForTarget(Unit target)
         {
-            uint auraStates = m_unitData.AuraState & ~(uint)AuraStateType.PerCasterAuraStateMask;
+            uint auraStates = GetUpdateField<uint>(UnitFields.AuraState) & ~(uint)AuraStateType.PerCasterAuraStateMask;
             foreach (var state in m_auraStateAuras)
                 if (Convert.ToBoolean((1 << (int)state.Key - 1) & (uint)AuraStateType.PerCasterAuraStateMask))
                     if (state.Value.GetBase().GetCasterGUID() == target.GetGUID())
@@ -4139,7 +4050,7 @@ namespace Game.Entities
             return auraStates;
         }
 
-        public bool CanProc() { return m_procDeep == 0; }
+        public bool CanProc() => m_procDeep == 0;
 
         public void _ApplyAuraEffect(Aura aura, uint effIndex)
         {
@@ -4170,11 +4081,8 @@ namespace Game.Entities
             {
                 uint aStateMask = (1u << ((int)aState - 1));
                 // force update so the new caster registers it
-                if (aStateMask.HasAnyFlag((uint)AuraStateType.PerCasterAuraStateMask) && (m_unitData.AuraState & aStateMask) != 0)
-                {
-                    m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.AuraState);
-                    ForceUpdateFieldChange();
-                }
+                if (aStateMask.HasAnyFlag((uint)AuraStateType.PerCasterAuraStateMask) && (GetUpdateField<uint>(UnitFields.AuraState) & aStateMask) != 0)
+                    ForceValuesUpdateAtIndex(UnitFields.AuraState);
                 else
                     ModifyAuraState(aState, true);
             }
@@ -4214,7 +4122,6 @@ namespace Game.Entities
             aura.SetIsSingleTarget(caster != null && aura.GetSpellInfo().IsSingleTarget() || aura.HasEffectType(AuraType.ControlVehicle));
             if (aura.IsSingleTarget())
             {
-
                 // @HACK: Player is not in world during loading auras.
                 //Single target auras are not saved or loaded from database
                 //but may be created as a result of aura links (player mounts with passengers)
@@ -4229,7 +4136,6 @@ namespace Game.Entities
                     var aur = scAuras[i];
                     if (aur != aura && aur.IsSingleTargetWith(aura))
                         aur.Remove();
-
                 }
             }
         }
@@ -4317,7 +4223,7 @@ namespace Game.Entities
                 {
                     Unit caster = aura.GetCaster();
                     if (caster && caster.IsTypeId(TypeId.Player))
-                        Spell.SendCastResult(caster.ToPlayer(), aura.GetSpellInfo(), aura.GetSpellVisual(), aura.GetCastGUID(), SpellCastResult.AuraBounced);
+                        Spell.SendCastResult(caster.ToPlayer(), aura.GetSpellInfo(), aura.GetSpellXSpellVisualID(), aura.GetCastGUID(), SpellCastResult.AuraBounced);
                 }
 
                 aura.Remove();
@@ -4417,15 +4323,9 @@ namespace Game.Entities
             return null;
         }
 
-        public List<AuraEffect> GetAuraEffectsByType(AuraType type)
-        {
-            return m_modAuras.LookupByKey(type);
-        }
+        public List<AuraEffect> GetAuraEffectsByType(AuraType type) => m_modAuras.LookupByKey(type);
 
-        public int GetTotalAuraModifier(AuraType auratype)
-        {
-            return GetTotalAuraModifier(auratype, aurEff => true);
-        }
+        public int GetTotalAuraModifier(AuraType auratype) => GetTotalAuraModifier(auratype, aurEff => true);
 
         public int GetTotalAuraModifier(AuraType auratype, Func<AuraEffect, bool> predicate)
         {
@@ -4451,10 +4351,7 @@ namespace Game.Entities
             return modifier;
         }
 
-        public float GetTotalAuraMultiplier(AuraType auratype)
-        {
-            return GetTotalAuraMultiplier(auratype, aurEff => true);
-        }
+        public float GetTotalAuraMultiplier(AuraType auratype) => GetTotalAuraMultiplier(auratype, aurEff => true);
 
         public float GetTotalAuraMultiplier(AuraType auratype, Func<AuraEffect, bool> predicate)
         {
@@ -4483,10 +4380,7 @@ namespace Game.Entities
             return multiplier;
         }
 
-        public int GetMaxPositiveAuraModifier(AuraType auratype)
-        {
-            return GetMaxPositiveAuraModifier(auratype, aurEff => true);
-        }
+        public int GetMaxPositiveAuraModifier(AuraType auratype) => GetMaxPositiveAuraModifier(auratype, aurEff => true);
 
         public int GetMaxPositiveAuraModifier(AuraType auratype, Func<AuraEffect, bool> predicate)
         {
@@ -4504,10 +4398,7 @@ namespace Game.Entities
             return modifier;
         }
 
-        public int GetMaxNegativeAuraModifier(AuraType auratype)
-        {
-            return GetMaxNegativeAuraModifier(auratype, aurEff => true);
-        }
+        public int GetMaxNegativeAuraModifier(AuraType auratype) => GetMaxNegativeAuraModifier(auratype, aurEff => true);
 
         public int GetMaxNegativeAuraModifier(AuraType auratype, Func<AuraEffect, bool> predicate)
         {
@@ -4523,65 +4414,23 @@ namespace Game.Entities
             return modifier;
         }
 
-        public int GetTotalAuraModifierByMiscMask(AuraType auratype, int miscMask)
-        {
-            return GetTotalAuraModifier(auratype, aurEff =>
-            {
-                if ((aurEff.GetMiscValue() & miscMask) != 0)
-                    return true;
-                return false;
-            });
-        }
+        public int GetTotalAuraModifierByMiscMask(AuraType auratype, int miscMask) =>
+            GetTotalAuraModifier(auratype, aurEff => { if ((aurEff.GetMiscValue() & miscMask) != 0) return true; return false; });
 
-        public float GetTotalAuraMultiplierByMiscMask(AuraType auratype, uint miscMask)
-        {
-            return GetTotalAuraMultiplier(auratype, aurEff =>
-            {
-                if ((aurEff.GetMiscValue() & miscMask) != 0)
-                    return true;
-                return false;
-            });
-        }
+        public float GetTotalAuraMultiplierByMiscMask(AuraType auratype, uint miscMask) =>
+            GetTotalAuraMultiplier(auratype, aurEff => { if ((aurEff.GetMiscValue() & miscMask) != 0) return true; return false; });
 
-        public int GetMaxPositiveAuraModifierByMiscMask(AuraType auratype, uint miscMask, AuraEffect except = null)
-        {
-            return GetMaxPositiveAuraModifier(auratype, aurEff =>
-            {
-                if (except != aurEff && (aurEff.GetMiscValue() & miscMask) != 0)
-                    return true;
-                return false;
-            });
-        }
+        public int GetMaxPositiveAuraModifierByMiscMask(AuraType auratype, uint miscMask, AuraEffect except = null) =>
+            GetMaxPositiveAuraModifier(auratype, aurEff => { if (except != aurEff && (aurEff.GetMiscValue() & miscMask) != 0) return true; return false; });
 
-        public int GetMaxNegativeAuraModifierByMiscMask(AuraType auratype, uint miscMask)
-        {
-            return GetMaxNegativeAuraModifier(auratype, aurEff =>
-            {
-                if ((aurEff.GetMiscValue() & miscMask) != 0)
-                    return true;
-                return false;
-            });
-        }
+        public int GetMaxNegativeAuraModifierByMiscMask(AuraType auratype, uint miscMask) =>
+            GetMaxNegativeAuraModifier(auratype, aurEff => { if ((aurEff.GetMiscValue() & miscMask) != 0) return true; return false; });
 
-        public int GetTotalAuraModifierByMiscValue(AuraType auratype, int miscValue)
-        {
-            return GetTotalAuraModifier(auratype, aurEff =>
-            {
-                if (aurEff.GetMiscValue() == miscValue)
-                    return true;
-                return false;
-            });
-        }
+        public int GetTotalAuraModifierByMiscValue(AuraType auratype, int miscValue) =>
+            GetTotalAuraModifier(auratype, aurEff => { if (aurEff.GetMiscValue() == miscValue) return true; return false; });
 
-        public float GetTotalAuraMultiplierByMiscValue(AuraType auratype, int miscValue)
-        {
-            return GetTotalAuraMultiplier(auratype, aurEff =>
-            {
-                if (aurEff.GetMiscValue() == miscValue)
-                    return true;
-                return false;
-            });
-        }
+        public float GetTotalAuraMultiplierByMiscValue(AuraType auratype, int miscValue) =>
+            GetTotalAuraMultiplier(auratype, aurEff => { if (aurEff.GetMiscValue() == miscValue) return true; return false; });
 
         int GetMaxPositiveAuraModifierByMiscValue(AuraType auratype, int miscValue)
         {
@@ -4656,8 +4505,8 @@ namespace Game.Entities
             }
         }
 
-        public SortedSet<AuraApplication> GetVisibleAuras() { return m_visibleAuras; }
-        public bool HasVisibleAura(AuraApplication aurApp) { return m_visibleAuras.Contains(aurApp); }
-        public void SetVisibleAuraUpdate(AuraApplication aurApp) { m_visibleAurasToUpdate.Add(aurApp); }
+        public SortedSet<AuraApplication> GetVisibleAuras() => m_visibleAuras;
+        public bool HasVisibleAura(AuraApplication aurApp) => m_visibleAuras.Contains(aurApp);
+        public void SetVisibleAuraUpdate(AuraApplication aurApp) => m_visibleAurasToUpdate.Add(aurApp);
     }
 }

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -1216,16 +1216,6 @@ namespace Game
                         }
                         break;
                     }
-                case ConditionTypes.Achievement:
-                    {
-                        AchievementRecord achievement = CliDB.AchievementStorage.LookupByKey(cond.ConditionValue1);
-                        if (achievement == null)
-                        {
-                            Log.outError(LogFilter.Sql, "{0} has non existing achivement id ({1}), skipped.", cond.ToString(true), cond.ConditionValue1);
-                            return false;
-                        }
-                        break;
-                    }
                 case ConditionTypes.Class:
                     {
                         if (Convert.ToBoolean(cond.ConditionValue1 & ~(uint)Class.ClassMaskAllPlayable))
@@ -1513,16 +1503,6 @@ namespace Game
                         }
                         break;
                     }
-                case ConditionTypes.RealmAchievement:
-                    {
-                        AchievementRecord achievement = CliDB.AchievementStorage.LookupByKey(cond.ConditionValue1);
-                        if (achievement == null)
-                        {
-                            Log.outError(LogFilter.Sql, "{0} has non existing realm first achivement id ({1}), skipped.", cond.ToString(), cond.ConditionValue1);
-                            return false;
-                        }
-                        break;
-                    }
                 case ConditionTypes.StandState:
                     {
                         bool valid;
@@ -1721,7 +1701,7 @@ namespace Game
 
         public static bool IsPlayerMeetingCondition(Player player, PlayerConditionRecord condition)
         {
-            ContentTuningLevels? levels = Global.DB2Mgr.GetContentTuningData(condition.ContentTuningID, player.m_playerData.CtrOptions.GetValue().ContentTuningConditionMask);
+            ContentTuningLevels? levels = Global.DB2Mgr.GetContentTuningData(condition.ContentTuningID);
             if (levels.HasValue)
             {
                 byte minLevel = (byte)(condition.Flags.HasAnyFlag(0x800) ? levels.Value.MinLevelWithDelta : levels.Value.MinLevel);
@@ -1858,10 +1838,10 @@ namespace Game
                 }
             }
 
-            if (condition.PvpMedal != 0 && !Convert.ToBoolean((1 << (condition.PvpMedal - 1)) & player.m_activePlayerData.PvpMedals))
+            if (condition.PvpMedal != 0 && !Convert.ToBoolean((1 << (condition.PvpMedal - 1)) & player.GetUpdateField<uint>(ActivePlayerFields.PvpMedals)))
                 return false;
 
-            if (condition.LifetimeMaxPVPRank != 0 && player.m_activePlayerData.LifetimeMaxRank != condition.LifetimeMaxPVPRank)
+            if (condition.LifetimeMaxPVPRank != 0 && player.GetUpdateField<byte>(ActivePlayerFields.Bytes1, (byte)ActivePlayerBytes1Offset.LifetimeMaxRank) != condition.LifetimeMaxPVPRank)
                 return false;
 
             if (condition.MovementFlags[0] != 0 && !Convert.ToBoolean((uint)player.GetUnitMovementFlags() & condition.MovementFlags[0]))
@@ -1917,7 +1897,7 @@ namespace Game
                 {
                     uint questBit = Global.DB2Mgr.GetQuestUniqueBitFlag(condition.PrevQuestID[i]);
                     if (questBit != 0)
-                        results[i] = (player.m_activePlayerData.QuestCompleted[((int)questBit - 1) >> 6] & (1ul << (((int)questBit - 1) & 63))) != 0;
+                        results[i] = (player.GetUpdateField<ulong>(ActivePlayerFields.QuestCompleted + (((int)questBit - 1) >> 6)) & (1ul << (((int)questBit - 1) & 63))) != 0;
                 }
 
                 if (!PlayerConditionLogic(condition.PrevQuestLogic, results))
@@ -2011,7 +1991,7 @@ namespace Game
                 {
                     AreaTableRecord area = CliDB.AreaTableStorage.LookupByKey(condition.Explored[i]);
                     if (area != null)
-                        if (area.AreaBit != -1 && !Convert.ToBoolean(player.m_activePlayerData.ExploredZones[area.AreaBit / 64] & (1ul << ((int)area.AreaBit % 64))))
+                        if (area.AreaBit != -1 && !Convert.ToBoolean(player.GetUpdateField<ulong>(ActivePlayerFields.ExploredZones + area.AreaBit / 64) & (1ul << ((int)area.AreaBit % 64))))
                             return false;
                 }
             }
@@ -2059,26 +2039,6 @@ namespace Game
             if (condition.WeatherID != 0)
                 if (player.GetMap().GetZoneWeather(player.GetZoneId()) != (WeatherState)condition.WeatherID)
                     return false;
-
-            if (condition.Achievement[0] != 0)
-            {
-                results = new bool[condition.Achievement.Length];
-                for (var i = 0; i < results.Length; ++i)
-                    results[i] = true;
-
-                for (var i = 0; i < condition.Achievement.Length; ++i)
-                {
-                    if (condition.Achievement[i] != 0)
-                    {
-                        // if (condition.Flags & 2) { any character on account completed it } else { current character only }
-                        // TODO: part of accountwide achievements
-                        results[i] = player.HasAchieved(condition.Achievement[i]);
-                    }
-                }
-
-                if (!PlayerConditionLogic(condition.AchievementLogic, results))
-                    return false;
-            }
 
             if (condition.LfgStatus[0] != 0)
             {
@@ -2150,22 +2110,16 @@ namespace Game
                 }
             }
 
-            if (condition.MinAvgItemLevel != 0 && Math.Floor(player.m_playerData.AvgItemLevel[0]) < condition.MinAvgItemLevel)
+            if (condition.MinAvgItemLevel != 0 && Math.Floor(player.GetUpdateField<float>(PlayerFields.AvgItemLevel)) < condition.MinAvgItemLevel)
                 return false;
 
-            if (condition.MaxAvgItemLevel != 0 && Math.Floor(player.m_playerData.AvgItemLevel[0]) > condition.MaxAvgItemLevel)
+            if (condition.MaxAvgItemLevel != 0 && Math.Floor(player.GetUpdateField<float>(PlayerFields.AvgItemLevel)) > condition.MaxAvgItemLevel)
                 return false;
 
-            if (condition.MinAvgEquippedItemLevel != 0 && Math.Floor(player.m_playerData.AvgItemLevel[1]) < condition.MinAvgEquippedItemLevel)
+            if (condition.MinAvgEquippedItemLevel != 0 && Math.Floor(player.GetUpdateField<float>(PlayerFields.AvgItemLevel + 1)) < condition.MinAvgEquippedItemLevel)
                 return false;
 
-            if (condition.MaxAvgEquippedItemLevel != 0 && Math.Floor(player.m_playerData.AvgItemLevel[1]) > condition.MaxAvgEquippedItemLevel)
-                return false;
-
-            if (condition.ModifierTreeID != 0 && !player.ModifierTreeSatisfied(condition.ModifierTreeID))
-                return false;
-
-            if (condition.CovenantID != 0 && player.m_playerData.CovenantID != condition.CovenantID)
+            if (condition.MaxAvgEquippedItemLevel != 0 && Math.Floor(player.GetUpdateField<float>(PlayerFields.AvgItemLevel + 1)) > condition.MaxAvgEquippedItemLevel)
                 return false;
 
             return true;
@@ -2300,7 +2254,7 @@ namespace Game
                         return 1;
 
                     //todo fix me
-                    // init with predetermined seed                      
+                    // init with predetermined seed
                     //std::mt19937 mt(arg2? arg2 : 1);
                     //value = mt() % arg1 + 1;
                     return 0;

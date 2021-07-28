@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,15 +18,13 @@
 using Framework.Constants;
 using Game.BattleGrounds;
 using Game.Entities;
-using Game.Guilds;
 using Game.Networking.Packets;
-using System;
 using System.Collections.Generic;
 
 namespace Game.Arenas
 {
     public class Arena : Battleground
-    {        
+    {
         public Arena(BattlegroundTemplate battlegroundTemplate) : base(battlegroundTemplate)
         {
             StartDelayTimes[BattlegroundConst.EventIdFirst] = BattlegroundStartTimeIntervals.Delay1m;
@@ -153,15 +151,10 @@ namespace Game.Arenas
             // arena rating calculation
             if (IsRated())
             {
-                uint loserTeamRating;
-                uint loserMatchmakerRating;
                 int loserChange = 0;
                 int loserMatchmakerChange = 0;
-                uint winnerTeamRating;
-                uint winnerMatchmakerRating;
                 int winnerChange = 0;
                 int winnerMatchmakerChange = 0;
-                bool guildAwarded = false;
 
                 // In case of arena draw, follow this logic:
                 // winnerArenaTeam => ALLIANCE, loserArenaTeam => HORDE
@@ -172,10 +165,10 @@ namespace Game.Arenas
                 {
                     // In case of arena draw, follow this logic:
                     // winnerMatchmakerRating => ALLIANCE, loserMatchmakerRating => HORDE
-                    loserTeamRating = loserArenaTeam.GetRating();
-                    loserMatchmakerRating = GetArenaMatchmakerRating(winner == 0 ? Team.Horde : GetOtherTeam(winner));
-                    winnerTeamRating = winnerArenaTeam.GetRating();
-                    winnerMatchmakerRating = GetArenaMatchmakerRating(winner == 0 ? Team.Alliance : winner);
+                    uint loserTeamRating = loserArenaTeam.GetRating();
+                    uint loserMatchmakerRating = GetArenaMatchmakerRating(winner == 0 ? Team.Horde : GetOtherTeam(winner));
+                    uint winnerTeamRating = winnerArenaTeam.GetRating();
+                    uint winnerMatchmakerRating = GetArenaMatchmakerRating(winner == 0 ? Team.Alliance : winner);
 
                     if (winner != 0)
                     {
@@ -251,26 +244,9 @@ namespace Game.Arenas
                         // per player calculation
                         if (team == winner)
                         {
-                            // update achievement BEFORE personal rating update
-                            uint rating = player.GetArenaPersonalRating(winnerArenaTeam.GetSlot());
-                            player.UpdateCriteria(CriteriaTypes.WinRatedArena, rating != 0 ? rating : 1);
-                            player.UpdateCriteria(CriteriaTypes.WinRatedArena, GetMapId());
-
                             // Last standing - Rated 5v5 arena & be solely alive player
                             if (GetArenaType() == ArenaTypes.Team5v5 && aliveWinners == 1 && player.IsAlive())
                                 player.CastSpell(player, ArenaSpellIds.LastManStanding, true);
-
-                            if (!guildAwarded)
-                            {
-                                guildAwarded = true;
-                                ulong guildId = GetBgMap().GetOwnerGuildId(player.GetBGTeam());
-                                if (guildId != 0)
-                                {
-                                    Guild guild = Global.GuildMgr.GetGuildById(guildId);
-                                    if (guild)
-                                        guild.UpdateCriteria(CriteriaTypes.WinRatedArena, Math.Max(winnerArenaTeam.GetRating(), 1), 0, 0, null, player);
-                                }
-                            }
 
                             winnerArenaTeam.MemberWon(player, loserMatchmakerRating, winnerMatchmakerChange);
                         }
@@ -280,9 +256,6 @@ namespace Game.Arenas
                                 winnerArenaTeam.MemberLost(player, loserMatchmakerRating, winnerMatchmakerChange);
 
                             loserArenaTeam.MemberLost(player, winnerMatchmakerRating, loserMatchmakerChange);
-
-                            // Arena lost => reset the win_rated_arena having the "no_lose" condition
-                            player.ResetCriteria(CriteriaFailEvent.LoseRankedArenaMatchWithTeamSize, 0);
                         }
                     }
 

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -36,8 +36,7 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             Locale loc = handler.GetSessionDbcLocale();
@@ -53,7 +52,7 @@ namespace Game.Chat
                     if (string.IsNullOrEmpty(name))
                         continue;
 
-                    string activeStr = target.m_playerData.PlayerTitle == titleInfo.MaskID
+                    string activeStr = target.GetUpdateField<uint>(PlayerFields.PlayerTitle) == titleInfo.MaskID
                     ? handler.GetCypherString(CypherStrings.Active) : "";
 
                     string titleNameStr = string.Format(name.ConvertFormatSyntax(), targetName);
@@ -73,10 +72,7 @@ namespace Game.Chat
         [Command("rename", RBACPermissions.CommandCharacterRename, true)]
         static bool HandleCharacterRenameCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             string newNameStr = args.NextString();
@@ -197,9 +193,7 @@ namespace Game.Chat
         [Command("level", RBACPermissions.CommandCharacterLevel, true)]
         static bool HandleCharacterLevelCommand(StringArguments args, CommandHandler handler)
         {
-            string nameStr;
-            string levelStr;
-            handler.ExtractOptFirstArg(args, out nameStr, out levelStr);
+            handler.ExtractOptFirstArg(args, out string nameStr, out string levelStr);
             if (string.IsNullOrEmpty(levelStr))
                 return false;
 
@@ -210,10 +204,7 @@ namespace Game.Chat
                 levelStr = null;                                    // current level will used
             }
 
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             int oldlevel = (int)(target ? target.GetLevel() : Global.CharacterCacheStorage.GetCharacterLevelByGuid(targetGuid));
@@ -241,10 +232,7 @@ namespace Game.Chat
         [Command("customize", RBACPermissions.CommandCharacterCustomize, true)]
         static bool HandleCharacterCustomizeCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.UPD_ADD_AT_LOGIN_FLAG);
@@ -269,15 +257,11 @@ namespace Game.Chat
         [Command("changeaccount", RBACPermissions.CommandCharacterChangeaccount, true)]
         static bool HandleCharacterChangeAccountCommand(StringArguments args, CommandHandler handler)
         {
-            string playerNameStr;
-            string accountName;
-            handler.ExtractOptFirstArg(args, out playerNameStr, out accountName);
+            handler.ExtractOptFirstArg(args, out string playerNameStr, out string accountName);
             if (accountName.IsEmpty())
                 return false;
 
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(new StringArguments(playerNameStr), out _, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(new StringArguments(playerNameStr), out _, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             CharacterCacheEntry characterInfo = Global.CharacterCacheStorage.GetCharacterCacheByGuid(targetGuid);
@@ -343,10 +327,7 @@ namespace Game.Chat
         [Command("changefaction", RBACPermissions.CommandCharacterChangefaction, true)]
         static bool HandleCharacterChangeFactionCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.UPD_ADD_AT_LOGIN_FLAG);
@@ -371,10 +352,7 @@ namespace Game.Chat
         [Command("changerace", RBACPermissions.CommandCharacterChangerace, true)]
         static bool HandleCharacterChangeRaceCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.UPD_ADD_AT_LOGIN_FLAG);
@@ -401,8 +379,7 @@ namespace Game.Chat
         [Command("reputation", RBACPermissions.CommandCharacterReputation, true)]
         static bool HandleCharacterReputationCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             Locale loc = handler.GetSessionDbcLocale();
@@ -476,8 +453,7 @@ namespace Game.Chat
                 accountId = Global.CharacterCacheStorage.GetCharacterAccountIdByGuid(characterGuid);
             }
 
-            string accountName;
-            Global.AccountMgr.GetName(accountId, out accountName);
+            Global.AccountMgr.GetName(accountId, out string accountName);
 
             Player.DeleteFromDB(characterGuid, accountId, true, true);
             handler.SendSysMessage(CypherStrings.CharacterDeleted, characterName, characterGuid.ToString(), accountName, accountId);
@@ -732,9 +708,7 @@ namespace Game.Chat
         [CommandNonGroup("levelup", RBACPermissions.CommandLevelup)]
         static bool LevelUp(StringArguments args, CommandHandler handler)
         {
-            string nameStr;
-            string levelStr;
-            handler.ExtractOptFirstArg(args, out nameStr, out levelStr);
+            handler.ExtractOptFirstArg(args, out string nameStr, out string levelStr);
 
             // exception opt second arg: .character level $name
             if (!string.IsNullOrEmpty(levelStr) && !levelStr.IsNumber())
@@ -743,10 +717,7 @@ namespace Game.Chat
                 levelStr = null;                                    // current level will used
             }
 
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             int oldlevel = (int)(target ? target.GetLevel() : Global.CharacterCacheStorage.GetCharacterLevelByGuid(targetGuid));

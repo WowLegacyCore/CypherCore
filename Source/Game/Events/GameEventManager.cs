@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -884,16 +884,16 @@ namespace Game
             }
         }
 
-        public ulong GetNPCFlag(Creature cr)
+        public NPCFlags GetNPCFlag(Creature cr)
         {
-            ulong mask = 0;
+            NPCFlags mask = NPCFlags.None;
             ulong guid = cr.GetSpawnId();
 
             foreach (var id in m_ActiveEvents)
             {
                 foreach (var pair in mGameEventNPCFlags[id])
                     if (pair.guid == guid)
-                        mask |= pair.npcflag;
+                        mask |= (NPCFlags)pair.npcflag;
             }
 
             return mask;
@@ -1123,19 +1123,22 @@ namespace Game
                         var creatureBounds = map.GetCreatureBySpawnIdStore().LookupByKey(spawnId);
                         foreach (var creature in creatureBounds)
                         {
-                            ulong npcflag = GetNPCFlag(creature);
+                            NPCFlags npcflag = GetNPCFlag(creature);
                             CreatureTemplate creatureTemplate = creature.GetCreatureTemplate();
                             if (creatureTemplate != null)
-                                npcflag |= (ulong)creatureTemplate.Npcflag;
+                                npcflag |= creatureTemplate.NpcFlags;
 
-                            creature.SetNpcFlags((NPCFlags)(npcflag & 0xFFFFFFFF));
-                            creature.SetNpcFlags2((NPCFlags2)(npcflag >> 32));
+                            creature.SetNpcFlags(npcflag);
+
+                            // TODO: Support multiple NpcFlags!!!
+                            // creature.SetNpcFlags2((NPCFlags2)(npcflag >> 32));
+
                             // reset gossip options, since the flag change might have added / removed some
                             //cr.ResetGossipOptions();
                         }
                     }
                 });
-            }            
+            }
         }
 
         void UpdateBattlegroundSettings()
@@ -1283,7 +1286,7 @@ namespace Game
                         var gameobjectBounds = map.GetGameObjectBySpawnIdStore().LookupByKey(guid);
                         foreach (var go in gameobjectBounds)
                             go.AddObjectToRemoveList();
-                        
+
                     });
                 }
             }
@@ -1312,7 +1315,7 @@ namespace Game
                 {
                     var creatureBounds = map.GetCreatureBySpawnIdStore().LookupByKey(tuple.Item1);
                     foreach (var creature in creatureBounds)
-                    { 
+                    {
                         if (activate)
                         {
                             tuple.Item2.equipement_id_prev = creature.GetCurrentEquipmentId();

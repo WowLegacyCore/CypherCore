@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -58,8 +58,7 @@ namespace Game.Movement
 
             for (int src = 0, dst = 1; dst < taxi.Count; src = dst++)
             {
-                uint path, cost;
-                Global.ObjectMgr.GetTaxiPath(taxi[src], taxi[dst], out path, out cost);
+                Global.ObjectMgr.GetTaxiPath(taxi[src], taxi[dst], out uint path, out uint cost);
                 if (path > CliDB.TaxiPathNodesByPath.Keys.Max())
                     return;
 
@@ -156,10 +155,7 @@ namespace Game.Movement
                         _pointsForPathSwitch.RemoveAt(0);
                         player.m_taxi.NextTaxiDestination();
                         if (!_pointsForPathSwitch.Empty())
-                        {
-                            player.UpdateCriteria(CriteriaTypes.GoldSpentForTravelling, (uint)_pointsForPathSwitch[0].Cost);
                             player.ModifyMoney(-_pointsForPathSwitch[0].Cost);
-                        }
                     }
 
                     if (pointId == _currentNode)

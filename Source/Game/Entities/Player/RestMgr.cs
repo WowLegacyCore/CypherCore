@@ -1,4 +1,5 @@
 ﻿using Framework.Constants;
+using System;
 
 namespace Game.Entities
 {
@@ -27,7 +28,7 @@ namespace Game.Entities
                     if (_player.GetLevel() >= WorldConfig.GetIntValue(WorldCfg.MaxPlayerLevel))
                         restBonus = 0;
 
-                    next_level_xp = _player.m_activePlayerData.NextLevelXP;
+                    next_level_xp = _player.GetUpdateField<uint>(ActivePlayerFields.NextLevelXP);
                     affectedByRaF = true;
                     break;
                 case RestTypes.Honor:
@@ -35,7 +36,7 @@ namespace Game.Entities
                     if (_player.IsMaxHonorLevel())
                         restBonus = 0;
 
-                    next_level_xp = _player.m_activePlayerData.HonorNextLevel;
+                    next_level_xp = _player.GetUpdateField<uint>(ActivePlayerFields.HonorNextLevel);
                     break;
                 default:
                     return;
@@ -114,11 +115,7 @@ namespace Game.Entities
             if (rested_bonus > xp) // max rested_bonus == xp or (r+x) = 200% xp
                 rested_bonus = xp;
 
-            uint rested_loss = rested_bonus;
-            if (restType == RestTypes.XP)
-               MathFunctions.AddPct(ref rested_loss, _player.GetTotalAuraModifier(AuraType.ModRestedXpConsumption));
-
-            SetRestBonus(restType, GetRestBonus(restType) - rested_loss);
+            SetRestBonus(restType, GetRestBonus(restType) - rested_bonus);
 
             Log.outDebug(LogFilter.Player, "RestMgr.GetRestBonus: Player '{0}' ({1}) gain {2} xp (+{3} Rested Bonus). Rested points={4}",
                 _player.GetGUID().ToString(), _player.GetName(), xp + rested_bonus, rested_bonus, GetRestBonus(restType));
@@ -152,16 +149,16 @@ namespace Game.Entities
             switch (restType)
             {
                 case RestTypes.Honor:
-                    return _player.m_activePlayerData.HonorNextLevel / 72000.0f * bubble;
+                    return _player.GetUpdateField<uint>(ActivePlayerFields.HonorNextLevel) / 72000.0f * bubble;
                 case RestTypes.XP:
-                    return _player.m_activePlayerData.NextLevelXP / 72000.0f * bubble;
+                    return _player.GetUpdateField<uint>(ActivePlayerFields.NextLevelXP) / 72000.0f * bubble;
                 default:
                     return 0.0f;
             }
         }
 
-        public float GetRestBonus(RestTypes restType) { return _restBonus[(int)restType]; }
-        public bool HasRestFlag(RestFlag restFlag) { return (_restFlagMask & restFlag) != 0; }
-        public uint GetInnTriggerId() { return _innAreaTriggerId; }
+        public float GetRestBonus(RestTypes restType) => _restBonus[(int)restType];
+        public bool HasRestFlag(RestFlag restFlag) => _restFlagMask.HasAnyFlag(restFlag);
+        public uint GetInnTriggerId() => _innAreaTriggerId;
     }
 }

@@ -67,8 +67,7 @@ namespace Game.Collision
         Vector3 zVec;
         public override void Invoke(Vector3 point, uint entry)
         {
-            float group_Z;
-            if (prims[(int)entry].IsInsideObject(point, zVec, out group_Z))
+            if (prims[(int)entry].IsInsideObject(point, zVec, out float group_Z))
             {
                 if (group_Z < zDist)
                 {

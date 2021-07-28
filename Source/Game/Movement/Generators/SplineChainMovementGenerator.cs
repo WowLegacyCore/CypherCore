@@ -67,7 +67,7 @@ namespace Game.Movement
             if (actualDuration != thisLink.ExpectedDuration)
             {
                 Log.outDebug(LogFilter.Movement, "{0}: Sent spline for {1}, duration is {2} ms. Expected was {3} ms (delta {4} ms). Adjusting.", me.GetGUID().ToString(), index, actualDuration, thisLink.ExpectedDuration, actualDuration - thisLink.ExpectedDuration);
-                toNext = (uint)(actualDuration / thisLink.ExpectedDuration * toNext);
+                toNext = actualDuration / thisLink.ExpectedDuration * toNext;
             }
             else
             {

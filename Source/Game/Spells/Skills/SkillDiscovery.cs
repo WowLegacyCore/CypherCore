@@ -102,7 +102,7 @@ namespace Game.Spells
                     }
 
                     foreach (var _spell_idx in bounds)
-                        SkillDiscoveryStorage.Add(-(int)_spell_idx.SkillLine, new SkillDiscoveryEntry(spellId, reqSkillValue, chance));
+                        SkillDiscoveryStorage.Add(-_spell_idx.SkillLine, new SkillDiscoveryEntry(spellId, reqSkillValue, chance));
                 }
                 else
                 {

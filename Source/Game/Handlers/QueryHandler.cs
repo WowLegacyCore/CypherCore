@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -301,32 +301,6 @@ namespace Game
                     questCompletionNPC.NPCs.Add(id | 0x80000000); // GO mask
 
                 response.QuestCompletionNPCs.Add(questCompletionNPC);
-            }
-
-            SendPacket(response);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.QuestPoiQuery, Processing = PacketProcessing.Inplace)]
-        void HandleQuestPOIQuery(QuestPOIQuery packet)
-        {
-            if (packet.MissingQuestCount >= SharedConst.MaxQuestLogSize)
-                return;
-
-            // Read quest ids and add the in a unordered_set so we don't send POIs for the same quest multiple times
-            HashSet<uint> questIds = new();
-            for (int i = 0; i < packet.MissingQuestCount; ++i)
-                questIds.Add(packet.MissingQuestPOIs[i]); // QuestID
-
-            QuestPOIQueryResponse response = new();
-
-            foreach (uint questId in questIds)
-            {
-                if (_player.FindQuestSlot(questId) != SharedConst.MaxQuestLogSize)
-                {
-                    QuestPOIData poiData = Global.ObjectMgr.GetQuestPOIData(questId);
-                    if (poiData != null)
-                        response.QuestPOIDataStats.Add(poiData);
-                }
             }
 
             SendPacket(response);

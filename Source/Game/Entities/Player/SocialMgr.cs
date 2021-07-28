@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -146,7 +146,7 @@ namespace Game.Entities
             return social;
         }
 
-        public void RemovePlayerSocial(ObjectGuid guid) { _socialMap.Remove(guid); }
+        public void RemovePlayerSocial(ObjectGuid guid) => _socialMap.Remove(guid);
     }
 
     public class PlayerSocial
@@ -169,7 +169,7 @@ namespace Game.Entities
             // check client limits
             if (GetNumberOfSocialsWithFlag(flag) >= (((flag & SocialFlag.Friend) != 0) ? SocialManager.FriendLimit : SocialManager.IgnoreLimit))
                 return false;
-            
+
             var friendInfo = _playerSocialMap.LookupByKey(friendGuid);
             if (friendInfo != null)
             {
@@ -271,19 +271,13 @@ namespace Game.Entities
             return false;
         }
 
-        public bool HasFriend(ObjectGuid friendGuid)
-        {
-            return _HasContact(friendGuid, SocialFlag.Friend);
-        }
+        public bool HasFriend(ObjectGuid friendGuid) => _HasContact(friendGuid, SocialFlag.Friend);
 
-        public bool HasIgnore(ObjectGuid ignoreGuid)
-        {
-            return _HasContact(ignoreGuid, SocialFlag.Ignored);
-        }
+        public bool HasIgnore(ObjectGuid ignoreGuid) => _HasContact(ignoreGuid, SocialFlag.Ignored);
 
-        ObjectGuid GetPlayerGUID() { return m_playerGUID; }
+        ObjectGuid GetPlayerGUID() => m_playerGUID;
 
-        public void SetPlayerGUID(ObjectGuid guid) { m_playerGUID = guid; }
+        public void SetPlayerGUID(ObjectGuid guid) => m_playerGUID = guid;
     }
 
     public class FriendInfo

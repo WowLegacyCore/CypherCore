@@ -541,7 +541,7 @@ namespace Game.Chat
                             {
                                 isSpawned = true;
                                 if (isBlocked)
-                                    handler.SendSysMessage($" | |-- '{groupData.name}' would be allowed to spawn by boss state {bossStateId} being {(EncounterState)actualState}, but this is overruled");
+                                    handler.SendSysMessage($" | |-- '{groupData.name}' would be allowed to spawn by boss state {bossStateId} being {actualState}, but this is overruled");
                                 else
                                     handler.SendSysMessage($" | |-- '{groupData.name}' is allowed to spawn because boss state {bossStateId} is {(EncounterState)bossStateId}.");
                             }
@@ -552,7 +552,7 @@ namespace Game.Chat
                             }
                         }
                         else
-                            handler.SendSysMessage($" | |-- '{groupData.name}' could've been {(isSpawn ? "allowed to spawn" : "blocked from spawning")} if boss state {bossStateId} matched mask 0x{tuple.Item3:X2}; but it is {(EncounterState)actualState} . 0x{(1 << (int)actualState):X2}, which does not match.");
+                            handler.SendSysMessage($" | |-- '{groupData.name}' could've been {(isSpawn ? "allowed to spawn" : "blocked from spawning")} if boss state {bossStateId} matched mask 0x{tuple.Item3:X2}; but it is {actualState} . 0x{(1 << (int)actualState):X2}, which does not match.");
                     }
                     if (isBlocked)
                         handler.SendSysMessage($" | |=> '{groupData.name}' is not active due to a blocking rule being matched");
@@ -868,8 +868,8 @@ namespace Game.Chat
             if (entry == 0)
                 return false;
 
-            float x, y, z, o = handler.GetSession().GetPlayer().GetOrientation();
-            handler.GetSession().GetPlayer().GetClosePoint(out x, out y, out z, handler.GetSession().GetPlayer().GetCombatReach());
+            float o = handler.GetSession().GetPlayer().GetOrientation();
+            handler.GetSession().GetPlayer().GetClosePoint(out float x, out float y, out float z, handler.GetSession().GetPlayer().GetCombatReach());
 
             uint id = args.NextUInt32();
             if (id == 0)

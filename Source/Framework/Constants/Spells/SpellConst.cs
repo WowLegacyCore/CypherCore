@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -2275,100 +2275,6 @@ namespace Framework.Constants
         RandomizeArchaeologyDigsites = 187,
         SummonStabledPetAsGuardian = 188,
         Loot = 189, // NYI, lootid in MiscValue ?
-        ChangePartyMembers = 190, // MiscValueA = 1 is join, MiscValueA = 0 is leave - used by NPCs
-        TeleportToDigsite = 191,
-        UncageBattlepet = 192,
-        StartPetBattle = 193,
-        Unk194 = 194,
-        PlaySceneScriptPackage = 195,
-        CreateSceneObject = 196, // MiscValueA = SceneId, goes into guid as entry, SceneScriptPackageId goes into ObjectData::Entry
-        CreatePersonalSceneObject = 197, // MiscValueA = SceneId, goes into guid as entry, SceneScriptPackageId goes into ObjectData::Entry
-        PlayScene = 198, // NYI
-        DespawnSummon = 199, // MiscValueA is some kind of unknown internal id
-        HealBattlepetPct = 200, // NYI
-        EnableBattlePets = 201, // NYI
-        ApplyAreaAuraSummons = 202,
-        RemoveAura2 = 203,
-        ChangeBattlepetQuality = 204,
-        LaunchQuestChoice = 205,
-        AlterItem = 206,
-        Unk207 = 207,
-        SetReputation = 208,
-        Unk209 = 209,
-        LearnGarrisonBuilding = 210,
-        LearnGarrisonSpecialization = 211,
-        RemoveAuraBySApellLabel = 212,
-        JumpDest2 = 213,
-        CreateGarrison = 214,
-        UpgradeCharacterSpells = 215,
-        CreateShipment = 216,
-        UpgradeGarrison = 217,
-        Unk218 = 218,
-        CreateConversation = 219,
-        AddGarrisonFollower = 220,
-        AddGarrisonMission = 221,
-        CreateHeirloomItem = 222,
-        ChangeItemBonuses = 223,
-        ActivateGarrisonBuilding = 224,
-        GrantBattlepetLevel = 225,
-        TriggerActionSet = 226,
-        TeleportToLfgDungeon = 227,
-        Unk228 = 228,
-        SetFollowerQuality = 229,
-        Unk230 = 230,
-        IncreaseFollowerExperience = 231,
-        RemovePhase = 232,
-        RandomizeFollowerAbilities = 233,
-        Unk234 = 234,
-        Unk235 = 235,
-        GiveExperience = 236,
-        GiveRestedEcperienceBonus = 237,
-        IncreaseSkill = 238,
-        EndGarrisonBuildingConstruction = 239,
-        GiveArtifactPower = 240,
-        Unk241 = 241,
-        GiveArtifactPowerNoBonus = 242, // Unaffected by Artifact Knowledge
-        ApplyEnchantIllusion = 243,
-        LearnFollowerAbility = 244,
-        UpgradeHeirloom = 245,
-        FinishGarrisonMission = 246,
-        AddGarrisonMissionSet = 247,
-        FinishShipment = 248,
-        ForceEquipItem = 249,
-        TakeScreenshot = 250, // Serverside marker for selfie screenshot - achievement check
-        SetGarrisonCacheSize = 251,
-        TeleportUnits = 252,
-        GiveHonor = 253,
-        JumpCharge = 254,
-        LearnTransmogSet = 255,
-        Unk256 = 256,
-        Unk257 = 257,
-        ModifyKeystone = 258,
-        RespecAzeriteEmpoweredItem = 259,
-        SummonStabledPet = 260,
-        ScrapItem = 261,
-        Unk262 = 262,
-        RepairItem = 263,
-        RemoveGem = 264,
-        LearnAzeriteEssencePower = 265,
-        SetItemBonusListGroupEntry = 266, // Sets item bonuses to specific ItemBonusListGroupEntry id
-        CreatePrivateConversation = 267,
-        ApplyMountEquipment = 268,
-        IncreaseItemBonusListGroupStep = 269, // Advances ItemBonusListGroup bonuses to next rank
-        Unk270 = 270,
-        ApplyAreaAuraPartyNonrandom = 271,
-        SetCovenant = 272,
-        CraftRuneforgeLegendary = 273,
-        Unk274 = 274,
-        Unk275 = 275,
-        LearnTransmogIllusion = 276,
-        SetChromieTime = 277,
-        Unk278 = 278,
-        LearnGarrTalent = 279,
-        Unk280 = 280,
-        LearnSoulbindConduit = 281,
-        ConvertItemsToCurrency = 282,
-        CompleteCampaign = 283, // Flags all quests as completed that are assigned to campaign (MiscValueA)
         TotalSpellEffects
     }
 

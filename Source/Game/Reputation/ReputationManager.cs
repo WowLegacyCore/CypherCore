@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -63,7 +63,7 @@ namespace Game
 
             return rank;
         }
-        
+
         public FactionState GetState(FactionRecord factionEntry)
         {
             return factionEntry.CanHaveReputation() ? GetState(factionEntry.ReputationIndex) : null;
@@ -151,7 +151,7 @@ namespace Game
 
             return ReputationRankThresholds.LastOrDefault();
         }
-        
+
         public int GetReputation(FactionRecord factionEntry)
         {
             // Faction without recorded reputation. Just ignore.
@@ -198,7 +198,7 @@ namespace Game
 
             return 0;
         }
-        
+
         public void ApplyForceReaction(uint faction_id, ReputationRank rank, bool apply)
         {
             if (apply)
@@ -327,7 +327,7 @@ namespace Game
         {
             return SetReputation(factionEntry, standing, false, false, false);
         }
-        
+
         public bool SetReputation(FactionRecord factionEntry, int standing, bool incremental, bool spillOverOnly, bool noSpillover)
         {
             Global.ScriptMgr.OnPlayerReputationChange(_player, factionEntry.Id, standing, incremental);
@@ -472,12 +472,6 @@ namespace Game
 
                 if (factionEntry.FriendshipRepID == 0 && paragonReputation == null)
                     UpdateRankCounters(old_rank, new_rank);
-
-                _player.UpdateCriteria(CriteriaTypes.KnownFactions, factionEntry.Id);
-                _player.UpdateCriteria(CriteriaTypes.GainReputation, factionEntry.Id);
-                _player.UpdateCriteria(CriteriaTypes.GainExaltedReputation, factionEntry.Id);
-                _player.UpdateCriteria(CriteriaTypes.GainReveredReputation, factionEntry.Id);
-                _player.UpdateCriteria(CriteriaTypes.GainHonoredReputation, factionEntry.Id);
 
                 return true;
             }
@@ -728,7 +722,7 @@ namespace Game
 
             return _player.GetLevel() >= _player.GetQuestMinLevel(quest);
         }
-        
+
         public byte GetVisibleFactionCount() { return _visibleFactionCount; }
 
         public byte GetHonoredFactionCount() { return _honoredFactionCount; }

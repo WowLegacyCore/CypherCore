@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,25 +16,20 @@
  */
 
 using Game;
-using Game.Achievements;
 using Game.AI;
 using Game.Arenas;
 using Game.BattleFields;
 using Game.BattleGrounds;
-using Game.BlackMarket;
 using Game.Cache;
 using Game.Chat;
 using Game.Collision;
 using Game.DataStorage;
 using Game.DungeonFinding;
 using Game.Entities;
-using Game.Garrisons;
 using Game.Groups;
-using Game.Guilds;
 using Game.Loots;
 using Game.Maps;
 using Game.PvP;
-using Game.Scenarios;
 using Game.Scripting;
 using Game.Services;
 using Game.SupportSystem;
@@ -42,78 +37,68 @@ using Game.SupportSystem;
 public static class Global
 {
     //Main
-    public static ObjectAccessor ObjAccessor { get { return ObjectAccessor.Instance; } }
-    public static ObjectManager ObjectMgr { get { return ObjectManager.Instance; } }
-    public static WorldManager WorldMgr { get { return WorldManager.Instance; } }
-    public static RealmManager RealmMgr { get { return RealmManager.Instance; } }
-    public static WorldServiceManager ServiceMgr { get { return WorldServiceManager.Instance; } }
+    public static ObjectAccessor ObjAccessor => ObjectAccessor.Instance;
+    public static ObjectManager ObjectMgr => ObjectManager.Instance;
+    public static WorldManager WorldMgr => WorldManager.Instance;
+    public static RealmManager RealmMgr => RealmManager.Instance;
+    public static WorldServiceManager ServiceMgr => WorldServiceManager.Instance;
 
     //Guild
-    public static PetitionManager PetitionMgr { get { return PetitionManager.Instance; } }
-    public static GuildManager GuildMgr { get { return GuildManager.Instance; } }
-    public static GuildFinderManager GuildFinderMgr { get { return GuildFinderManager.Instance; } }
+    public static PetitionManager PetitionMgr => PetitionManager.Instance;
+    public static GuildManager GuildMgr => GuildManager.Instance;
 
     //Social
-    public static CalendarManager CalendarMgr { get { return CalendarManager.Instance; } }
-    public static SocialManager SocialMgr { get { return SocialManager.Instance; } }
-    public static WhoListStorageManager WhoListStorageMgr { get { return WhoListStorageManager.Instance; } }
+    public static CalendarManager CalendarMgr => CalendarManager.Instance;
+    public static SocialManager SocialMgr => SocialManager.Instance;
+    public static WhoListStorageManager WhoListStorageMgr => WhoListStorageManager.Instance;
 
     //Scripts
-    public static ScriptManager ScriptMgr { get { return ScriptManager.Instance; } }
-    public static SmartAIManager SmartAIMgr { get { return SmartAIManager.Instance; } }
+    public static ScriptManager ScriptMgr => ScriptManager.Instance;
+    public static SmartAIManager SmartAIMgr => SmartAIManager.Instance;
 
     //Groups
-    public static GroupManager GroupMgr { get { return GroupManager.Instance; } }
-    public static LFGManager LFGMgr { get { return LFGManager.Instance; } }
-    public static ArenaTeamManager ArenaTeamMgr { get { return ArenaTeamManager.Instance; } }
+    public static GroupManager GroupMgr => GroupManager.Instance;
+    public static LFGManager LFGMgr => LFGManager.Instance;
+    public static ArenaTeamManager ArenaTeamMgr => ArenaTeamManager.Instance;
 
     //Maps System
-    public static MapManager MapMgr { get { return MapManager.Instance; } }
-    public static MMapManager MMapMgr { get { return MMapManager.Instance; } }
-    public static VMapManager VMapMgr { get { return VMapManager.Instance; } }
-    public static WaypointManager WaypointMgr { get { return WaypointManager.Instance; } }
-    public static TransportManager TransportMgr { get { return TransportManager.Instance; } }
-    public static InstanceSaveManager InstanceSaveMgr { get { return InstanceSaveManager.Instance; } }
-    public static TaxiPathGraph TaxiPathGraph { get { return TaxiPathGraph.Instance; } }
-    public static ScenarioManager ScenarioMgr { get { return ScenarioManager.Instance; } }
+    public static MapManager MapMgr => MapManager.Instance;
+    public static MMapManager MMapMgr => MMapManager.Instance;
+    public static VMapManager VMapMgr => VMapManager.Instance;
+    public static WaypointManager WaypointMgr => WaypointManager.Instance;
+    public static TransportManager TransportMgr => TransportManager.Instance;
+    public static InstanceSaveManager InstanceSaveMgr => InstanceSaveManager.Instance;
+    public static TaxiPathGraph TaxiPathGraph => TaxiPathGraph.Instance;
 
     //PVP
-    public static BattlegroundManager BattlegroundMgr { get { return BattlegroundManager.Instance; } }
-    public static OutdoorPvPManager OutdoorPvPMgr { get { return OutdoorPvPManager.Instance; } }
-    public static BattleFieldManager BattleFieldMgr { get { return BattleFieldManager.Instance; } }
+    public static BattlegroundManager BattlegroundMgr => BattlegroundManager.Instance;
+    public static OutdoorPvPManager OutdoorPvPMgr => OutdoorPvPManager.Instance;
+    public static BattleFieldManager BattleFieldMgr => BattleFieldManager.Instance;
 
     //Account
-    public static AccountManager AccountMgr { get { return AccountManager.Instance; } }
-    public static BNetAccountManager BNetAccountMgr { get { return BNetAccountManager.Instance; } }
-
-    //Garrison
-    public static GarrisonManager GarrisonMgr { get { return GarrisonManager.Instance; } }
-
-    //Achievement
-    public static AchievementGlobalMgr AchievementMgr { get { return AchievementGlobalMgr.Instance; } }
-    public static CriteriaManager CriteriaMgr { get { return CriteriaManager.Instance; } }
+    public static AccountManager AccountMgr => AccountManager.Instance;
+    public static BNetAccountManager BNetAccountMgr => BNetAccountManager.Instance;
 
     //DataStorage
-    public static AreaTriggerDataStorage AreaTriggerDataStorage { get { return AreaTriggerDataStorage.Instance; } }
-    public static CharacterTemplateDataStorage CharacterTemplateDataStorage { get { return CharacterTemplateDataStorage.Instance; } }
-    public static ConversationDataStorage ConversationDataStorage { get { return ConversationDataStorage.Instance; } }
-    public static CharacterCache CharacterCacheStorage { get { return CharacterCache.Instance; } }
-    public static LootItemStorage LootItemStorage { get { return LootItemStorage.Instance; } }
+    public static AreaTriggerDataStorage AreaTriggerDataStorage => AreaTriggerDataStorage.Instance;
+    public static CharacterTemplateDataStorage CharacterTemplateDataStorage => CharacterTemplateDataStorage.Instance;
+    public static ConversationDataStorage ConversationDataStorage => ConversationDataStorage.Instance;
+    public static CharacterCache CharacterCacheStorage => CharacterCache.Instance;
+    public static LootItemStorage LootItemStorage => LootItemStorage.Instance;
 
     //Misc
-    public static ConditionManager ConditionMgr { get { return ConditionManager.Instance; } }
-    public static DB2Manager DB2Mgr { get { return DB2Manager.Instance; } }
-    public static DisableManager DisableMgr { get { return DisableManager.Instance; } }
-    public static PoolManager PoolMgr { get { return PoolManager.Instance; } }
-    public static WeatherManager WeatherMgr { get { return WeatherManager.Instance; } }
+    public static ConditionManager ConditionMgr => ConditionManager.Instance;
+    public static DB2Manager DB2Mgr => DB2Manager.Instance;
+    public static DisableManager DisableMgr => DisableManager.Instance;
+    public static PoolManager PoolMgr => PoolManager.Instance;
+    public static WeatherManager WeatherMgr => WeatherManager.Instance;
 
-    public static GameEventManager GameEventMgr { get { return GameEventManager.Instance; } }
-    public static LanguageManager LanguageMgr { get { return LanguageManager.Instance; } }
-    public static CreatureTextManager CreatureTextMgr { get { return CreatureTextManager.Instance; } }
-    public static AuctionManager AuctionHouseMgr { get { return AuctionManager.Instance; } }
+    public static GameEventManager GameEventMgr => GameEventManager.Instance;
+    public static LanguageManager LanguageMgr => LanguageManager.Instance;
+    public static CreatureTextManager CreatureTextMgr => CreatureTextManager.Instance;
+    public static AuctionManager AuctionHouseMgr => AuctionManager.Instance;
 
-    public static SpellManager SpellMgr { get { return SpellManager.Instance; } }
-    public static SupportManager SupportMgr { get { return SupportManager.Instance; } }
-    public static WardenCheckManager WardenCheckMgr { get { return WardenCheckManager.Instance; } }
-    public static BlackMarketManager BlackMarketMgr { get { return BlackMarketManager.Instance; } }
+    public static SpellManager SpellMgr => SpellManager.Instance;
+    public static SupportManager SupportMgr => SupportManager.Instance;
+    public static WardenCheckManager WardenCheckMgr => WardenCheckManager.Instance;
 }

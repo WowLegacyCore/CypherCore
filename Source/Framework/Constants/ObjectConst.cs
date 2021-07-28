@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,18 +22,16 @@ namespace Framework.Constants
         Object = 0,
         Item = 1,
         Container = 2,
-        AzeriteEmpoweredItem = 3,
-        AzeriteItem = 4,
-        Unit = 5,
-        Player = 6,
-        ActivePlayer = 7,
-        GameObject = 8,
-        DynamicObject = 9,
-        Corpse = 10,
-        AreaTrigger = 11,
-        SceneObject = 12,
-        Conversation = 13,
-        Max = 14
+        Unit = 3,
+        Player = 4,
+        ActivePlayer = 5,
+        GameObject = 6,
+        DynamicObject = 7,
+        Corpse = 8,
+        AreaTrigger = 9,
+        SceneObject = 10,
+        Conversation = 11,
+        Max = 12
     }
 
     public enum TypeMask
@@ -41,17 +39,15 @@ namespace Framework.Constants
         Object = 0x01,
         Item = 0x02,
         Container = 0x04,
-        AzeriteEmpoweredItem = 0x08,
-        AzeriteItem = 0x10,
-        Unit = 0x20,
-        Player = 0x40,
-        ActivePlayer = 0x80,
-        GameObject = 0x100,
-        DynamicObject = 0x200,
-        Corpse = 0x400,
-        AreaTrigger = 0x800,
-        Sceneobject = 0x1000,
-        Conversation = 0x2000,
+        Unit = 0x8,
+        Player = 0x10,
+        ActivePlayer = 0x20,
+        GameObject = 0x40,
+        DynamicObject = 0x80,
+        Corpse = 0x100,
+        AreaTrigger = 0x200,
+        Sceneobject = 0x400,
+        Conversation = 0x800,
         Seer = Player | Unit | DynamicObject
     }
 

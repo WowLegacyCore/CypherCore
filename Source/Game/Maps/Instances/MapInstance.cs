@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,9 +19,7 @@ using Framework.Constants;
 using Game.BattleGrounds;
 using Game.DataStorage;
 using Game.Entities;
-using Game.Garrisons;
 using Game.Groups;
-using Game.Scenarios;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -106,7 +104,7 @@ namespace Game.Maps
                     }
                 }
             }
-            else if(!IsGarrison())
+            else
             {
                 InstanceBind pBind = player.GetBoundInstance(GetId(), player.GetDifficultyID(GetEntry()));
                 InstanceSave pSave = pBind != null ? pBind.save : null;
@@ -131,7 +129,7 @@ namespace Game.Maps
                     {
                         groupBind = group.GetBoundInstance(this);
                         if (groupBind != null)
-                        { 
+                        {
                             // solo saves should be reset when entering a group's instance
                             player.UnbindInstance(GetId(), player.GetDifficultyID(GetEntry()));
                             pSave = groupBind.save;
@@ -159,13 +157,6 @@ namespace Game.Maps
                     if (map == null)
                         map = CreateInstance(newInstanceId, null, diff, player.GetTeamId());
                 }
-            }
-            else
-            {
-                newInstanceId = (uint)player.GetGUID().GetCounter();
-                map = FindInstanceMap(newInstanceId);
-                if (!map)
-                    map = CreateGarrison(newInstanceId, player);
             }
 
             return map;
@@ -202,9 +193,6 @@ namespace Game.Maps
 
                 bool load_data = save != null;
                 map.CreateInstanceData(load_data);
-                InstanceScenario instanceScenario = Global.ScenarioMgr.CreateInstanceScenario(map, teamId);
-                if (instanceScenario != null)
-                    map.SetInstanceScenario(instanceScenario);
 
                 if (WorldConfig.GetBoolValue(WorldCfg.InstancemapLoadGrids))
                     map.LoadAllCells();
@@ -226,18 +214,6 @@ namespace Game.Maps
                 bg.SetBgMap(map);
 
                 m_InstancedMaps[InstanceId] = map;
-                return map;
-            }
-        }
-
-        GarrisonMap CreateGarrison(uint instanceId, Player owner)
-        {
-            lock (_mapLock)
-            {
-                GarrisonMap map = new(GetId(), GetGridExpiry(), instanceId, this, owner.GetGUID());
-                Cypher.Assert(map.IsGarrison());
-
-                m_InstancedMaps[instanceId] = map;
                 return map;
             }
         }
@@ -270,14 +246,11 @@ namespace Game.Maps
             return true;
         }
 
-        public override EnterState CannotEnter(Player player) { return EnterState.CanEnter; }
+        public override EnterState CannotEnter(Player player) => EnterState.CanEnter;
 
-        public Map FindInstanceMap(uint instanceId)
-        {
-            return m_InstancedMaps.LookupByKey(instanceId);
-        }
+        public Map FindInstanceMap(uint instanceId) => m_InstancedMaps.LookupByKey(instanceId);
 
-        public Dictionary<uint, Map> GetInstancedMaps() { return m_InstancedMaps; }
+        public Dictionary<uint, Map> GetInstancedMaps() => m_InstancedMaps;
 
         Dictionary<uint, Map> m_InstancedMaps = new();
     }

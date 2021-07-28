@@ -146,8 +146,7 @@ namespace Game.Collision
             // child bounds are defined in object space:
             Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
             Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            float zDist;
-            if (iModel.IntersectPoint(pModel, zDirModel, out zDist, info))
+            if (iModel.IntersectPoint(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
                 // Transform back to world space. Note that:
@@ -167,8 +166,7 @@ namespace Game.Collision
             // child bounds are defined in object space:
             Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
             //Vector3 zDirModel = iInvRot * Vector3(0.f, 0.f, -1.f);
-            float zDist;
-            if (info.hitModel.GetLiquidLevel(pModel, out zDist))
+            if (info.hitModel.GetLiquidLevel(pModel, out float zDist))
             {
                 // calculate world height (zDist in model coords):
                 // assume WMO not tilted (wouldn't make much sense anyway)
@@ -191,8 +189,7 @@ namespace Game.Collision
             // child bounds are defined in object space:
             Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
             Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            float zDist;
-            if (iModel.GetLocationInfo(pModel, zDirModel, out zDist, info))
+            if (iModel.GetLocationInfo(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
                 // Transform back to world space. Note that:

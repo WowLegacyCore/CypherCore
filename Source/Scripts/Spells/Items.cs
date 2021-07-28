@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -375,7 +375,7 @@ namespace Scripts.Spells.Items
         public const uint UnstablePowerAuraStack = 24659;
         public const uint RestlessStrengthAuraStack = 24662;
 
-        // AuraprocRemovespells        
+        // AuraprocRemovespells
         public const uint TalismanOfAscendance = 28200;
         public const uint JomGabbar = 29602;
         public const uint BattleTrance = 45040;
@@ -805,7 +805,7 @@ namespace Scripts.Spells.Items
             DoCheckProc.Add(new CheckProcHandler(CheckProc));
         }
     }
-    
+
     [Script] // 71564 - Deadly Precision
     class spell_item_deadly_precision : AuraScript
     {
@@ -1105,7 +1105,7 @@ namespace Scripts.Spells.Items
             OnEffectPeriodic.Add(new EffectPeriodicHandler(PeriodicTick, 0, AuraType.PeriodicTriggerSpell));
         }
     }
-    
+
     [Script] // 7434 - Fate Rune of Unsurpassed Vigor
     class spell_item_fate_rune_of_unsurpassed_vigor : AuraScript
     {
@@ -1146,7 +1146,6 @@ namespace Scripts.Spells.Items
                 case Class.Priest:
                     possibleSpells.Add(SpellIds.FlaskOfTheNorthSp);
                     break;
-                case Class.Deathknight:
                 case Class.Warrior:
                     possibleSpells.Add(SpellIds.FlaskOfTheNorthStr);
                     break;
@@ -1274,10 +1273,6 @@ namespace Scripts.Spells.Items
                     break;
                 case PowerType.Rage:
                     spellId = _rageSpellId;
-                    break;
-                // Death Knights can't use daggers, but oh well
-                case PowerType.RunicPower:
-                    spellId = _rpSpellId;
                     break;
                 default:
                     return;
@@ -1676,7 +1671,7 @@ namespace Scripts.Spells.Items
             AfterEffectRemove .Add(new EffectApplyHandler(OnRemove, 0, AuraType.Dummy, AuraEffectHandleModes.Real));
         }
     }
-    
+
     // http://www.wowhead.com/item=6657 Savory Deviate Delight
     [Script] // 8213 Savory Deviate Delight
     class spell_item_savory_deviate_delight : SpellScript
@@ -1708,56 +1703,6 @@ namespace Scripts.Spells.Items
         public override void Register()
         {
             OnEffectHit.Add(new EffectHandler(HandleDummy, 0, SpellEffectName.Dummy));
-        }
-    }
-
-    // 48129 - Scroll of Recall
-    // 60320 - Scroll of Recall II
-    [Script] // 60321 - Scroll of Recall III
-    class spell_item_scroll_of_recall : SpellScript
-    {
-        public override bool Load()
-        {
-            return GetCaster().GetTypeId() == TypeId.Player;
-        }
-
-        void HandleScript(uint effIndex)
-        {
-            Unit caster = GetCaster();
-            byte maxSafeLevel = 0;
-            switch (GetSpellInfo().Id)
-            {
-                case SpellIds.ScrollOfRecallI:  // Scroll of Recall
-                    maxSafeLevel = 40;
-                    break;
-                case SpellIds.ScrollOfRecallII:  // Scroll of Recall II
-                    maxSafeLevel = 70;
-                    break;
-                case SpellIds.ScrollOfRecallIII:  // Scroll of Recal III
-                    maxSafeLevel = 80;
-                    break;
-                default:
-                    break;
-            }
-
-            if (caster.GetLevel() > maxSafeLevel)
-            {
-                caster.CastSpell(caster, SpellIds.Lost, true);
-
-                // ALLIANCE from 60323 to 60330 - HORDE from 60328 to 60335
-                uint spellId = SpellIds.ScrollOfRecallFailAlliance1;
-                if (GetCaster().ToPlayer().GetTeam() == Team.Horde)
-                    spellId = SpellIds.ScrollOfRecallFailHorde1;
-
-                GetCaster().CastSpell(GetCaster(), spellId + RandomHelper.URand(0, 7), true);
-
-                PreventHitDefaultEffect(effIndex);
-            }
-        }
-
-        public override void Register()
-        {
-            OnEffectHitTarget.Add(new EffectHandler(HandleScript, 0, SpellEffectName.TeleportUnits));
         }
     }
 
@@ -3339,58 +3284,6 @@ namespace Scripts.Spells.Items
         }
 
         uint _spellId;
-    }
-
-    [Script]
-    class spell_item_artifical_stamina : AuraScript
-    {
-        public override bool Validate(SpellInfo spellInfo)
-        {
-            return spellInfo.GetEffect(1) != null;
-        }
-
-        public override bool Load()
-        {
-            return GetOwner().IsTypeId(TypeId.Player);
-        }
-
-        void CalculateAmount(AuraEffect aurEff, ref int amount, ref bool canBeRecalculated)
-        {
-            Item artifact = GetOwner().ToPlayer().GetItemByGuid(GetAura().GetCastItemGUID());
-            if (artifact)
-                amount = (int)(GetSpellInfo().GetEffect(1).BasePoints * artifact.GetTotalPurchasedArtifactPowers() / 100);
-        }
-
-        public override void Register()
-        {
-            DoEffectCalcAmount.Add(new EffectCalcAmountHandler(CalculateAmount, 0, AuraType.ModTotalStatPercentage));
-        }
-    }
-
-    [Script]
-    class spell_item_artifical_damage : AuraScript
-    {
-        public override bool Validate(SpellInfo spellInfo)
-        {
-            return spellInfo.GetEffect(1) != null;
-        }
-
-        public override bool Load()
-        {
-            return GetOwner().IsTypeId(TypeId.Player);
-        }
-
-        void CalculateAmount(AuraEffect aurEff, ref int amount, ref bool canBeRecalculated)
-        {
-            Item artifact = GetOwner().ToPlayer().GetItemByGuid(GetAura().GetCastItemGUID());
-            if (artifact)
-                amount = (int)(GetSpellInfo().GetEffect(1).BasePoints * artifact.GetTotalPurchasedArtifactPowers() / 100);
-        }
-
-        public override void Register()
-        {
-            DoEffectCalcAmount.Add(new EffectCalcAmountHandler(CalculateAmount, 0, AuraType.ModDamagePercentDone));
-        }
     }
 
     [Script] // 28200 - Ascendance

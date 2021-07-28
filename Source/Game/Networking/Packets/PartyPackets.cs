@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -274,12 +274,12 @@ namespace Game.Networking.Packets
             // Position
             MemberStats.ZoneID = (ushort)player.GetZoneId();
             MemberStats.PositionX = (short)player.GetPositionX();
-            MemberStats.PositionY = (short)(player.GetPositionY());
-            MemberStats.PositionZ = (short)(player.GetPositionZ());
+            MemberStats.PositionY = (short)player.GetPositionY();
+            MemberStats.PositionZ = (short)player.GetPositionZ();
 
             MemberStats.SpecID = (ushort)player.GetPrimarySpecialization();
-            MemberStats.PartyType[0] = (sbyte)(player.m_playerData.PartyType & 0xF);
-            MemberStats.PartyType[1] = (sbyte)(player.m_playerData.PartyType >> 4);
+            MemberStats.PartyType[0] = (sbyte)(player.GetUpdateField<byte>(PlayerFields.Bytes1, 1) & 0xF);
+            MemberStats.PartyType[1] = (sbyte)(player.GetUpdateField<byte>(PlayerFields.Bytes1, 1) >> 4);
             MemberStats.WmoGroupID = 0;
             MemberStats.WmoDoodadPlacementID = 0;
 
@@ -303,7 +303,7 @@ namespace Game.Networking.Packets
                             continue;
 
                         if (aurApp.HasEffect(aurEff.GetEffIndex()))
-                            aura.Points.Add((float)aurEff.GetAmount());
+                            aura.Points.Add(aurEff.GetAmount());
                     }
                 }
 
@@ -343,7 +343,7 @@ namespace Game.Networking.Packets
                                 continue;
 
                             if (aurApp.HasEffect(aurEff.GetEffIndex()))
-                                aura.Points.Add((float)aurEff.GetAmount());
+                                aura.Points.Add(aurEff.GetAmount());
                         }
                     }
 
@@ -910,7 +910,7 @@ namespace Game.Networking.Packets
     }
 
     class PartyMemberAuraStates
-    {      
+    {
         public int SpellID;
         public ushort Flags;
         public uint ActiveFlags;

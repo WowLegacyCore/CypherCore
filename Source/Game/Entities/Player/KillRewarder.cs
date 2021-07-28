@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,6 @@ using Framework.Constants;
 using Game.DataStorage;
 using Game.Groups;
 using Game.Maps;
-using Game.Scenarios;
 using System.Collections.Generic;
 
 namespace Game.Entities
@@ -95,15 +94,6 @@ namespace Game.Entities
                     if (instance != null)
                         instance.UpdateEncounterStateForKilledCreature(_victim.GetEntry(), _victim);
                 }
-
-                uint guildId = victim.GetMap().GetOwnerGuildId();
-                var guild = Global.GuildMgr.GetGuildById(guildId);
-                if (guild != null)
-                    guild.UpdateCriteria(CriteriaTypes.KillCreature, victim.GetEntry(), 1, 0, victim, _killer);
-
-                Scenario scenario = victim.GetScenario();
-                if (scenario != null)
-                    scenario.UpdateCriteria(CriteriaTypes.KillCreature, victim.GetEntry(), 1, 0, victim, _killer);
             }
         }
 
@@ -208,7 +198,6 @@ namespace Game.Entities
                 if (target != null)
                 {
                     player.KilledMonster(target.GetCreatureTemplate(), target.GetGUID());
-                    player.UpdateCriteria(CriteriaTypes.KillCreatureType, (ulong)target.GetCreatureType(), 1, 0, target);
                 }
             }
         }
@@ -271,7 +260,6 @@ namespace Game.Entities
                             if (_killer == member || member.IsAtGroupRewardDistance(_victim))
                             {
                                 _RewardPlayer(member, isDungeon);
-                                member.UpdateCriteria(CriteriaTypes.SpecialPvpKill, 1, 0, 0, _victim);
                             }
                         }
                     }

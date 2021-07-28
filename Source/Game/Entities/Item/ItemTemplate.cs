@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -36,9 +36,7 @@ namespace Game.Entities
         }
 
         public string GetName(Locale locale = SharedConst.DefaultLocale)
-        {
-            return ExtendedData.Display[locale];
-        }
+        => ExtendedData.Display[locale];
 
         public bool CanChangeEquipStateInCombat()
         {
@@ -249,85 +247,79 @@ namespace Game.Entities
 
         public static int CalculateItemSpecBit(ChrSpecializationRecord spec)
         {
-            return (int)((spec.ClassID - 1) * PlayerConst.MaxSpecializations + spec.OrderIndex);
+            return (spec.ClassID - 1) * PlayerConst.MaxSpecializations + spec.OrderIndex;
         }
 
-        public uint GetId() { return BasicData.Id; }
-        public ItemClass GetClass() { return (ItemClass)BasicData.ClassID; }
-        public uint GetSubClass() { return BasicData.SubclassID; }
-        public ItemQuality GetQuality() { return (ItemQuality)ExtendedData.OverallQualityID; }
-        public ItemFlags GetFlags() { return (ItemFlags)ExtendedData.Flags[0]; }
-        public ItemFlags2 GetFlags2() { return (ItemFlags2)ExtendedData.Flags[1]; }
-        public ItemFlags3 GetFlags3() { return (ItemFlags3)ExtendedData.Flags[2]; }
-        public ItemFlags4 GetFlags4() { return (ItemFlags4)ExtendedData.Flags[3]; }
-        public float GetPriceRandomValue() { return ExtendedData.PriceRandomValue; }
-        public float GetPriceVariance() { return ExtendedData.PriceVariance; }
-        public uint GetBuyCount() { return Math.Max(ExtendedData.VendorStackCount, 1u); }
-        public uint GetBuyPrice() { return ExtendedData.BuyPrice; }
-        public uint GetSellPrice() { return ExtendedData.SellPrice; }
-        public InventoryType GetInventoryType() { return ExtendedData.inventoryType; }
-        public int GetAllowableClass() { return ExtendedData.AllowableClass; }
-        public long GetAllowableRace() { return ExtendedData.AllowableRace; }
-        public uint GetBaseItemLevel() { return ExtendedData.ItemLevel; }
-        public int GetBaseRequiredLevel() { return ExtendedData.RequiredLevel; }
-        public uint GetRequiredSkill() { return ExtendedData.RequiredSkill; }
-        public uint GetRequiredSkillRank() { return ExtendedData.RequiredSkillRank; }
-        public uint GetRequiredSpell() { return ExtendedData.RequiredAbility; }
-        public uint GetRequiredReputationFaction() { return ExtendedData.MinFactionID; }
-        public uint GetRequiredReputationRank() { return ExtendedData.MinReputation; }
-        public uint GetMaxCount() { return ExtendedData.MaxCount; }
-        public uint GetContainerSlots() { return ExtendedData.ContainerSlots; }
+        public uint GetId() => BasicData.Id;
+        public ItemClass GetClass() => BasicData.ClassID;
+        public uint GetSubClass() => BasicData.SubclassID;
+        public ItemQuality GetQuality() => (ItemQuality)ExtendedData.OverallQualityID;
+        public ItemFlags GetFlags() => (ItemFlags)ExtendedData.Flags[0];
+        public ItemFlags2 GetFlags2() => (ItemFlags2)ExtendedData.Flags[1];
+        public ItemFlags3 GetFlags3() => (ItemFlags3)ExtendedData.Flags[2];
+        public ItemFlags4 GetFlags4() => (ItemFlags4)ExtendedData.Flags[3];
+        public float GetPriceRandomValue() => ExtendedData.PriceRandomValue;
+        public float GetPriceVariance() => ExtendedData.PriceVariance;
+        public uint GetBuyCount() => Math.Max(ExtendedData.VendorStackCount, 1u);
+        public uint GetBuyPrice() => ExtendedData.BuyPrice;
+        public uint GetSellPrice() => ExtendedData.SellPrice;
+        public InventoryType GetInventoryType() => ExtendedData.inventoryType;
+        public int GetAllowableClass() => ExtendedData.AllowableClass;
+        public long GetAllowableRace() => ExtendedData.AllowableRace;
+        public uint GetBaseItemLevel() => ExtendedData.ItemLevel;
+        public int GetBaseRequiredLevel() => ExtendedData.RequiredLevel;
+        public uint GetRequiredSkill() => ExtendedData.RequiredSkill;
+        public uint GetRequiredSkillRank() => ExtendedData.RequiredSkillRank;
+        public uint GetRequiredSpell() => ExtendedData.RequiredAbility;
+        public uint GetRequiredReputationFaction() => ExtendedData.MinFactionID;
+        public uint GetRequiredReputationRank() => ExtendedData.MinReputation;
+        public uint GetMaxCount() => ExtendedData.MaxCount;
+        public uint GetContainerSlots() => ExtendedData.ContainerSlots;
         public int GetStatModifierBonusStat(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatModifierBonusStat[index]; }
         public int GetStatPercentEditor(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatPercentEditor[index]; }
         public float GetStatPercentageOfSocket(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatPercentageOfSocket[index]; }
-        public uint GetScalingStatContentTuning() { return ExtendedData.ContentTuningID; }
-        public uint GetPlayerLevelToItemLevelCurveId() { return ExtendedData.PlayerLevelToItemLevelCurveID; }
-        public uint GetDamageType() { return ExtendedData.DamageType; }
-        public uint GetDelay() { return ExtendedData.ItemDelay; }
-        public float GetRangedModRange() { return ExtendedData.ItemRange; }
-        public ItemBondingType GetBonding() { return (ItemBondingType)ExtendedData.Bonding; }
-        public uint GetPageText() { return ExtendedData.PageID; }
-        public uint GetStartQuest() { return ExtendedData.StartQuestID; }
-        public uint GetLockID() { return ExtendedData.LockID; }
-        public uint GetItemSet() { return ExtendedData.ItemSet; }
-        public uint GetArea(int index) { return ExtendedData.ZoneBound[index]; }
-        public uint GetMap() { return ExtendedData.InstanceBound; }
-        public BagFamilyMask GetBagFamily() { return (BagFamilyMask)ExtendedData.BagFamily; }
-        public uint GetTotemCategory() { return ExtendedData.TotemCategoryID; }
+        public uint GetScalingStatContentTuning() => ExtendedData.ContentTuningID;
+        public uint GetPlayerLevelToItemLevelCurveId() => ExtendedData.PlayerLevelToItemLevelCurveID;
+        public uint GetDamageType() => ExtendedData.DamageType;
+        public uint GetDelay() => ExtendedData.ItemDelay;
+        public float GetRangedModRange() => ExtendedData.ItemRange;
+        public ItemBondingType GetBonding() => (ItemBondingType)ExtendedData.Bonding;
+        public uint GetPageText() => ExtendedData.PageID;
+        public uint GetStartQuest() => ExtendedData.StartQuestID;
+        public uint GetLockID() => ExtendedData.LockID;
+        public uint GetItemSet() => ExtendedData.ItemSet;
+        public uint GetArea(int index) => ExtendedData.ZoneBound[index];
+        public uint GetMap() => ExtendedData.InstanceBound;
+        public BagFamilyMask GetBagFamily() => (BagFamilyMask)ExtendedData.BagFamily;
+        public uint GetTotemCategory() => ExtendedData.TotemCategoryID;
         public SocketColor GetSocketColor(uint index)
         {
             Cypher.Assert(index < ItemConst.MaxGemSockets);
             return (SocketColor)ExtendedData.SocketType[index];
         }
-        public uint GetSocketBonus() { return ExtendedData.SocketMatchEnchantmentId; }
-        public uint GetGemProperties() { return ExtendedData.GemProperties; }
-        public float GetQualityModifier() { return ExtendedData.QualityModifier; }
-        public uint GetDuration() { return ExtendedData.DurationInInventory; }
-        public uint GetItemLimitCategory() { return ExtendedData.LimitCategory; }
-        public HolidayIds GetHolidayID() { return (HolidayIds)ExtendedData.RequiredHoliday; }
-        public float GetDmgVariance() { return ExtendedData.DmgVariance; }
-        public byte GetArtifactID() { return ExtendedData.ArtifactID; }
-        public byte GetRequiredExpansion() { return ExtendedData.ExpansionID; }
+        public uint GetSocketBonus() => ExtendedData.SocketMatchEnchantmentId;
+        public uint GetGemProperties() => ExtendedData.GemProperties;
+        public float GetQualityModifier() => ExtendedData.QualityModifier;
+        public uint GetDuration() => ExtendedData.DurationInInventory;
+        public uint GetItemLimitCategory() => ExtendedData.LimitCategory;
+        public HolidayIds GetHolidayID() => (HolidayIds)ExtendedData.RequiredHoliday;
+        public float GetDmgVariance() => ExtendedData.DmgVariance;
+        public byte GetArtifactID() => ExtendedData.ArtifactID;
+        public byte GetRequiredExpansion() => ExtendedData.ExpansionID;
 
-        public bool IsCurrencyToken() { return (GetBagFamily() & BagFamilyMask.CurrencyTokens) != 0; }
+        public bool IsCurrencyToken() => (GetBagFamily() & BagFamilyMask.CurrencyTokens) != 0;
 
-        public uint GetMaxStackSize()
-        {
-            return (ExtendedData.Stackable == 2147483647 || ExtendedData.Stackable <= 0) ? (0x7FFFFFFF - 1) : ExtendedData.Stackable;
-        }
+        public uint GetMaxStackSize() => (ExtendedData.Stackable == 2147483647 || ExtendedData.Stackable <= 0) ? (0x7FFFFFFF - 1) : ExtendedData.Stackable;
 
-        public bool IsPotion() { return GetClass() == ItemClass.Consumable && GetSubClass() == (uint)ItemSubClassConsumable.Potion; }
-        public bool IsVellum() { return GetFlags3().HasAnyFlag(ItemFlags3.CanStoreEnchants); }
-        public bool IsConjuredConsumable() { return GetClass() == ItemClass.Consumable && GetFlags().HasAnyFlag(ItemFlags.Conjured); }
-        public bool IsCraftingReagent() { return GetFlags2().HasAnyFlag(ItemFlags2.UsedInATradeskill); }
+        public bool IsPotion() => GetClass() == ItemClass.Consumable && GetSubClass() == (uint)ItemSubClassConsumable.Potion;
+        public bool IsVellum() => GetFlags3().HasAnyFlag(ItemFlags3.CanStoreEnchants);
+        public bool IsConjuredConsumable() => GetClass() == ItemClass.Consumable && GetFlags().HasAnyFlag(ItemFlags.Conjured);
+        public bool IsCraftingReagent() => GetFlags2().HasAnyFlag(ItemFlags2.UsedInATradeskill);
 
-        public bool IsWeapon() { return GetClass() == ItemClass.Weapon; }
+        public bool IsWeapon() => GetClass() == ItemClass.Weapon;
 
-        public bool IsRangedWeapon()
-        {
-            return GetClass() == ItemClass.Weapon || GetSubClass() == (uint)ItemSubClassWeapon.Bow ||
-                   GetSubClass() == (uint)ItemSubClassWeapon.Gun || GetSubClass() == (uint)ItemSubClassWeapon.Crossbow;
-        }
+        public bool IsRangedWeapon() => GetClass() == ItemClass.Weapon || GetSubClass() == (uint)ItemSubClassWeapon.Bow ||
+            GetSubClass() == (uint)ItemSubClassWeapon.Gun || GetSubClass() == (uint)ItemSubClassWeapon.Crossbow;
 
         public uint MaxDurability;
         public List<ItemEffectRecord> Effects = new();

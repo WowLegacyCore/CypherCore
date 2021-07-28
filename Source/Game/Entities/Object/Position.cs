@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -51,22 +51,10 @@ namespace Game.Entities
             Orientation = position.Orientation;
         }
 
-        public float GetPositionX()
-        {
-            return posX;
-        }
-        public float GetPositionY()
-        {
-            return posY;
-        }
-        public float GetPositionZ()
-        {
-            return posZ;
-        }
-        public float GetOrientation()
-        {
-            return Orientation;
-        }
+        public float GetPositionX() => posX;
+        public float GetPositionY() => posY;
+        public float GetPositionZ() => posZ;
+        public float GetOrientation() => Orientation;
 
         public void Relocate(float x, float y)
         {
@@ -102,19 +90,10 @@ namespace Game.Entities
             SetOrientation(Orientation + offset.Orientation);
         }
 
-        public bool IsPositionValid()
-        {
-            return GridDefines.IsValidMapCoord(posX, posY, posZ, Orientation);
-        }
+        public bool IsPositionValid() => GridDefines.IsValidMapCoord(posX, posY, posZ, Orientation);
 
-        public float GetRelativeAngle(Position pos)
-        {
-            return GetAngle(pos) - Orientation;
-        }
-        public float GetRelativeAngle(float x, float y)
-        {
-            return GetAngle(x, y) - Orientation;
-        }
+        public float GetRelativeAngle(Position pos) => GetAngle(pos) - Orientation;
+        public float GetRelativeAngle(float x, float y) => GetAngle(x, y) - Orientation;
 
         public void GetPosition(out float x, out float y)
         {
@@ -131,10 +110,7 @@ namespace Game.Entities
             z = posZ;
             o = Orientation;
         }
-        public Position GetPosition()
-        {
-            return this;
-        }
+        public Position GetPosition() => this;
         public void GetPositionOffsetTo(Position endPos, out Position retOffset)
         {
             retOffset = new Position();
@@ -169,14 +145,8 @@ namespace Game.Entities
             return o % (2.0f * MathFunctions.PI);
         }
 
-        public float GetExactDist(float x, float y, float z)
-        {
-            return (float)Math.Sqrt(GetExactDistSq(x, y, z));
-        }
-        public float GetExactDist(Position pos)
-        {
-            return (float)Math.Sqrt(GetExactDistSq(pos));
-        }
+        public float GetExactDist(float x, float y, float z) => (float)Math.Sqrt(GetExactDistSq(x, y, z));
+        public float GetExactDist(Position pos) => (float)Math.Sqrt(GetExactDistSq(pos));
         public float GetExactDistSq(float x, float y, float z)
         {
             float dz = posZ - z;
@@ -191,14 +161,8 @@ namespace Game.Entities
 
             return dx * dx + dy * dy + dz * dz;
         }
-        public float GetExactDist2d(float x, float y)
-        {
-            return (float)Math.Sqrt(GetExactDist2dSq(x, y));
-        }
-        public float GetExactDist2d(Position pos)
-        {
-            return (float)Math.Sqrt(GetExactDist2dSq(pos));
-        }
+        public float GetExactDist2d(float x, float y) => (float)Math.Sqrt(GetExactDist2dSq(x, y));
+        public float GetExactDist2d(Position pos)=> (float)Math.Sqrt(GetExactDist2dSq(pos));
         public float GetExactDist2dSq(float x, float y)
         {
             float dx = posX - x;
@@ -231,23 +195,11 @@ namespace Game.Entities
             return GetAngle(pos.GetPositionX(), pos.GetPositionY());
         }
 
-        public bool IsInDist(float x, float y, float z, float dist)
-        {
-            return GetExactDistSq(x, y, z) < dist * dist;
-        }
-        public bool IsInDist(Position pos, float dist)
-        {
-            return GetExactDistSq(pos) < dist * dist;
-        }
+        public bool IsInDist(float x, float y, float z, float dist) => GetExactDistSq(x, y, z) < dist * dist;
+        public bool IsInDist(Position pos, float dist) => GetExactDistSq(pos) < dist * dist;
 
-        public bool IsInDist2d(float x, float y, float dist)
-        {
-            return GetExactDist2dSq(x, y) < dist * dist;
-        }
-        public bool IsInDist2d(Position pos, float dist)
-        {
-            return GetExactDist2dSq(pos) < dist * dist;
-        }
+        public bool IsInDist2d(float x, float y, float dist) => GetExactDist2dSq(x, y) < dist * dist;
+        public bool IsInDist2d(Position pos, float dist) => GetExactDist2dSq(pos) < dist * dist;
 
         public void SetOrientation(float orientation)
         {
@@ -337,15 +289,9 @@ namespace Game.Entities
             }
         }
 
-        public override string ToString()
-        {
-            return $"X: {posX} Y: {posY} Z: {posZ} O: {Orientation}";
-        }
+        public override string ToString() => $"X: {posX} Y: {posY} Z: {posZ} O: {Orientation}";
 
-        public static implicit operator Vector2(Position position)
-        {
-            return new(position.posX, position.posY);
-        }
+        public static implicit operator Vector2(Position position) => new(position.posX, position.posY);
     }
 
     public class WorldLocation : Position
@@ -382,7 +328,7 @@ namespace Game.Entities
             _mapId = mapId;
             Relocate(pos);
         }
-        
+
         public void WorldRelocate(WorldLocation loc)
         {
             _mapId = loc._mapId;
@@ -395,7 +341,7 @@ namespace Game.Entities
             Relocate(x, y, z, o);
         }
 
-        public uint GetMapId() { return _mapId; }
+        public uint GetMapId() => _mapId;
         public void SetMapId(uint mapId) { _mapId = mapId; }
 
         public Cell GetCurrentCell()
@@ -412,9 +358,6 @@ namespace Game.Entities
             _newPosition.Relocate(x, y, z, o);
         }
 
-        public WorldLocation GetWorldLocation()
-        {
-            return this;
-        }
+        public WorldLocation GetWorldLocation() => this;
     }
 }

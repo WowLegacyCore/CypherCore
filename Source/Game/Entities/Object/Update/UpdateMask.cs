@@ -1,6 +1,6 @@
 ﻿/*
- * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ * Copyright (C) 2012-2021 CypherCore <http://github.com/CypherCore>
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,135 +15,95 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Linq;
+using Framework.Constants;
+using Framework.IO;
+using System.Collections;
 
 namespace Game.Entities
 {
     public class UpdateMask
     {
-        int _blockCount;
-        int _blocksMaskCount;
-        uint[] _blocks;
-        uint[] _blocksMask;
-
-        public UpdateMask(int bits, uint[] input = null)
+        public UpdateMask(uint valuesCount = 0)
         {
-            _blockCount = (bits + 31) / 32;
-            _blocksMaskCount = (_blockCount + 31) / 32;
+            _fieldCount = valuesCount;
+            _blockCount = (valuesCount + 32 - 1) / 32;
 
-            _blocks = new uint[_blockCount];
-            _blocksMask = new uint[_blocksMaskCount];
-
-            if (input != null)
-            {
-                int block = 0;
-                for (; block < input.Length; ++block)
-                    if ((_blocks[block] = input[block]) != 0)
-                        _blocksMask[GetBlockIndex(block)] |= (uint)GetBlockFlag(block);
-
-                for (; block < _blockCount; ++block)
-                    _blocks[block] = 0;
-            }
+            _mask = new BitArray((int)valuesCount, false);
         }
 
-        public uint GetBlocksMask(uint index)
+        public void SetCount(int valuesCount)
         {
-            return _blocksMask[index];
+            _fieldCount = (uint)valuesCount;
+            _blockCount = (uint)(valuesCount + 32 - 1) / 32;
+
+            _mask = new BitArray(valuesCount, false);
         }
 
-        public uint GetBlock(uint index)
+        public uint GetCount() { return _fieldCount; }
+
+        public virtual void AppendToPacket(ByteBuffer data)
         {
-            return _blocks[index];
+            data.WriteUInt8((byte)_blockCount);
+            var maskArray = new byte[_blockCount << 2];
+
+            _mask.CopyTo(maskArray, 0);
+            data.WriteBytes(maskArray);
         }
 
-        public bool this[int index]
+        public bool GetBit(int index)
         {
-            get
-            {
-                return (_blocks[index / 32] & (1 << (index % 32))) != 0;
-            }
+            return _mask.Get(index);
         }
 
-        public bool IsAnySet() { return _blocksMask.Any(blockMask => blockMask != 0); }
-
-        public void Reset(int index)
+        public void SetBit(int index)
         {
-            int blockIndex = GetBlockIndex(index);
-            if ((_blocks[blockIndex] &= ~(uint)GetBlockFlag(index)) == 0)
-                _blocksMask[GetBlockIndex(blockIndex)] &= ~(uint)GetBlockFlag(blockIndex);
+            _mask.Set(index, true);
         }
 
-        public void ResetAll()
+        void UnsetBit(int index)
         {
-            Array.Clear(_blocks, 0, _blocks.Length);
-            Array.Clear(_blocksMask, 0, _blocksMask.Length);
+            _mask.Set(index, false);
         }
 
-        public void Set(int index)
+        public void Clear()
         {
-            int blockIndex = GetBlockIndex(index);
-            _blocks[blockIndex] |= (uint)GetBlockFlag(index);
-            _blocksMask[GetBlockIndex(blockIndex)] |= (uint)GetBlockFlag(blockIndex);
+            _mask.SetAll(false);
         }
 
-        public void SetAll()
+        uint _fieldCount;
+        protected uint _blockCount;
+        protected BitArray _mask;
+    }
+
+    public class DynamicUpdateMask : UpdateMask
+    {
+        public DynamicUpdateMask(uint valuesCount) : base(valuesCount) { }
+
+        public void EncodeDynamicFieldChangeType(DynamicFieldChangeType changeType, UpdateType updateType)
         {
-            for (int i = 0; i < _blocksMaskCount; ++i)
-                _blocksMask[i] = 0xFFFFFFFF;
-            for (int i = 0; i < _blockCount; ++i)
-                _blocks[i] = 0xFFFFFFFF;
-
-            if ((_blocksMaskCount % 32) != 0)
-            {
-                int unused = 32 - (_blocksMaskCount % 32);
-                _blocksMask[_blocksMaskCount - 1] &= (0xFFFFFFFF >> unused);
-            }
-
-            if ((_blockCount % 32) != 0)
-            {
-                int unused = 32 - (_blockCount % 32);
-                _blocks[_blockCount - 1] &= (0xFFFFFFFF >> unused);
-            }
+            DynamicFieldChangeType = (uint)(_blockCount | ((uint)(changeType & Entities.DynamicFieldChangeType.ValueAndSizeChanged) * ((3 - (int)updateType /*this part evaluates to 0 if update type is not VALUES*/) / 3)));
         }
 
-        public void AND(UpdateMask right)
+        public override void AppendToPacket(ByteBuffer data)
         {
-            for (int i = 0; i < _blocksMaskCount; ++i)
-                _blocksMask[i] &= right._blocksMask[i];
+            data.WriteUInt16((ushort)DynamicFieldChangeType);
+            if (ValueCount != 0)
+                data.WriteInt32(ValueCount);
 
-            for (int i = 0; i < _blockCount; ++i)
-            {
-                if (!Convert.ToBoolean(_blocks[i] &= right._blocks[i]))
-                    _blocksMask[GetBlockIndex(i)] &= ~(uint)GetBlockFlag(i);
-            }
+            var maskArray = new byte[_blockCount << 2];
+
+            _mask.CopyTo(maskArray, 0);
+            data.WriteBytes(maskArray);
         }
 
-        public void OR(UpdateMask right)
-        {
-            for (int i = 0; i < _blocksMaskCount; ++i)
-                _blocksMask[i] |= right._blocksMask[i];
+        public uint DynamicFieldChangeType;
+        public int ValueCount;
+    }
 
-            for (int i = 0; i < _blockCount; ++i)
-                _blocks[i] |= right._blocks[i];
-        }
-
-        public static UpdateMask operator &(UpdateMask left, UpdateMask right)
-        {
-            UpdateMask result = left;
-            result.AND(right);
-            return result;
-        }
-
-        public static UpdateMask operator |(UpdateMask left, UpdateMask right)
-        {
-            UpdateMask result = left;
-            result.OR(right);
-            return result;
-        }
-
-        //helpers
-        public static int GetBlockIndex(int bit) { return bit / 32; }
-        public static int GetBlockFlag(int bit) { return 1 << (bit % 32); }
+    public enum DynamicFieldChangeType
+    {
+        Unchanged = 0,
+        ValueChanged = 0x7FFF,
+        ValueAndSizeChanged = 0x8000
     }
 }

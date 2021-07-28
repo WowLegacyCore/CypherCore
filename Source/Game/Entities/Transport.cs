@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -118,7 +118,7 @@ namespace Game.Entities
             if (m_goTemplateAddon != null)
             {
                 SetFaction(m_goTemplateAddon.faction);
-                SetFlags((GameObjectFlags)m_goTemplateAddon.flags);
+                SetGameObjectFlag((GameObjectFlags)m_goTemplateAddon.flags);
             }
 
             m_goValue.Transport.PathProgress = 0;
@@ -216,7 +216,7 @@ namespace Game.Entities
 
                 Global.ScriptMgr.OnRelocate(this, _currentFrame.Node.NodeIndex, _currentFrame.Node.ContinentID, _currentFrame.Node.Loc.X, _currentFrame.Node.Loc.Y, _currentFrame.Node.Loc.Z);
 
-                Log.outDebug(LogFilter.Transport, "Transport {0} ({1}) moved to node {2} {3} {4} {5} {6}", GetEntry(), GetName(), _currentFrame.Node.NodeIndex, _currentFrame.Node.ContinentID, 
+                Log.outDebug(LogFilter.Transport, "Transport {0} ({1}) moved to node {2} {3} {4} {5} {6}", GetEntry(), GetName(), _currentFrame.Node.NodeIndex, _currentFrame.Node.ContinentID,
                     _currentFrame.Node.Loc.X, _currentFrame.Node.Loc.Y, _currentFrame.Node.Loc.Z);
 
                 // Departure event
@@ -242,9 +242,8 @@ namespace Game.Entities
                 if (IsMoving())
                 {
                     float t = !justStopped ? CalculateSegmentPos(timer * 0.001f) : 1.0f;
-                    Vector3 pos, dir;
-                    _currentFrame.Spline.Evaluate_Percent((int)_currentFrame.Index, t, out pos);
-                    _currentFrame.Spline.Evaluate_Derivative((int)_currentFrame.Index, t, out dir);
+                    _currentFrame.Spline.Evaluate_Percent((int)_currentFrame.Index, t, out Vector3 pos);
+                    _currentFrame.Spline.Evaluate_Derivative((int)_currentFrame.Index, t, out Vector3 dir);
                     UpdatePosition(pos.X, pos.Y, pos.Z, (float)Math.Atan2(dir.Y, dir.X) + MathFunctions.PI);
                 }
                 else if (justStopped)
@@ -322,8 +321,7 @@ namespace Game.Entities
             if (!creature)
                 return null;
 
-            float x, y, z, o;
-            data.spawnPoint.GetPosition(out x, out y, out z, out o);
+            data.spawnPoint.GetPosition(out float x, out float y, out float z, out float o);
 
             creature.SetTransport(this);
             creature.m_movementInfo.transport.guid = GetGUID();
@@ -363,8 +361,7 @@ namespace Game.Entities
             if (!go)
                 return null;
 
-            float x, y, z, o;
-            data.spawnPoint.GetPosition(out x, out y, out z, out o);
+            data.spawnPoint.GetPosition(out float x, out float y, out float z, out float o);
 
             go.SetTransport(this);
             go.m_movementInfo.transport.guid = GetGUID();
@@ -413,32 +410,32 @@ namespace Game.Entities
                     case SummonCategory.Wild:
                     case SummonCategory.Ally:
                     case SummonCategory.Unk:
+                    {
+                        switch (properties.Title)
                         {
-                            switch (properties.Title)
-                            {
-                                case SummonTitle.Minion:
-                                case SummonTitle.Guardian:
-                                case SummonTitle.Runeblade:
+                            case SummonTitle.Minion:
+                            case SummonTitle.Guardian:
+                            case SummonTitle.Runeblade:
+                                mask = UnitTypeMask.Guardian;
+                                break;
+                            case SummonTitle.Totem:
+                            case SummonTitle.LightWell:
+                                mask = UnitTypeMask.Totem;
+                                break;
+                            case SummonTitle.Vehicle:
+                            case SummonTitle.Mount:
+                                mask = UnitTypeMask.Summon;
+                                break;
+                            case SummonTitle.Companion:
+                                mask = UnitTypeMask.Minion;
+                                break;
+                            default:
+                                if (properties.Flags.HasAnyFlag(SummonPropFlags.Unk10)) // Mirror Image, Summon Gargoyle
                                     mask = UnitTypeMask.Guardian;
-                                    break;
-                                case SummonTitle.Totem:
-                                case SummonTitle.LightWell:
-                                    mask = UnitTypeMask.Totem;
-                                    break;
-                                case SummonTitle.Vehicle:
-                                case SummonTitle.Mount:
-                                    mask = UnitTypeMask.Summon;
-                                    break;
-                                case SummonTitle.Companion:
-                                    mask = UnitTypeMask.Minion;
-                                    break;
-                                default:
-                                    if (properties.Flags.HasAnyFlag(SummonPropFlags.Unk10)) // Mirror Image, Summon Gargoyle
-                                        mask = UnitTypeMask.Guardian;
-                                    break;
-                            }
-                            break;
+                                break;
                         }
+                        break;
+                    }
                     default:
                         return null;
                 }
@@ -464,14 +461,13 @@ namespace Game.Entities
                     break;
             }
 
-            float x, y, z, o;
-            pos.GetPosition(out x, out y, out z, out o);
+            pos.GetPosition(out float x, out float y, out float z, out float o);
             CalculatePassengerPosition(ref x, ref y, ref z, ref o);
 
             if (!summon.Create(map.GenerateLowGuid(HighGuid.Creature), map, entry, new Position(x, y, z, o), null, vehId))
                 return null;
 
-            PhasingHandler.InheritPhaseShift(summon, summoner ? (WorldObject)summoner : this);
+            PhasingHandler.InheritPhaseShift(summon, summoner ? summoner : this);
 
             summon.SetCreatedBySpell(spellId);
 
@@ -499,15 +495,11 @@ namespace Game.Entities
             return summon;
         }
 
-        public void CalculatePassengerPosition(ref float x, ref float y, ref float z, ref float o)
-        {
+        public void CalculatePassengerPosition(ref float x, ref float y, ref float z, ref float o) =>
             TransportPosHelper.CalculatePassengerPosition(ref x, ref y, ref z, ref o, GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation());
-        }
 
-        public void CalculatePassengerOffset(ref float x, ref float y, ref float z, ref float o)
-        {
+        public void CalculatePassengerOffset(ref float x, ref float y, ref float z, ref float o) =>
             TransportPosHelper.CalculatePassengerOffset(ref x, ref y, ref z, ref o, GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation());
-        }
 
         public void UpdatePosition(float x, float y, float z, float o)
         {
@@ -570,7 +562,7 @@ namespace Game.Entities
             _pendingStop = !enabled;
         }
 
-        public void SetDelayedAddModelToMap() { _delayedAddModel = true; }
+        public void SetDelayedAddModelToMap() => _delayedAddModel = true;
 
         void MoveToNextWaypoint()
         {
@@ -640,8 +632,7 @@ namespace Game.Entities
                             if (veh.GetTransport() == this)
                                 continue;
 
-                        float destX, destY, destZ, destO;
-                        obj.m_movementInfo.transport.pos.GetPosition(out destX, out destY, out destZ, out destO);
+                        obj.m_movementInfo.transport.pos.GetPosition(out float destX, out float destY, out float destZ, out float destO);
                         TransportPosHelper.CalculatePassengerPosition(ref destX, ref destY, ref destZ, ref destO, x, y, z, o);
 
                         obj.ToUnit().NearTeleportTo(destX, destY, destZ, destO);
@@ -669,10 +660,9 @@ namespace Game.Entities
                   z = nextFrame.Node.Loc.Z,
                   o = nextFrame.InitialOrientation;
 
-            foreach(WorldObject obj in _passengers.ToList())
+            foreach (WorldObject obj in _passengers.ToList())
             {
-                float destX, destY, destZ, destO;
-                obj.m_movementInfo.transport.pos.GetPosition(out destX, out destY, out destZ, out destO);
+                obj.m_movementInfo.transport.pos.GetPosition(out float destX, out float destY, out float destZ, out float destO);
                 TransportPosHelper.CalculatePassengerPosition(ref destX, ref destY, ref destZ, ref destO, x, y, z, o);
 
                 switch (obj.GetTypeId())
@@ -712,20 +702,19 @@ namespace Game.Entities
 
                 // Do not use Unit.UpdatePosition here, we don't want to remove auras
                 // as if regular movement occurred
-                float x, y, z, o;
-                passenger.m_movementInfo.transport.pos.GetPosition(out x, out y, out z, out o);
+                passenger.m_movementInfo.transport.pos.GetPosition(out float x, out float y, out float z, out float o);
                 CalculatePassengerPosition(ref x, ref y, ref z, ref o);
                 switch (passenger.GetTypeId())
                 {
                     case TypeId.Unit:
-                        {
-                            Creature creature = passenger.ToCreature();
-                            GetMap().CreatureRelocation(creature, x, y, z, o, false);
-                            creature.GetTransportHomePosition(out x, out y, out z, out o);
-                            CalculatePassengerPosition(ref x, ref y, ref z, ref o);
-                            creature.SetHomePosition(x, y, z, o);
-                            break;
-                        }
+                    {
+                        Creature creature = passenger.ToCreature();
+                        GetMap().CreatureRelocation(creature, x, y, z, o, false);
+                        creature.GetTransportHomePosition(out x, out y, out z, out o);
+                        CalculatePassengerPosition(ref x, ref y, ref z, ref o);
+                        creature.SetHomePosition(x, y, z, o);
+                        break;
+                    }
                     case TypeId.Player:
                         if (passenger.IsInWorld && !passenger.ToPlayer().IsBeingTeleported())
                         {
@@ -779,18 +768,18 @@ namespace Game.Entities
             ClearUpdateMask(true);
         }
 
-        public HashSet<WorldObject> GetPassengers() { return _passengers; }
+        public HashSet<WorldObject> GetPassengers() => _passengers;
 
-        public override uint GetTransportPeriod() { return m_gameObjectData.Level; }
-        public void SetPeriod(uint period) { SetLevel(period); }
-        uint GetTimer() { return m_goValue.Transport.PathProgress; }
+        public override uint GetTransportPeriod() => GetUpdateField<uint>(GameObjectFields.Level);
+        public void SetPeriod(uint period) => SetLevel(period);
+        uint GetTimer() => m_goValue.Transport.PathProgress;
 
-        public List<KeyFrame> GetKeyFrames() { return _transportInfo.keyFrames; }
-        public TransportTemplate GetTransportTemplate() { return _transportInfo; }
+        public List<KeyFrame> GetKeyFrames() => _transportInfo.keyFrames;
+        public TransportTemplate GetTransportTemplate() => _transportInfo;
 
         //! Helpers to know if stop frame was reached
-        bool IsMoving() { return _isMoving; }
-        void SetMoving(bool val) { _isMoving = val; }
+        bool IsMoving() => _isMoving;
+        void SetMoving(bool val) => _isMoving = val;
 
         TransportTemplate _transportInfo;
 

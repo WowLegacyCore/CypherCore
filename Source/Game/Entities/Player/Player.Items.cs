@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,6 @@
 
 using Framework.Constants;
 using Framework.Database;
-using Game.Arenas;
 using Game.BattleGrounds;
 using Game.DataStorage;
 using Game.Groups;
@@ -32,7 +31,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Game.BattleFields;
-using Framework.Dynamic;
 
 namespace Game.Entities
 {
@@ -108,8 +106,7 @@ namespace Game.Entities
             SQLTransaction trans = new();
 
             // Delete any references to the refund data
-            item.SetNotRefundable(this, true, trans, false);
-            GetSession().GetCollectionMgr().RemoveTemporaryAppearance(item);
+            item.SetNotRefundable(this, true, trans);
 
             // Destroy item
             DestroyItem(item.GetBagSlot(), item.GetSlot(), true);
@@ -223,7 +220,7 @@ namespace Game.Entities
             SendPacket(itemPurchaseRefundResult);
         }
 
-        //Trade 
+        //Trade
         void AddTradeableItem(Item item)
         {
             m_itemSoulboundTradeable.Add(item.GetGUID());
@@ -303,7 +300,7 @@ namespace Game.Entities
             if (item == null)
                 return;
 
-            uint pMaxDurability = item.m_itemData.MaxDurability;
+            uint pMaxDurability = item.GetMaxDurability();
 
             if (pMaxDurability == 0)
                 return;
@@ -354,8 +351,8 @@ namespace Game.Entities
             if (HasAuraType(AuraType.PreventDurabilityLoss))
                 return;
 
-            uint pMaxDurability = item.m_itemData.MaxDurability;
-            uint pOldDurability = item.m_itemData.Durability;
+            uint pMaxDurability = item.GetMaxDurability();
+            uint pOldDurability = item.GetDurability();
             int pNewDurability = (int)(pOldDurability - points);
 
             if (pNewDurability < 0)
@@ -409,11 +406,11 @@ namespace Game.Entities
             if (item == null)
                 return TotalCost;
 
-            uint maxDurability = item.m_itemData.MaxDurability;
+            uint maxDurability = item.GetMaxDurability();
             if (maxDurability == 0)
                 return TotalCost;
 
-            uint curDurability = item.m_itemData.Durability;
+            uint curDurability = item.GetDurability();
 
             if (cost)
             {
@@ -1268,8 +1265,6 @@ namespace Game.Entities
             if (item != null)
             {
                 ItemAddedQuestCheck(itemId, count);
-                UpdateCriteria(CriteriaTypes.ReceiveEpicItem, itemId, count);
-                UpdateCriteria(CriteriaTypes.OwnItem, itemId, 1);
 
                 item.AddItemFlag(ItemFieldFlags.NewItem);
 
@@ -1464,7 +1459,7 @@ namespace Game.Entities
             if (Convert.ToBoolean(proto.GetFlags2() & ItemFlags2.FactionAlliance) && GetTeam() != Team.Alliance)
                 return InventoryResult.CantEquipEver;
 
-            if ((proto.GetAllowableClass() & GetClassMask()) == 0 || (proto.GetAllowableRace() & (long)SharedConst.GetMaskForRace(GetRace())) == 0)
+            if ((proto.GetAllowableClass() & GetClassMask()) == 0 || (proto.GetAllowableRace() & SharedConst.GetMaskForRace(GetRace())) == 0)
                 return InventoryResult.CantEquipEver;
 
             if (proto.GetRequiredSkill() != 0)
@@ -1539,7 +1534,6 @@ namespace Game.Entities
             if (pItem != null)
             {
                 ItemAddedQuestCheck(item, 1);
-                UpdateCriteria(CriteriaTypes.ReceiveEpicItem, item, 1);
                 return EquipItem(pos, pItem, update);
             }
 
@@ -1590,8 +1584,6 @@ namespace Game.Entities
                         }
                     }
                 }
-
-                pItem.AddItemFlag2(ItemFieldFlags2.Equipped);
 
                 if (IsInWorld && update)
                 {
@@ -1645,10 +1637,6 @@ namespace Game.Entities
 
             if (slot == EquipmentSlot.MainHand || slot == EquipmentSlot.OffHand)
                 CheckTitanGripPenalty();
-
-            // only for full equip instead adding to stack
-            UpdateCriteria(CriteriaTypes.EquipItem, pItem.GetEntry());
-            UpdateCriteria(CriteriaTypes.EquipEpicItem, slot, pItem.GetEntry());
 
             UpdateAverageItemLevelEquipped();
 
@@ -1764,8 +1752,6 @@ namespace Game.Entities
                 byte slot = (byte)(pos & 255);
                 VisualizeItem(slot, pItem);
 
-                pItem.AddItemFlag2(ItemFieldFlags2.Equipped);
-
                 if (IsInWorld)
                 {
                     pItem.AddToWorld();
@@ -1774,9 +1760,6 @@ namespace Game.Entities
 
                 if (slot == EquipmentSlot.MainHand || slot == EquipmentSlot.OffHand)
                     CheckTitanGripPenalty();
-
-                UpdateCriteria(CriteriaTypes.EquipItem, pItem.GetEntry());
-                UpdateCriteria(CriteriaTypes.EquipEpicItem, slot, pItem.GetEntry());
             }
         }
         public void SendEquipError(InventoryResult msg, Item item1 = null, Item item2 = null, uint itemId = 0)
@@ -1825,12 +1808,11 @@ namespace Game.Entities
             SendPacket(failure);
         }
 
-        //Add/Remove/Misc Item 
+        //Add/Remove/Misc Item
         public bool AddItem(uint itemId, uint count)
         {
-            uint noSpaceForCount;
             List<ItemPosCount> dest = new();
-            InventoryResult msg = CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, itemId, count, out noSpaceForCount);
+            InventoryResult msg = CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, itemId, count, out uint noSpaceForCount);
             if (msg != InventoryResult.Ok)
                 count -= noSpaceForCount;
 
@@ -1875,7 +1857,6 @@ namespace Game.Entities
                             Item.RemoveItemsSetItem(this, pProto);
 
                         _ApplyItemMods(pItem, slot, false, update);
-                        pItem.RemoveItemFlag2(ItemFieldFlags2.Equipped);
 
                         // remove item dependent auras and casts (only weapon and armor slots)
                         if (slot < EquipmentSlot.End)
@@ -2017,8 +1998,7 @@ namespace Game.Entities
                 // change item amount before check (for unique max count check), provide space for splitted items
                 pSrcItem.SetCount(pSrcItem.GetCount() - count);
 
-                ushort dest;
-                InventoryResult msg = CanEquipItem(dstslot, out dest, pNewItem, false);
+                InventoryResult msg = CanEquipItem(dstslot, out ushort dest, pNewItem, false);
                 if (msg != InventoryResult.Ok)
                 {
                     pSrcItem.SetCount(pSrcItem.GetCount() + count);
@@ -2049,7 +2029,7 @@ namespace Game.Entities
 
             if (pSrcItem.HasItemFlag(ItemFieldFlags.Child))
             {
-                Item parentItem = GetItemByGuid(pSrcItem.m_itemData.Creator);
+                Item parentItem = GetItemByGuid(pSrcItem.GetCreator());
                 if (parentItem)
                 {
                     if (IsEquipmentPos(src))
@@ -2063,7 +2043,7 @@ namespace Game.Entities
             }
             else if (pDstItem && pDstItem.HasItemFlag(ItemFieldFlags.Child))
             {
-                Item parentItem = GetItemByGuid(pDstItem.m_itemData.Creator);
+                Item parentItem = GetItemByGuid(pDstItem.GetCreator());
                 if (parentItem)
                 {
                     if (IsEquipmentPos(dst))
@@ -2165,8 +2145,7 @@ namespace Game.Entities
                 }
                 else if (IsEquipmentPos(dst))
                 {
-                    ushort _dest;
-                    InventoryResult msg = CanEquipItem(dstslot, out _dest, pSrcItem, false);
+                    InventoryResult msg = CanEquipItem(dstslot, out ushort _dest, pSrcItem, false);
                     if (msg != InventoryResult.Ok)
                     {
                         SendEquipError(msg, pSrcItem);
@@ -2502,7 +2481,7 @@ namespace Game.Entities
             //packet.QuestLogItemID;
             packet.Quantity = quantity;
             packet.QuantityInInventory = GetItemCount(item.GetEntry());
-            //packet.DungeonEncounterID; 
+            //packet.DungeonEncounterID;
             packet.BattlePetSpeciesID = (int)item.GetModifier(ItemModifier.BattlePetSpeciesId);
             packet.BattlePetBreedID = (int)item.GetModifier(ItemModifier.BattlePetBreedData) & 0xFFFFFF;
             packet.BattlePetBreedQuality = (item.GetModifier(ItemModifier.BattlePetBreedData) >> 24) & 0xFF;
@@ -2529,7 +2508,7 @@ namespace Game.Entities
         }
         void AddItemDurations(Item item)
         {
-            if (item.m_itemData.Expiration != 0)
+            if (item.GetUpdateField<uint>(ItemFields.Expiration) != 0)
             {
                 m_itemDuration.Add(item);
                 item.SendTimeUpdate(this);
@@ -2932,7 +2911,7 @@ namespace Game.Entities
                 return InventoryResult.ItemNotFound;
 
             // Used by group, function GroupLoot, to know if a prototype can be used by a player
-            if ((proto.GetAllowableClass() & GetClassMask()) == 0 || (proto.GetAllowableRace() & (long)SharedConst.GetMaskForRace(GetRace())) == 0)
+            if ((proto.GetAllowableClass() & GetClassMask()) == 0 || (proto.GetAllowableRace() & SharedConst.GetMaskForRace(GetRace())) == 0)
                 return InventoryResult.CantEquipEver;
 
             if (proto.GetRequiredSpell() != 0 && !HasSpell(proto.GetRequiredSpell()))
@@ -2953,7 +2932,7 @@ namespace Game.Entities
             if (proto.GetClass() == ItemClass.Armor && proto.GetSubClass() > (uint)ItemSubClassArmor.Miscellaneous
                 && proto.GetSubClass() < (uint)ItemSubClassArmor.Cosmetic && proto.GetInventoryType() != InventoryType.Cloak)
             {
-                if (_class == Class.Warrior || _class == Class.Paladin || _class == Class.Deathknight)
+                if (_class == Class.Warrior || _class == Class.Paladin)
                 {
                     if (GetLevel() < 40)
                     {
@@ -2994,7 +2973,7 @@ namespace Game.Entities
                 // if current back slot non-empty search oldest or free
                 if (m_items[slot] != null)
                 {
-                    uint oldest_time = m_activePlayerData.BuybackTimestamp[0];
+                    uint oldest_time = GetUpdateField<uint>(ActivePlayerFields.BuybackTimestamp);
                     uint oldest_slot = InventorySlots.BuyBackStart;
 
                     for (byte i = InventorySlots.BuyBackStart + 1; i < InventorySlots.BuyBackEnd; ++i)
@@ -3006,7 +2985,7 @@ namespace Game.Entities
                             break;
                         }
 
-                        uint i_time = m_activePlayerData.BuybackTimestamp[i - InventorySlots.BuyBackStart];
+                        uint i_time = GetUpdateField<uint>(ActivePlayerFields.BuybackTimestamp + i - InventorySlots.BuyBackStart);
 
                         if (oldest_time > i_time)
                         {
@@ -3153,12 +3132,6 @@ namespace Game.Entities
                 }
 
                 if (iece.Flags.HasAnyFlag((byte)ItemExtendedCostFlags.RequireGuild) && GetGuildId() == 0)
-                {
-                    SendEquipError(InventoryResult.VendorMissingTurnins); // Find correct error
-                    return false;
-                }
-
-                if (iece.RequiredAchievement != 0 && !HasAchieved(iece.RequiredAchievement))
                 {
                     SendEquipError(InventoryResult.VendorMissingTurnins); // Find correct error
                     return false;
@@ -3356,12 +3329,6 @@ namespace Game.Entities
                     SendEquipError(InventoryResult.VendorMissingTurnins); // Find correct error
                     return false;
                 }
-
-                if (iece.RequiredAchievement != 0 && !HasAchieved(iece.RequiredAchievement))
-                {
-                    SendEquipError(InventoryResult.VendorMissingTurnins); // Find correct error
-                    return false;
-                }
             }
 
             ulong price = 0;
@@ -3420,7 +3387,6 @@ namespace Game.Entities
                         guild.AddGuildNews(GuildNews.ItemPurchased, GetGUID(), 0, item);
                 }
 
-                UpdateCriteria(CriteriaTypes.BoughtItemFromVendor, 1);
                 return true;
             }
 
@@ -3457,8 +3423,8 @@ namespace Game.Entities
             draft.SendMailTo(trans, new MailReceiver(this, GetGUID().GetCounter()), sender);
             DB.Characters.CommitTransaction(trans);
         }
-        public void SetBuybackPrice(uint slot, uint price) { SetUpdateFieldValue(ref m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.BuybackPrice, (int)slot), price); }
-        public void SetBuybackTimestamp(uint slot, uint timestamp) { SetUpdateFieldValue(ref m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.BuybackTimestamp, (int)slot), timestamp); }
+        public void SetBuybackPrice(uint slot, uint price) => SetUpdateField<uint>(ActivePlayerFields.BuybackPrice + (int)slot, price);
+        public void SetBuybackTimestamp(uint slot, uint timestamp) => SetUpdateField<uint>(ActivePlayerFields.BuybackTimestamp + (int)slot, timestamp);
 
         public Item GetItemFromBuyBackSlot(uint slot)
         {
@@ -3482,7 +3448,7 @@ namespace Game.Entities
                         if (itemTemplate != null)
                             if (itemTemplate.GetFlags().HasAnyFlag(ItemFlags.HasLoot))
                                 Global.LootItemStorage.RemoveStoredLootForContainer(pItem.GetGUID().GetCounter());
-                        
+
                         pItem.SetState(ItemUpdateState.Removed, this);
                     }
                 }
@@ -3568,15 +3534,13 @@ namespace Game.Entities
             ApplyItemEquipSpell(item, apply);
 
             if (updateItemAuras)
-            { 
+            {
                 ApplyItemDependentAuras(item, apply);
                 WeaponAttackType attackType = Player.GetAttackBySlot(slot, item.GetTemplate().GetInventoryType());
                 if (attackType != WeaponAttackType.Max)
                     UpdateWeaponDependentAuras(attackType);
             }
 
-            ApplyArtifactPowers(item, apply);
-            ApplyAzeritePowers(item, apply);
             ApplyEnchantment(item, apply);
 
             Log.outDebug(LogFilter.Player, "_ApplyItemMods complete.");
@@ -3803,9 +3767,9 @@ namespace Game.Entities
             uint armor = proto.GetArmor(itemLevel);
             if (armor != 0)
             {
-                HandleStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Total, (float)armor, apply);
+                HandleStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Total, armor, apply);
                 if (proto.GetClass() == ItemClass.Armor && (ItemSubClassArmor)proto.GetSubClass() == ItemSubClassArmor.Shield)
-                    SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.ShieldBlock), apply ? (uint)(armor * 2.5f) : 0);
+                    SetUpdateField<float>(ActivePlayerFields.ShieldBlock, apply ? armor * 2.5f : 0.0f);
             }
 
             WeaponAttackType attType = GetAttackBySlot(slot, proto.GetInventoryType());
@@ -3946,7 +3910,6 @@ namespace Game.Entities
 
                     ApplyItemEquipSpell(m_items[i], false);
                     ApplyEnchantment(m_items[i], false);
-                    ApplyArtifactPowers(m_items[i], false);
                 }
             }
 
@@ -4001,7 +3964,6 @@ namespace Game.Entities
                         continue;
 
                     ApplyItemEquipSpell(m_items[i], true);
-                    ApplyArtifactPowers(m_items[i], true);
                     ApplyEnchantment(m_items[i], true);
                 }
             }
@@ -4019,34 +3981,6 @@ namespace Game.Entities
                         continue;
 
                     _ApplyItemMods(m_items[i], i, apply);
-                }
-            }
-        }
-
-        void ApplyAllAzeriteItemMods(bool apply)
-        {
-            for (byte i = 0; i < InventorySlots.BagEnd; ++i)
-            {
-                if (m_items[i])
-                {
-                    if (!m_items[i].IsAzeriteItem() || m_items[i].IsBroken() || !CanUseAttackType(Player.GetAttackBySlot(i, m_items[i].GetTemplate().GetInventoryType())))
-                        continue;
-
-                    ApplyAzeritePowers(m_items[i], apply);
-                }
-            }
-        }
-
-        void ApplyAllAzeriteEmpoweredItemMods(bool apply)
-        {
-            for (byte i = 0; i < InventorySlots.BagEnd; ++i)
-            {
-                if (m_items[i])
-                {
-                    if (!m_items[i].IsAzeriteEmpoweredItem() || m_items[i].IsBroken() || !CanUseAttackType(Player.GetAttackBySlot(i, m_items[i].GetTemplate().GetInventoryType())))
-                        continue;
-
-                    ApplyAzeritePowers(m_items[i], apply);
                 }
             }
         }
@@ -4153,7 +4087,7 @@ namespace Game.Entities
 
             if (pSrcItem)
             {
-                if (pSrcItem.IsNotEmptyBag() && !IsBagPos((ushort)((ushort)bag << 8 | slot)))
+                if (pSrcItem.IsNotEmptyBag() && !IsBagPos((ushort)(bag << 8 | slot)))
                     return InventoryResult.DestroyNonemptyBag;
 
                 if (pSrcItem.HasItemFlag(ItemFieldFlags.Child) && !IsEquipmentPos(bag, slot) && !IsChildEquipmentPos(bag, slot))
@@ -4222,9 +4156,8 @@ namespace Game.Entities
             {
                 ItemRemovedQuestCheck(it.GetEntry(), it.GetCount());
                 RemoveItem(bag, slot, update);
-                it.SetNotRefundable(this, false, null, false);
+                it.SetNotRefundable(this, false, null);
                 Item.RemoveItemFromUpdateQueueOf(it, this);
-                GetSession().GetCollectionMgr().RemoveTemporaryAppearance(it);
                 if (it.IsInWorld)
                 {
                     it.RemoveFromWorld();
@@ -4236,7 +4169,6 @@ namespace Game.Entities
         {
             // update quest counters
             ItemAddedQuestCheck(pItem.GetEntry(), pItem.GetCount());
-            UpdateCriteria(CriteriaTypes.ReceiveEpicItem, pItem.GetEntry(), pItem.GetCount());
 
             // store item
             Item pLastItem = StoreItem(dest, pItem, update);
@@ -4514,7 +4446,7 @@ namespace Game.Entities
 
             return freeSlotCount;
         }
-        
+
         //Bags
         public Bag GetBagByPos(byte bag)
         {
@@ -4840,7 +4772,7 @@ namespace Game.Entities
                     ContentTuningLevels? requiredLevels = null;
                     // check allowed level (extend range to upper values if MaxLevel more or equal max player level, this let GM set high level with 1...max range items)
                     if (pItem.GetQuality() == ItemQuality.Heirloom)
-                        requiredLevels = Global.DB2Mgr.GetContentTuningData(pItem.GetScalingContentTuningId(), 0, true);
+                        requiredLevels = Global.DB2Mgr.GetContentTuningData(pItem.GetScalingContentTuningId(), true);
 
                     if (requiredLevels.HasValue && requiredLevels.Value.MaxLevel < SharedConst.DefaultMaxLevel && requiredLevels.Value.MaxLevel < GetLevel() && Global.DB2Mgr.GetHeirloomByItemId(pProto.GetId()) == null)
                         return InventoryResult.NotEquippable;
@@ -4923,7 +4855,7 @@ namespace Game.Entities
                             // offhand item must can be stored in inventory for offhand item and it also must be unequipped
                             Item offItem = GetItemByPos(InventorySlots.Bag0, EquipmentSlot.OffHand);
                             List<ItemPosCount> off_dest = new();
-                            if (offItem != null && (!not_loading || CanUnequipItem(((int)InventorySlots.Bag0 << 8) | (int)EquipmentSlot.OffHand, false) != InventoryResult.Ok ||
+                            if (offItem != null && (!not_loading || CanUnequipItem((InventorySlots.Bag0 << 8) | EquipmentSlot.OffHand, false) != InventoryResult.Ok ||
                                 CanStoreItem(ItemConst.NullBag, ItemConst.NullSlot, off_dest, offItem, false) != InventoryResult.Ok))
                                 return swap ? InventoryResult.CantSwap : InventoryResult.InvFull;
                         }
@@ -4983,7 +4915,7 @@ namespace Game.Entities
                 return res;
 
             // check unique-equipped on gems
-            foreach (SocketedGem gemData in pItem.m_itemData.Gems)
+            foreach (ItemDynamicFieldGems gemData in pItem.GetGems())
             {
                 ItemTemplate pGem = Global.ObjectMgr.GetItemTemplate(gemData.ItemId);
                 if (pGem == null)
@@ -5078,213 +5010,6 @@ namespace Game.Entities
         //Child
         public static bool IsChildEquipmentPos(ushort pos) { return IsChildEquipmentPos((byte)(pos >> 8), (byte)(pos & 255)); }
 
-        //Artifact
-        void ApplyArtifactPowers(Item item, bool apply)
-        {
-            if (item.IsArtifactDisabled())
-                return;
-
-            foreach (ArtifactPower artifactPower in item.m_itemData.ArtifactPowers)
-            {
-                byte rank = artifactPower.CurrentRankWithBonus;
-                if (rank == 0)
-                    continue;
-
-                if (CliDB.ArtifactPowerStorage[artifactPower.ArtifactPowerId].Flags.HasAnyFlag(ArtifactPowerFlag.ScalesWithNumPowers))
-                    rank = 1;
-
-                ArtifactPowerRankRecord artifactPowerRank = Global.DB2Mgr.GetArtifactPowerRank(artifactPower.ArtifactPowerId, (byte)(rank - 1));
-                if (artifactPowerRank == null)
-                    continue;
-
-                ApplyArtifactPowerRank(item, artifactPowerRank, apply);
-            }
-
-            ArtifactAppearanceRecord artifactAppearance = CliDB.ArtifactAppearanceStorage.LookupByKey(item.GetModifier(ItemModifier.ArtifactAppearanceId));
-            if (artifactAppearance != null)
-                if (artifactAppearance.OverrideShapeshiftDisplayID != 0 && GetShapeshiftForm() == (ShapeShiftForm)artifactAppearance.OverrideShapeshiftFormID)
-                    RestoreDisplayId();
-        }
-
-        public void ApplyArtifactPowerRank(Item artifact, ArtifactPowerRankRecord artifactPowerRank, bool apply)
-        {
-            SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(artifactPowerRank.SpellID, Difficulty.None);
-            if (spellInfo == null)
-                return;
-
-            if (spellInfo.IsPassive())
-            {
-                AuraApplication powerAura = GetAuraApplication(artifactPowerRank.SpellID, ObjectGuid.Empty, artifact.GetGUID());
-                if (powerAura != null)
-                {
-                    if (apply)
-                    {
-                        foreach (AuraEffect auraEffect in powerAura.GetBase().GetAuraEffects())
-                        {
-                            if (auraEffect == null)
-                                continue;
-
-                            if (powerAura.HasEffect(auraEffect.GetEffIndex()))
-                                auraEffect.ChangeAmount((int)(artifactPowerRank.AuraPointsOverride != 0 ? artifactPowerRank.AuraPointsOverride : auraEffect.GetSpellEffectInfo().CalcValue()));
-                        }
-                    }
-                    else
-                        RemoveAura(powerAura);
-                }
-                else if (apply)
-                {
-                    CastSpellExtraArgs args = new(TriggerCastFlags.FullMask);
-                    args.CastItem = artifact;
-                    if (artifactPowerRank.AuraPointsOverride != 0)
-                        for (int i = 0; i < SpellConst.MaxEffects; ++i)
-                            if (spellInfo.GetEffect((uint)i) != null)
-                                args.AddSpellMod(SpellValueMod.BasePoint0 + i, (int)artifactPowerRank.AuraPointsOverride);
-
-                    CastSpell(this, artifactPowerRank.SpellID, args);
-                }
-            }
-            else
-            {
-                if (apply && !HasSpell(artifactPowerRank.SpellID))
-                {
-                    AddTemporarySpell(artifactPowerRank.SpellID);
-                    LearnedSpells learnedSpells = new();
-                    learnedSpells.SuppressMessaging = true;
-                    learnedSpells.SpellID.Add(artifactPowerRank.SpellID);
-                    SendPacket(learnedSpells);
-                }
-                else if (!apply)
-                {
-                    RemoveTemporarySpell(artifactPowerRank.SpellID);
-                    UnlearnedSpells unlearnedSpells = new();
-                    unlearnedSpells.SuppressMessaging = true;
-                    unlearnedSpells.SpellID.Add(artifactPowerRank.SpellID);
-                    SendPacket(unlearnedSpells);
-                }
-            }
-        }
-
-        void ApplyAzeritePowers(Item item, bool apply)
-        {
-            AzeriteItem azeriteItem = item.ToAzeriteItem();
-            if (azeriteItem != null)
-            {
-                // milestone powers
-                foreach (uint azeriteItemMilestonePowerId in azeriteItem.m_azeriteItemData.UnlockedEssenceMilestones)
-                    ApplyAzeriteItemMilestonePower(azeriteItem, CliDB.AzeriteItemMilestonePowerStorage.LookupByKey(azeriteItemMilestonePowerId), apply);
-
-                // essences
-                SelectedAzeriteEssences selectedEssences = azeriteItem.GetSelectedAzeriteEssences();
-                if (selectedEssences != null)
-                {
-                    for (byte slot = 0; slot < SharedConst.MaxAzeriteEssenceSlot; ++slot)
-                        if (selectedEssences.AzeriteEssenceID[slot] != 0)
-                            ApplyAzeriteEssence(azeriteItem, selectedEssences.AzeriteEssenceID[slot], azeriteItem.GetEssenceRank(selectedEssences.AzeriteEssenceID[slot]),
-                                (AzeriteItemMilestoneType)Global.DB2Mgr.GetAzeriteItemMilestonePower(slot).Type == AzeriteItemMilestoneType.MajorEssence, apply);
-                }
-            }
-            else
-            {
-                AzeriteEmpoweredItem azeriteEmpoweredItem = item.ToAzeriteEmpoweredItem();
-                if (azeriteEmpoweredItem)
-                {
-                    if (!apply || GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.Equipment))
-                    {
-                        for (int i = 0; i < SharedConst.MaxAzeriteEmpoweredTier; ++i)
-                        {
-                            AzeritePowerRecord azeritePower = CliDB.AzeritePowerStorage.LookupByKey(azeriteEmpoweredItem.GetSelectedAzeritePower(i));
-                            if (azeritePower != null)
-                                ApplyAzeritePower(azeriteEmpoweredItem, azeritePower, apply);
-                        }
-                    }
-                }
-            }
-        }
-
-        public void ApplyAzeriteItemMilestonePower(AzeriteItem item, AzeriteItemMilestonePowerRecord azeriteItemMilestonePower, bool apply)
-        {
-            AzeriteItemMilestoneType type = (AzeriteItemMilestoneType)azeriteItemMilestonePower.Type;
-            if (type == AzeriteItemMilestoneType.BonusStamina)
-            {
-                AzeritePowerRecord azeritePower = CliDB.AzeritePowerStorage.LookupByKey(azeriteItemMilestonePower.AzeritePowerID);
-                if (azeritePower != null)
-                {
-                    if (apply)
-                        CastSpell(this, azeritePower.SpellID, item);
-                    else
-                        RemoveAurasDueToItemSpell(azeritePower.SpellID, item.GetGUID());
-                }
-            }
-        }
-
-        public void ApplyAzeriteEssence(AzeriteItem item, uint azeriteEssenceId, uint rank, bool major, bool apply)
-        {
-            for (uint currentRank = 1; currentRank <= rank; ++currentRank)
-            {
-                AzeriteEssencePowerRecord azeriteEssencePower = Global.DB2Mgr.GetAzeriteEssencePower(azeriteEssenceId, currentRank);
-                if (azeriteEssencePower != null)
-                {
-                    ApplyAzeriteEssencePower(item, azeriteEssencePower, major, apply);
-                    if (major && currentRank == 1)
-                    {
-                        if (apply)
-                        {
-                            CastSpellExtraArgs args = new(TriggerCastFlags.FullMask);
-                            args.AddSpellMod(SpellValueMod.BasePoint0, (int)azeriteEssencePower.MajorPowerDescription);
-                            CastSpell(this, PlayerConst.SpellIdHeartEssenceActionBarOverride, args);
-                        }
-                        else
-                            RemoveAurasDueToSpell(PlayerConst.SpellIdHeartEssenceActionBarOverride);
-                    }
-                }
-            }
-        }
-
-        void ApplyAzeriteEssencePower(AzeriteItem item, AzeriteEssencePowerRecord azeriteEssencePower, bool major, bool apply)
-        {
-            SpellInfo powerSpell = Global.SpellMgr.GetSpellInfo(azeriteEssencePower.MinorPowerDescription, Difficulty.None);
-            if (powerSpell != null)
-            {
-                if (apply)
-                    CastSpell(this, powerSpell.Id, item);
-                else
-                    RemoveAurasDueToItemSpell(powerSpell.Id, item.GetGUID());
-            }
-
-            if (major)
-            {
-                powerSpell = Global.SpellMgr.GetSpellInfo(azeriteEssencePower.MajorPowerDescription, Difficulty.None);
-                if (powerSpell != null)
-                {
-                    if (powerSpell.IsPassive())
-                    {
-                        if (apply)
-                            CastSpell(this, powerSpell.Id, item);
-                        else
-                            RemoveAurasDueToItemSpell(powerSpell.Id, item.GetGUID());
-                    }
-                    else
-                    {
-                        if (apply)
-                            LearnSpell(powerSpell.Id, true, 0, true);
-                        else
-                            RemoveSpell(powerSpell.Id, false, false, true);
-                    }
-                }
-            }
-        }
-
-        public void ApplyAzeritePower(AzeriteEmpoweredItem item, AzeritePowerRecord azeritePower, bool apply)
-        {
-            if (apply)
-            {
-                if (azeritePower.SpecSetID == 0 || Global.DB2Mgr.IsSpecSetMember(azeritePower.SpecSetID, GetPrimarySpecialization()))
-                    CastSpell(this, azeritePower.SpellID, item);
-            }
-            else
-                RemoveAurasDueToItemSpell(azeritePower.SpellID, item.GetGUID());
-        }
-
         public bool HasItemOrGemWithIdEquipped(uint item, uint count, byte except_slot = ItemConst.NullSlot)
         {
             uint tempcount = 0;
@@ -5349,20 +5074,29 @@ namespace Game.Entities
         //Visual
         public void SetVisibleItemSlot(uint slot, Item pItem)
         {
-            var itemField = m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.VisibleItems, (int)slot);
             if (pItem != null)
             {
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemID), pItem.GetVisibleEntry(this));
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemAppearanceModID), pItem.GetVisibleAppearanceModId(this));
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemVisual), pItem.GetVisibleItemVisual(this));
+                SetUpdateField<uint>(PlayerFields.VisibleItems + (int)(slot * 2), pItem.GetVisibleEntry(this));
+                SetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), pItem.GetVisibleAppearanceModId(this));
+                SetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), pItem.GetVisibleItemVisual(this), 1);
             }
             else
             {
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemID), 0u);
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemAppearanceModID), (ushort)0);
-                SetUpdateFieldValue(itemField.ModifyValue(itemField.ItemVisual), (ushort)0);
+                SetUpdateField<uint>(PlayerFields.VisibleItems + (int)(slot * 2), 0);
+                SetUpdateField<uint>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), 0);
             }
         }
+
+        public VisibleItem GetVisibleItem(int slot)
+        {
+            return new()
+            {
+                ItemID              = GetUpdateField<uint>(PlayerFields.VisibleItems + (slot * 2)),
+                ItemAppearanceModID = GetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (slot * 2), 0),
+                ItemVisual          = GetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (slot * 2), 1)
+            };
+        }
+
         void VisualizeItem(uint slot, Item pItem)
         {
             if (pItem == null)
@@ -5370,11 +5104,7 @@ namespace Game.Entities
 
             // check also  BIND_WHEN_PICKED_UP and BIND_QUEST_ITEM for .additem or .additemset case by GM (not binded at adding to inventory)
             if (pItem.GetBonding() == ItemBondingType.OnEquip || pItem.GetBonding() == ItemBondingType.OnAcquire || pItem.GetBonding() == ItemBondingType.Quest)
-            {
                 pItem.SetBinding(true);
-                if (IsInWorld)
-                    GetSession().GetCollectionMgr().AddItemAppearance(pItem);
-            }
 
             Log.outDebug(LogFilter.Player, "STORAGE: EquipItem slot = {0}, item = {1}", slot, pItem.GetEntry());
 
@@ -5798,7 +5528,7 @@ namespace Game.Entities
             }
         }
 
-        public byte GetInventorySlotCount() { return m_activePlayerData.NumBackpackSlots;    }
+        public byte GetInventorySlotCount() => GetUpdateField<byte>(ActivePlayerFields.Bytes4, 2);
         public void SetInventorySlotCount(byte slots)
         {
             //ASSERT(slots <= (INVENTORY_SLOT_ITEM_END - INVENTORY_SLOT_ITEM_START));
@@ -5841,15 +5571,15 @@ namespace Game.Entities
                 }
             }
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.NumBackpackSlots), slots);
+            SetUpdateField<byte>(ActivePlayerFields.Bytes4, slots, 2);
         }
 
-        public byte GetBankBagSlotCount() { return m_activePlayerData.NumBankSlots; }
-        public void SetBankBagSlotCount(byte count) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.NumBankSlots), count); }
+        public byte GetBankBagSlotCount() => GetUpdateField<byte>(PlayerFields.Bytes1, 1);
+        public void SetBankBagSlotCount(byte count) => SetUpdateField<byte>(PlayerFields.Bytes1, count, 1);
 
         //Loot
-        public ObjectGuid GetLootGUID() { return m_playerData.LootTargetGUID; }
-        public void SetLootGUID(ObjectGuid guid) { SetUpdateFieldValue(m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.LootTargetGUID), guid); }
+        public ObjectGuid GetLootGUID() => GetUpdateField<ObjectGuid>(PlayerFields.LootTargetGUID);
+        public void SetLootGUID(ObjectGuid guid) => SetUpdateField<ObjectGuid>(PlayerFields.LootTargetGUID, guid);
         public void StoreLootItem(byte lootSlot, Loot loot, AELootResult aeResult = null)
         {
             LootItem item = loot.LootItemInSlot(lootSlot, this, out NotNormalLootItem qitem, out NotNormalLootItem ffaitem, out NotNormalLootItem conditem);
@@ -5928,12 +5658,7 @@ namespace Game.Entities
 
                 // if aeLooting then we must delay sending out item so that it appears properly stacked in chat
                 if (aeResult == null)
-                {
                     SendNewItem(newitem, item.count, false, false, true);
-                    UpdateCriteria(CriteriaTypes.LootItem, item.itemid, item.count);
-                    UpdateCriteria(CriteriaTypes.LootType, item.itemid, item.count, (ulong)loot.loot_type);
-                    UpdateCriteria(CriteriaTypes.LootEpicItem, item.itemid, item.count);
-                }
                 else
                     aeResult.Add(newitem, item.count, loot.loot_type);
 
@@ -5947,7 +5672,7 @@ namespace Game.Entities
         }
 
         public Dictionary<ObjectGuid, ObjectGuid> GetAELootView() { return m_AELootView; }
-        
+
         /// <summary>
         /// if in a Battleground a player dies, and an enemy removes the insignia, the player's bones is lootable
         /// Called by remove insignia spell effect
@@ -6478,7 +6203,7 @@ namespace Game.Entities
 
                 EquipmentSetID data = new();
                 data.GUID = eqSlot.Data.Guid;
-                data.Type = (int)eqSlot.Data.Type;
+                data.Type = 0;
                 data.SetID = eqSlot.Data.SetID;
                 SendPacket(data);
             }
@@ -6499,91 +6224,6 @@ namespace Game.Entities
                     break;
                 }
             }
-        }
-
-        //Void Storage
-        public bool IsVoidStorageUnlocked() { return HasPlayerFlag(PlayerFlags.VoidUnlocked); }
-        public void UnlockVoidStorage() { AddPlayerFlag(PlayerFlags.VoidUnlocked); }
-        public void LockVoidStorage() { RemovePlayerFlag(PlayerFlags.VoidUnlocked); }
-
-        public byte GetNextVoidStorageFreeSlot()
-        {
-            for (byte i = 0; i < SharedConst.VoidStorageMaxSlot; ++i)
-                if (_voidStorageItems[i] == null) // unused item
-                    return i;
-
-            return SharedConst.VoidStorageMaxSlot;
-        }
-
-        public byte GetNumOfVoidStorageFreeSlots()
-        {
-            byte count = 0;
-
-            for (byte i = 0; i < SharedConst.VoidStorageMaxSlot; ++i)
-                if (_voidStorageItems[i] == null)
-                    count++;
-
-            return count;
-        }
-
-        public byte AddVoidStorageItem(VoidStorageItem item)
-        {
-            byte slot = GetNextVoidStorageFreeSlot();
-
-            if (slot >= SharedConst.VoidStorageMaxSlot)
-            {
-                GetSession().SendVoidStorageTransferResult(VoidTransferError.Full);
-                return 255;
-            }
-
-            _voidStorageItems[slot] = item;
-            return slot;
-        }
-
-        public void DeleteVoidStorageItem(byte slot)
-        {
-            if (slot >= SharedConst.VoidStorageMaxSlot)
-            {
-                GetSession().SendVoidStorageTransferResult(VoidTransferError.InternalError1);
-                return;
-            }
-
-            _voidStorageItems[slot] = null;
-        }
-
-        public bool SwapVoidStorageItem(byte oldSlot, byte newSlot)
-        {
-            if (oldSlot >= SharedConst.VoidStorageMaxSlot || newSlot >= SharedConst.VoidStorageMaxSlot || oldSlot == newSlot)
-                return false;
-            
-            _voidStorageItems.Swap(newSlot, oldSlot);
-            return true;
-        }
-
-        public VoidStorageItem GetVoidStorageItem(byte slot)
-        {
-            if (slot >= SharedConst.VoidStorageMaxSlot)
-            {
-                GetSession().SendVoidStorageTransferResult(VoidTransferError.InternalError1);
-                return null;
-            }
-
-            return _voidStorageItems[slot];
-        }
-
-        public VoidStorageItem GetVoidStorageItem(ulong id, out byte slot)
-        {
-            slot = 0;
-            for (byte i = 0; i < SharedConst.VoidStorageMaxSlot; ++i)
-            {
-                if (_voidStorageItems[i] != null && _voidStorageItems[i].ItemId == id)
-                {
-                    slot = i;
-                    return _voidStorageItems[i];
-                }
-            }
-
-            return null;
         }
 
         //Misc
@@ -6774,7 +6414,6 @@ namespace Game.Entities
                 ItemTemplate itemTemplate = item.GetTemplate();
                 if (itemTemplate != null)
                 {
-                    ushort dest;
                     if (item.IsEquipped())
                     {
                         uint itemLevel = item.GetItemLevel(this);
@@ -6786,7 +6425,7 @@ namespace Game.Entities
                             slotData = (inventoryType, itemLevel, item.GetGUID());
                         }
                     }
-                    else if (CanEquipItem(ItemConst.NullSlot, out dest, item, true, false) == InventoryResult.Ok)
+                    else if (CanEquipItem(ItemConst.NullSlot, out ushort dest, item, true, false) == InventoryResult.Ok)
                     {
                         uint itemLevel = item.GetItemLevel(this);
                         InventoryType inventoryType = itemTemplate.GetInventoryType();
@@ -6838,5 +6477,12 @@ namespace Game.Entities
             totalItemLevel /= 16.0f;
             SetAverageItemLevelEquipped(totalItemLevel);
         }
+    }
+
+    public struct VisibleItem
+    {
+        public uint ItemID;
+        public ushort ItemAppearanceModID;
+        public ushort ItemVisual;
     }
 }

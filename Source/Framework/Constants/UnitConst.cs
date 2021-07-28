@@ -1,6 +1,6 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -144,20 +144,7 @@ namespace Framework.Constants
         Focus,
         Energy,
         ComboPoints,
-        Runes,
-        RunicPower,
-        SoulShards,
-        LunarPower,
-        HolyPower,
-        Alternate,
-        Maelstrom,
-        Chi,
-        Insanity,
-        BurningEmbers,
-        DemonicFury,
-        ArcaneCharges,
-        Fury,
-        Pain,
+        Happiness,
         Armor, // ARMOR..RESISTANCE_ARCANE must be in existed order, it's accessed by index values of SpellSchools enum.
         ResistanceHoly,
         ResistanceFire,
@@ -177,7 +164,7 @@ namespace Framework.Constants
         ResistanceStart = Armor,
         ResistanceEnd = ResistanceArcane + 1,
         PowerStart = Mana,
-        PowerEnd = Pain + 1
+        PowerEnd = Happiness + 1
     }
     public enum UnitModifierFlatType
     {
@@ -560,6 +547,7 @@ namespace Framework.Constants
         Normal
     }
 
+    [Flags]
     public enum UnitDynFlags
     {
         None                    = 0x00,
@@ -570,5 +558,13 @@ namespace Framework.Constants
         SpecialInfo             = 0x20,
         Dead                    = 0x40,
         ReferAFriend            = 0x80
+    }
+
+    public enum UnitBytes1Offset
+    {
+        Race,
+        Class,
+        PlayerClass,
+        Sex
     }
 }

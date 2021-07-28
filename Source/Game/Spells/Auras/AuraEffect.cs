@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,7 +21,6 @@ using Game.BattleFields;
 using Game.BattleGrounds;
 using Game.DataStorage;
 using Game.Entities;
-using Game.Loots;
 using Game.Maps;
 using Game.Networking.Packets;
 using System;
@@ -77,7 +76,7 @@ namespace Game.Spells
             if (!m_spellInfo.HasAttribute(SpellAttr8.MasterySpecialization) || MathFunctions.fuzzyEq(GetSpellEffectInfo().BonusCoefficient, 0.0f))
                 amount = GetSpellEffectInfo().CalcValue(caster, m_baseAmount, GetBase().GetOwner().ToUnit(), GetBase().GetCastItemId(), GetBase().GetCastItemLevel());
             else if (caster != null && caster.IsTypeId(TypeId.Player))
-                amount = (int)(caster.ToPlayer().m_activePlayerData.Mastery * GetSpellEffectInfo().BonusCoefficient);
+                amount = (int)(caster.ToPlayer().GetUpdateField<float>(ActivePlayerFields.Mastery) * GetSpellEffectInfo().BonusCoefficient);
 
             // custom amount calculations go here
             switch (GetAuraType())
@@ -214,7 +213,7 @@ namespace Game.Spells
                     if (m_spellInfo.IsChanneled())
                         caster.ModSpellDurationTime(m_spellInfo, ref _period);
                     else if (m_spellInfo.HasAttribute(SpellAttr5.HasteAffectDuration))
-                        _period = (int)(_period * caster.m_unitData.ModCastingSpeed);
+                        _period = (int)(_period * caster.GetModCastingSpeed());
                 }
             }
             else // prevent infinite loop on Update
@@ -448,7 +447,7 @@ namespace Game.Spells
         {
             return target.SpellCritChanceTaken(caster, null, this, GetSpellInfo().GetSchoolMask(), CalcPeriodicCritChance(caster), GetSpellInfo().GetAttackType());
         }
-        
+
         public bool IsAffectingSpell(SpellInfo spell)
         {
             if (spell == null)
@@ -798,7 +797,7 @@ namespace Game.Spells
         public void SetAmount(int amount) { _amount = amount; m_canBeRecalculated = false; }
 
         public float? GetEstimatedAmount() { return _estimatedAmount; }
-        
+
         public int GetPeriodicTimer() { return _periodicTimer; }
         public void SetPeriodicTimer(int periodicTimer) { _periodicTimer = periodicTimer; }
 
@@ -1920,13 +1919,10 @@ namespace Game.Spells
             if (target == null)
                 return;
 
-            uint bitIndex = (uint)GetMiscValue() - 1;
-            uint index = bitIndex / 32;
-            uint flag = 1u << ((int)bitIndex % 32);
             if (apply)
-                target.AddTrackResourceFlag(index, flag);
+                target.AddTrackResourceFlag(1u << (GetMiscValue() - 1));
             else
-                target.RemoveTrackResourceFlag(index, flag);
+                target.RemoveTrackResourceFlag(1u << (GetMiscValue() - 1));
         }
 
         [AuraEffectHandler(AuraType.TrackStealthed)]
@@ -2058,7 +2054,7 @@ namespace Game.Spells
                     {
                         if (mountEntry.IsSelfMount())
                         {
-                            displayId = 73200; //DisplayId: HiddenMount 
+                            displayId = 73200; //DisplayId: HiddenMount
                         }
                         else
                         {
@@ -2967,7 +2963,7 @@ namespace Game.Spells
                 {
                     if (spellGroupVal != 0)
                     {
-                        target.HandleStatFlatModifier((UnitMods.StatStart + (int)i), UnitModifierFlatType.Total, (float)spellGroupVal, !apply);
+                        target.HandleStatFlatModifier((UnitMods.StatStart + (int)i), UnitModifierFlatType.Total, spellGroupVal, !apply);
                         if (target.IsTypeId(TypeId.Player) || target.IsPet())
                             target.UpdateStatBuffMod(i);
                     }
@@ -3230,7 +3226,7 @@ namespace Game.Spells
             Unit target = aurApp.GetTarget();
 
             PowerType power = (PowerType)GetMiscValue();
-            UnitMods unitMod = (UnitMods)(UnitMods.PowerStart + (int)power);
+            UnitMods unitMod = UnitMods.PowerStart + (int)power;
 
             target.HandleStatFlatModifier(unitMod, UnitModifierFlatType.Total, GetAmount(), apply);
         }
@@ -3252,8 +3248,6 @@ namespace Game.Spells
             // Update manaregen value
             if (GetMiscValue() == (int)PowerType.Mana)
                 target.ToPlayer().UpdateManaRegen();
-            else if (GetMiscValue() == (int)PowerType.Runes)
-                target.ToPlayer().UpdateAllRunesRegen();
             // other powers are not immediate effects - implemented in Player.Regenerate, Creature.Regenerate
         }
 
@@ -3435,15 +3429,6 @@ namespace Game.Spells
                 float amount = target.GetTotalAuraMultiplier(AuraType.ModBaseManaPct);
                 target.SetStatPctModifier(UnitMods.Mana, UnitModifierPctType.Base, amount);
             }
-        }
-
-        [AuraEffectHandler(AuraType.ModManaCostPct)]
-        void HandleModManaCostPct(AuraApplication aurApp, AuraEffectHandleModes mode, bool apply)
-        {
-            if (!mode.HasAnyFlag(AuraEffectHandleModes.ChangeAmountMask | AuraEffectHandleModes.Stat))
-                return;
-
-            aurApp.GetTarget().ApplyModManaCostMultiplier(GetAmount() / 100.0f, apply);
         }
 
         [AuraEffectHandler(AuraType.ModPowerDisplay)]
@@ -4021,11 +4006,10 @@ namespace Game.Spells
             if ((GetMiscValueB() & (1 << (int)PowerType.Mana)) == 0)
                 return;
 
-            Unit target = aurApp.GetTarget();
-
-            for (int i = 0; i < (int)SpellSchools.Max; ++i)
-                if (Convert.ToBoolean(GetMiscValue() & (1 << i)))
-                    target.ApplyModManaCostModifier((SpellSchools)i, GetAmount(), apply);
+            // Unit target = aurApp.GetTarget();
+            // for (int i = 0; i < (int)SpellSchools.Max; ++i)
+            //     if (Convert.ToBoolean(GetMiscValue() & (1 << i)))
+            //         target.ApplyModManaCostModifier((SpellSchools)i, GetAmount(), apply);
         }
 
         [AuraEffectHandler(AuraType.ArenaPreparation)]
@@ -4459,11 +4443,10 @@ namespace Game.Spells
             }
 
             //Adding items
-            uint noSpaceForCount;
             uint count = (uint)GetAmount();
 
             List<ItemPosCount> dest = new();
-            InventoryResult msg = plCaster.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, GetSpellEffectInfo().ItemType, count, out noSpaceForCount);
+            InventoryResult msg = plCaster.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, GetSpellEffectInfo().ItemType, count, out uint noSpaceForCount);
             if (msg != InventoryResult.Ok)
             {
                 count -= noSpaceForCount;
@@ -4968,7 +4951,7 @@ namespace Game.Spells
                     }
                 case AuraType.PeriodicDamagePercent:
                     // ceil obtained value, it may happen that 10 ticks for 10% damage may not kill owner
-                    damage = (uint)Math.Ceiling(MathFunctions.CalculatePct((float)target.GetMaxHealth(), (float)damage));
+                    damage = (uint)Math.Ceiling(MathFunctions.CalculatePct((float)target.GetMaxHealth(), damage));
                     damage = target.SpellDamageBonusTaken(caster, GetSpellInfo(), damage, DamageEffectType.DOT);
                     break;
                 default:
@@ -5088,7 +5071,7 @@ namespace Game.Spells
             uint resist = damageInfo.GetResist();
 
             // SendSpellNonMeleeDamageLog expects non-absorbed/non-resisted damage
-            SpellNonMeleeDamage log = new(caster, target, GetSpellInfo(), GetBase().GetSpellVisual(), GetSpellInfo().GetSchoolMask(), GetBase().GetCastGUID());
+            SpellNonMeleeDamage log = new(caster, target, GetSpellInfo(), GetBase().GetSpellXSpellVisualID(), GetSpellInfo().GetSchoolMask(), GetBase().GetCastGUID());
             log.damage = damage;
             log.originalDamage = (uint)dmg;
             log.absorb = absorb;
@@ -5197,13 +5180,13 @@ namespace Game.Spells
             Log.outDebug(LogFilter.Spells, "PeriodicTick: {0} (TypeId: {1}) heal of {2} (TypeId: {3}) for {4} health inflicted by {5}",
                 GetCasterGUID().ToString(), GetCaster().GetTypeId(), target.GetGUID().ToString(), target.GetTypeId(), damage, GetId());
 
-            uint heal = (uint)damage;
+            uint heal = damage;
 
             HealInfo healInfo = new(caster, target, heal, GetSpellInfo(), GetSpellInfo().GetSchoolMask());
             Unit.CalcHealAbsorb(healInfo);
             Unit.DealHeal(healInfo);
 
-            SpellPeriodicAuraLogInfo pInfo = new(this, heal, (uint)damage, heal - healInfo.GetEffectiveHeal(), healInfo.GetAbsorb(), 0, 0.0f, crit);
+            SpellPeriodicAuraLogInfo pInfo = new(this, heal, damage, heal - healInfo.GetEffectiveHeal(), healInfo.GetAbsorb(), 0, 0.0f, crit);
             target.SendPeriodicAuraLog(pInfo);
 
             if (caster != null)
@@ -5360,7 +5343,7 @@ namespace Game.Spells
 
             SpellInfo spellProto = GetSpellInfo();
             // maybe has to be sent different to client, but not by SMSG_PERIODICAURALOG
-            SpellNonMeleeDamage damageInfo = new(caster, target, spellProto, GetBase().GetSpellVisual(), spellProto.SchoolMask, GetBase().GetCastGUID());
+            SpellNonMeleeDamage damageInfo = new(caster, target, spellProto, GetBase().GetSpellXSpellVisualID(), spellProto.SchoolMask, GetBase().GetCastGUID());
             // no SpellDamageBonus for burn mana
             caster.CalculateSpellDamageTaken(damageInfo, (int)(gain * dmgMultiplier), spellProto);
 
@@ -5405,7 +5388,7 @@ namespace Game.Spells
             float critChance = modOwner.SpellCritChanceDone(null, this, GetSpellInfo().GetSchoolMask(), GetSpellInfo().GetAttackType());
             return Math.Max(0.0f, critChance);
         }
-        
+
         void HandleBreakableCCAuraProc(AuraApplication aurApp, ProcEventInfo eventInfo)
         {
             int damageLeft = (int)(GetAmount() - eventInfo.GetDamageInfo().GetDamage());
@@ -5460,7 +5443,7 @@ namespace Game.Spells
                 return;
             }
 
-            SpellNonMeleeDamage damageInfo = new(target, triggerTarget, GetSpellInfo(), GetBase().GetSpellVisual(), GetSpellInfo().SchoolMask, GetBase().GetCastGUID());
+            SpellNonMeleeDamage damageInfo = new(target, triggerTarget, GetSpellInfo(), GetBase().GetSpellXSpellVisualID(), GetSpellInfo().SchoolMask, GetBase().GetCastGUID());
             int damage = (int)target.SpellDamageBonusDone(triggerTarget, GetSpellInfo(), (uint)GetAmount(), DamageEffectType.SpellDirect, GetSpellEffectInfo());
             damage = (int)triggerTarget.SpellDamageBonusTaken(target, GetSpellInfo(), (uint)damage, DamageEffectType.SpellDirect);
             target.CalculateSpellDamageTaken(damageInfo, damage, GetSpellInfo());
@@ -5484,23 +5467,6 @@ namespace Game.Spells
                 target.SendPacket(new WeatherPkt((WeatherState)GetMiscValue(), 1.0f));
             else
                 target.GetMap().SendZoneWeather(target.GetZoneId(), target);
-        }
-
-        [AuraEffectHandler(AuraType.EnableAltPower)]
-        void HandleEnableAltPower(AuraApplication aurApp, AuraEffectHandleModes mode, bool apply)
-        {
-            if (!mode.HasAnyFlag(AuraEffectHandleModes.Real))
-                return;
-
-            int altPowerId = GetMiscValue();
-            UnitPowerBarRecord powerEntry = CliDB.UnitPowerBarStorage.LookupByKey(altPowerId);
-            if (powerEntry == null)
-                return;
-
-            if (apply)
-                aurApp.GetTarget().SetMaxPower(PowerType.AlternatePower, (int)powerEntry.MaxPower);
-            else
-                aurApp.GetTarget().SetMaxPower(PowerType.AlternatePower, 0);
         }
 
         [AuraEffectHandler(AuraType.ModSpellCategoryCooldown)]
@@ -5597,7 +5563,7 @@ namespace Game.Spells
 
             if (apply)
             {
-                AreaTrigger.CreateAreaTrigger((uint)GetMiscValue(), GetCaster(), target, GetSpellInfo(), target, GetBase().GetDuration(), GetBase().GetSpellVisual(), ObjectGuid.Empty, this);
+                AreaTrigger.CreateAreaTrigger((uint)GetMiscValue(), GetCaster(), target, GetSpellInfo(), target, GetBase().GetDuration(), GetBase().GetSpellXSpellVisualID(), ObjectGuid.Empty, this);
             }
             else
             {

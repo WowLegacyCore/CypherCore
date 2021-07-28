@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -45,10 +45,9 @@ namespace Game.Chat
         [Command("mana", RBACPermissions.CommandModifyMana)]
         static bool HandleModifyManaCommand(StringArguments args, CommandHandler handler)
         {
-            int mana, manamax;
             Player target = handler.GetSelectedPlayerOrSelf();
 
-            if (CheckModifyResources(args, handler, target, out mana, out manamax))
+            if (CheckModifyResources(args, handler, target, out int mana, out int manamax))
             {
                 NotifyModification(handler, target, CypherStrings.YouChangeMana, CypherStrings.YoursManaChanged, mana, manamax);
                 target.SetMaxPower(PowerType.Mana, manamax);
@@ -62,10 +61,9 @@ namespace Game.Chat
         [Command("energy", RBACPermissions.CommandModifyEnergy)]
         static bool HandleModifyEnergyCommand(StringArguments args, CommandHandler handler)
         {
-            int energy, energymax;
             Player target = handler.GetSelectedPlayerOrSelf();
             byte energyMultiplier = 10;
-            if (CheckModifyResources(args, handler, target, out energy, out energymax, energyMultiplier))
+            if (CheckModifyResources(args, handler, target, out int energy, out int energymax, energyMultiplier))
             {
                 NotifyModification(handler, target, CypherStrings.YouChangeEnergy, CypherStrings.YoursEnergyChanged, energy / energyMultiplier, energymax / energyMultiplier);
                 target.SetMaxPower(PowerType.Energy, energymax);
@@ -78,30 +76,13 @@ namespace Game.Chat
         [Command("rage", RBACPermissions.CommandModifyRage)]
         static bool HandleModifyRageCommand(StringArguments args, CommandHandler handler)
         {
-            int rage, ragemax;
             Player target = handler.GetSelectedPlayerOrSelf();
             byte rageMultiplier = 10;
-            if (CheckModifyResources(args, handler, target, out rage, out ragemax, rageMultiplier))
+            if (CheckModifyResources(args, handler, target, out int rage, out int ragemax, rageMultiplier))
             {
                 NotifyModification(handler, target, CypherStrings.YouChangeRage, CypherStrings.YoursRageChanged, rage / rageMultiplier, ragemax / rageMultiplier);
                 target.SetMaxPower(PowerType.Rage, ragemax);
                 target.SetPower(PowerType.Rage, rage);
-                return true;
-            }
-            return false;
-        }
-
-        [Command("runicpower", RBACPermissions.CommandModifyRunicpower)]
-        static bool HandleModifyRunicPowerCommand(StringArguments args, CommandHandler handler)
-        {
-            int rune, runemax;
-            Player target = handler.GetSelectedPlayerOrSelf();
-            byte runeMultiplier = 10;
-            if (CheckModifyResources(args, handler, target, out rune, out runemax, runeMultiplier))
-            {
-                NotifyModification(handler, target, CypherStrings.YouChangeRunicPower, CypherStrings.YoursRunicPowerChanged, rune / runeMultiplier, runemax / runeMultiplier);
-                target.SetMaxPower(PowerType.RunicPower, runemax);
-                target.SetPower(PowerType.RunicPower, rune);
                 return true;
             }
             return false;
@@ -121,22 +102,26 @@ namespace Game.Chat
 
             if (!uint.TryParse(pfactionid, out uint factionid))
             {
-                uint _factionid = target.GetFaction();
-                uint _flag = target.m_unitData.Flags;
-                ulong _npcflag = (ulong)target.m_unitData.NpcFlags[0] << 32 | target.m_unitData.NpcFlags[1];
-                uint _dyflag = target.m_objectData.DynamicFlags;
-                handler.SendSysMessage(CypherStrings.CurrentFaction, target.GetGUID().ToString(), _factionid, _flag, _npcflag, _dyflag);
+                uint targetFaction = target.GetFaction();
+                uint targetFlag = target.GetUpdateField<uint>(UnitFields.Flags);
+                uint targetNpcFlag = target.GetUpdateField<uint>(UnitFields.NpcFlags);
+                uint targetNpcFlag2 = target.GetUpdateField<uint>(UnitFields.NpcFlags + 1);
+                uint targetDynamicFlag = (uint)target.GetDynamicFlags();
+                handler.SendSysMessage(CypherStrings.CurrentFaction, target.GetGUID().ToString(), targetFaction, targetFlag, targetNpcFlag, targetNpcFlag2, targetDynamicFlag);
                 return true;
             }
 
             if (!uint.TryParse(args.NextString(), out uint flag))
-                flag = target.m_unitData.Flags;
+                flag = target.GetUpdateField<uint>(UnitFields.Flags);
 
-            if (!ulong.TryParse(args.NextString(), out ulong npcflag))
-                npcflag = (ulong)target.m_unitData.NpcFlags[0] << 32 | target.m_unitData.NpcFlags[1];
+            if (!uint.TryParse(args.NextString(), out uint npcflag))
+                npcflag = target.GetUpdateField<uint>(UnitFields.NpcFlags);
+
+            if (!uint.TryParse(args.NextString(), out uint npcflag2))
+                npcflag2 = target.GetUpdateField<uint>(UnitFields.NpcFlags + 1);
 
             if (!uint.TryParse(args.NextString(), out uint dyflag))
-                dyflag = target.m_objectData.DynamicFlags;
+                dyflag = (uint)target.GetDynamicFlags();
 
             if (!CliDB.FactionTemplateStorage.ContainsKey(factionid))
             {
@@ -148,8 +133,8 @@ namespace Game.Chat
 
             target.SetFaction(factionid);
             target.SetUnitFlags((UnitFlags)flag);
-            target.SetNpcFlags((NPCFlags)(npcflag & 0xFFFFFFFF));
-            target.SetNpcFlags2((NPCFlags2)(npcflag >> 32));
+            target.SetNpcFlags((NPCFlags)npcflag);
+            target.SetNpcFlags2((NPCFlags2)npcflag2);
             target.SetDynamicFlags((UnitDynFlags)dyflag);
 
             return true;
@@ -210,9 +195,8 @@ namespace Game.Chat
         [Command("scale", RBACPermissions.CommandModifyScale)]
         static bool HandleModifyScaleCommand(StringArguments args, CommandHandler handler)
         {
-            float Scale;
             Unit target = handler.GetSelectedUnit();
-            if (CheckModifySpeed(args, handler, target, out Scale, 0.1f, 10.0f, false))
+            if (CheckModifySpeed(args, handler, target, out float Scale, 0.1f, 10.0f, false))
             {
                 NotifyModification(handler, target, CypherStrings.YouChangeSize, CypherStrings.YoursSizeChanged, Scale);
                 Creature creatureTarget = target.ToCreature();
@@ -251,8 +235,7 @@ namespace Game.Chat
             if (handler.HasLowerSecurity(target, ObjectGuid.Empty))
                 return false;
 
-            float speed;
-            if (!CheckModifySpeed(args, handler, target, out speed, 0.1f, 50.0f))
+            if (!CheckModifySpeed(args, handler, target, out float speed, 0.1f, 50.0f))
                 return false;
 
             NotifyModification(handler, target, CypherStrings.YouGiveMount, CypherStrings.MountGived);
@@ -752,9 +735,8 @@ namespace Game.Chat
             [Command("all", RBACPermissions.CommandModifySpeedAll)]
             static bool HandleModifyASpeedCommand(StringArguments args, CommandHandler handler)
             {
-                float allSpeed;
                 Player target = handler.GetSelectedPlayerOrSelf();
-                if (CheckModifySpeed(args, handler, target, out allSpeed, 0.1f, 50.0f))
+                if (CheckModifySpeed(args, handler, target, out float allSpeed, 0.1f, 50.0f))
                 {
                     NotifyModification(handler, target, CypherStrings.YouChangeAspeed, CypherStrings.YoursAspeedChanged, allSpeed);
                     target.SetSpeedRate(UnitMoveType.Walk, allSpeed);
@@ -769,9 +751,8 @@ namespace Game.Chat
             [Command("swim", RBACPermissions.CommandModifySpeedSwim)]
             static bool HandleModifySwimCommand(StringArguments args, CommandHandler handler)
             {
-                float swimSpeed;
                 Player target = handler.GetSelectedPlayerOrSelf();
-                if (CheckModifySpeed(args, handler, target, out swimSpeed, 0.1f, 50.0f))
+                if (CheckModifySpeed(args, handler, target, out float swimSpeed, 0.1f, 50.0f))
                 {
                     NotifyModification(handler, target, CypherStrings.YouChangeSwimSpeed, CypherStrings.YoursSwimSpeedChanged, swimSpeed);
                     target.SetSpeedRate(UnitMoveType.Swim, swimSpeed);
@@ -783,9 +764,8 @@ namespace Game.Chat
             [Command("backwalk", RBACPermissions.CommandModifySpeedBackwalk)]
             static bool HandleModifyBWalkCommand(StringArguments args, CommandHandler handler)
             {
-                float backSpeed;
                 Player target = handler.GetSelectedPlayerOrSelf();
-                if (CheckModifySpeed(args, handler, target, out backSpeed, 0.1f, 50.0f))
+                if (CheckModifySpeed(args, handler, target, out float backSpeed, 0.1f, 50.0f))
                 {
                     NotifyModification(handler, target, CypherStrings.YouChangeBackSpeed, CypherStrings.YoursBackSpeedChanged, backSpeed);
                     target.SetSpeedRate(UnitMoveType.RunBack, backSpeed);
@@ -797,9 +777,8 @@ namespace Game.Chat
             [Command("fly", RBACPermissions.CommandModifySpeedFly)]
             static bool HandleModifyFlyCommand(StringArguments args, CommandHandler handler)
             {
-                float flySpeed;
                 Player target = handler.GetSelectedPlayerOrSelf();
-                if (CheckModifySpeed(args, handler, target, out flySpeed, 0.1f, 50.0f, false))
+                if (CheckModifySpeed(args, handler, target, out float flySpeed, 0.1f, 50.0f, false))
                 {
                     NotifyModification(handler, target, CypherStrings.YouChangeFlySpeed, CypherStrings.YoursFlySpeedChanged, flySpeed);
                     target.SetSpeedRate(UnitMoveType.Flight, flySpeed);
@@ -811,9 +790,8 @@ namespace Game.Chat
             [Command("walk", RBACPermissions.CommandModifySpeedWalk)]
             static bool HandleModifyWalkSpeedCommand(StringArguments args, CommandHandler handler)
             {
-                float Speed;
                 Player target = handler.GetSelectedPlayerOrSelf();
-                if (CheckModifySpeed(args, handler, target, out Speed, 0.1f, 50.0f))
+                if (CheckModifySpeed(args, handler, target, out float Speed, 0.1f, 50.0f))
                 {
                     NotifyModification(handler, target, CypherStrings.YouChangeSpeed, CypherStrings.YoursSpeedChanged, Speed);
                     target.SetSpeedRate(UnitMoveType.Run, Speed);

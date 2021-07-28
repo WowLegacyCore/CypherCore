@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,14 +33,6 @@ namespace Game.Entities
 
         public void InitTaxiNodesForLevel(Race race, Class chrClass, uint level)
         {
-            // class specific initial known nodes
-            if (chrClass == Class.Deathknight)
-            {
-                var factionMask = Player.TeamForRace(race) == Team.Horde ? CliDB.HordeTaxiNodesMask : CliDB.AllianceTaxiNodesMask;
-                for (int i = 0; i < PlayerConst.TaxiMaskSize; ++i)
-                    m_taximask[i] |= (byte)(CliDB.OldContinentsNodesMask[i] & factionMask[i]);
-            }
-
             // race specific initial known nodes: capital and taxi hub masks
             switch (race)
             {
@@ -49,8 +41,6 @@ namespace Game.Entities
                 case Race.NightElf:
                 case Race.Gnome:
                 case Race.Draenei:
-                case Race.Worgen:
-                case Race.PandarenAlliance:
                     SetTaximaskNode(2);     // Stormwind, Elwynn
                     SetTaximaskNode(6);     // Ironforge, Dun Morogh
                     SetTaximaskNode(26);    // Lor'danel, Darkshore
@@ -71,7 +61,6 @@ namespace Game.Entities
                 case Race.Troll:
                 case Race.BloodElf:
                 case Race.Goblin:
-                case Race.PandarenHorde:
                     SetTaximaskNode(11);    // Undercity, Tirisfal
                     SetTaximaskNode(22);    // Thunder Bluff, Mulgore
                     SetTaximaskNode(23);    // Orgrimmar, Durotar
@@ -155,8 +144,7 @@ namespace Game.Entities
 
             for (int i = 1; i < m_TaxiDestinations.Count; ++i)
             {
-                uint path;
-                Global.ObjectMgr.GetTaxiPath(m_TaxiDestinations[i - 1], m_TaxiDestinations[i], out path, out _);
+                Global.ObjectMgr.GetTaxiPath(m_TaxiDestinations[i - 1], m_TaxiDestinations[i], out uint path, out _);
                 if (path == 0)
                     return false;
             }
@@ -187,9 +175,8 @@ namespace Game.Entities
             if (m_TaxiDestinations.Count < 2)
                 return 0;
 
-            uint path;
 
-            Global.ObjectMgr.GetTaxiPath(m_TaxiDestinations[0], m_TaxiDestinations[1], out path, out _);
+            Global.ObjectMgr.GetTaxiPath(m_TaxiDestinations[0], m_TaxiDestinations[1], out uint path, out _);
 
             return path;
         }

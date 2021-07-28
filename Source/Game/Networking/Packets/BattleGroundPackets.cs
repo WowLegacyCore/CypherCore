@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -24,29 +24,6 @@ using System.Collections.Generic;
 
 namespace Game.Networking.Packets
 {
-    public class SeasonInfo : ServerPacket
-    {
-        public SeasonInfo() : base(ServerOpcodes.SeasonInfo) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteInt32(MythicPlusSeasonID);
-            _worldPacket.WriteInt32(CurrentSeason);
-            _worldPacket.WriteInt32(PreviousSeason);
-            _worldPacket.WriteInt32(ConquestWeeklyProgressCurrencyID);
-            _worldPacket.WriteInt32(PvpSeasonID);
-            _worldPacket.WriteBit(WeeklyRewardChestsEnabled);
-            _worldPacket.FlushBits();
-        }
-
-        public int MythicPlusSeasonID;
-        public int PreviousSeason;
-        public int CurrentSeason;
-        public int PvpSeasonID;
-        public int ConquestWeeklyProgressCurrencyID;
-        public bool WeeklyRewardChestsEnabled;
-    }
-
     public class AreaSpiritHealerQuery : ClientPacket
     {
         public AreaSpiritHealerQuery(WorldPacket packet) : base(packet) { }
@@ -309,12 +286,12 @@ namespace Game.Networking.Packets
             _worldPacket.FlushBits();
         }
 
-        public bool WargameArenas;
-        public bool RatedArenas;
-        public bool WargameBattlegrounds;
-        public bool ArenaSkirmish;
-        public bool PugBattlegrounds;
-        public bool RatedBattlegrounds;
+        public bool WargameArenas = false;
+        public bool RatedArenas = false;
+        public bool WargameBattlegrounds = false;
+        public bool ArenaSkirmish = false;
+        public bool PugBattlegrounds = false;
+        public bool RatedBattlegrounds = false;
     }
 
     class RequestBattlefieldStatus : ClientPacket
@@ -459,78 +436,24 @@ namespace Game.Networking.Packets
 
         BracketInfo[] Bracket = new BracketInfo[6];
     }
-    
-    class PVPMatchInitialize : ServerPacket
-    {
-        public PVPMatchInitialize() : base(ServerOpcodes.PvpMatchInitialize, ConnectionType.Instance) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteUInt32(MapID);
-            _worldPacket.WriteUInt8((byte)State);
-            _worldPacket.WriteInt64(StartTime);
-            _worldPacket.WriteInt32(Duration);
-            _worldPacket.WriteUInt8(ArenaFaction);
-            _worldPacket.WriteUInt32(BattlemasterListID);
-            _worldPacket.WriteBit(Registered);
-            _worldPacket.WriteBit(AffectsRating);
-            _worldPacket.FlushBits();
-        }
-
-        public enum MatchState
-        {
-            InProgress = 1,
-            Complete = 3,
-            Inactive = 4
-        }
-
-        public uint MapID;
-        public MatchState State = MatchState.Inactive;
-        public long StartTime;
-        public int Duration;
-        public byte ArenaFaction;
-        public uint BattlemasterListID;
-        public bool Registered;
-        public bool AffectsRating;
-    }
-
-    class PVPMatchComplete : ServerPacket
-    {
-        public PVPMatchComplete() : base(ServerOpcodes.PvpMatchComplete, ConnectionType.Instance) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteUInt8(Winner);
-            _worldPacket.WriteInt32(Duration);
-            _worldPacket.WriteBit(LogData.HasValue);
-            _worldPacket.FlushBits();
-
-            if (LogData.HasValue)
-                LogData.Value.Write(_worldPacket);
-        }
-
-        public byte Winner;
-        public int Duration;
-        public Optional<PVPMatchStatistics> LogData;
-    }
 
     //Structs
-    struct BracketInfo
+    public class BracketInfo
     {
-        public int PersonalRating;
-        public int Ranking;
-        public int SeasonPlayed;
-        public int SeasonWon;
-        public int Unused1;
-        public int Unused2;
-        public int WeeklyPlayed;
-        public int WeeklyWon;
-        public int BestWeeklyRating;
-        public int LastWeeksBestRating;
-        public int BestSeasonRating;
-        public int PvpTierID;
-        public int Unused3;
-        public bool Disqualified;
+        public int PersonalRating = 0;
+        public int Ranking = 0;
+        public int SeasonPlayed = 0;
+        public int SeasonWon = 0;
+        public int Unused1 = 0;
+        public int Unused2 = 0;
+        public int WeeklyPlayed = 0;
+        public int WeeklyWon = 0;
+        public int BestWeeklyRating = 0;
+        public int LastWeeksBestRating = 0;
+        public int BestSeasonRating = 0;
+        public int PvpTierID = 0;
+        public int Unused3 = 0;
+        public bool Disqualified = false;
 
         public void Write(WorldPacket data)
         {

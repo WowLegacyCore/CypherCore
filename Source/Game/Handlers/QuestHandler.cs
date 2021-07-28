@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -458,9 +458,8 @@ namespace Game
                     }
 
                     GetPlayer().TakeQuestSourceItem(questId, true); // remove quest src item from player
-                    GetPlayer().AbandonQuest(questId); // remove all quest items player received before abandoning quest. Note, this does not remove normal drop items that happen to be quest requirements. 
+                    GetPlayer().AbandonQuest(questId); // remove all quest items player received before abandoning quest. Note, this does not remove normal drop items that happen to be quest requirements.
                     GetPlayer().RemoveActiveQuest(questId);
-                    GetPlayer().RemoveCriteriaTimer(CriteriaStartEvent.AcceptQuest, questId);
 
                     Log.outInfo(LogFilter.Network, "Player {0} abandoned quest {1}", GetPlayer().GetGUID().ToString(), questId);
 
@@ -471,8 +470,6 @@ namespace Game
                 }
 
                 GetPlayer().SetQuestSlot(packet.Entry, 0);
-
-                GetPlayer().UpdateCriteria(CriteriaTypes.QuestAbandoned, 1);
             }
         }
 

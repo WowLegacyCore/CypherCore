@@ -179,8 +179,7 @@ namespace Game.AI
 
                 if (me.GetMotionMaster().GetCurrentMovementGeneratorType() == MovementGeneratorType.Chase)
                 {
-                    float fPosX, fPosY, fPosZ;
-                    me.GetPosition(out fPosX, out fPosY, out fPosZ);
+                    me.GetPosition(out float fPosX, out float fPosY, out float fPosZ);
                     me.GetMotionMaster().MovePoint(0xFFFFFF, fPosX, fPosY, fPosZ);
                 }
             }

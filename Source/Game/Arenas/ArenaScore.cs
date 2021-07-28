@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -53,10 +53,10 @@ namespace Game.Arenas
                 $"PreMatchMMR: {PreMatchMMR} PostMatchRating: {PostMatchRating} PostMatchMMR: {PostMatchMMR}";
         }
 
-        uint PreMatchRating;
-        uint PreMatchMMR;
-        uint PostMatchRating;
-        uint PostMatchMMR;
+        uint PreMatchRating = 0;
+        uint PreMatchMMR = 0;
+        uint PostMatchRating = 0;
+        uint PostMatchMMR = 0;
     }
 
     public class ArenaTeamScore

@@ -432,9 +432,8 @@ namespace Game.AI
                 if (!me.GetCharmInfo().IsAtStay() && !me.GetCharmInfo().IsReturning())
                 {
                     // Return to previous position where stay was clicked
-                    float x, y, z;
 
-                    me.GetCharmInfo().GetStayPosition(out x, out y, out z);
+                    me.GetCharmInfo().GetStayPosition(out float x, out float y, out float z);
                     ClearCharmInfoFlags();
                     me.GetCharmInfo().SetIsReturning(true);
                     me.GetMotionMaster().Clear();

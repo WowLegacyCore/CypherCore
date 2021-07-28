@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -634,7 +634,7 @@ namespace Game.Networking.Packets
 
         public int MapID;
         public int OldTimeRemaining;
-        public long ServerTime;
+        public long ServerTime = 0L;
         public uint DifficultyID;
         public int NewTimeRemaining;
     }
@@ -668,10 +668,10 @@ namespace Game.Networking.Packets
             _worldPacket.WriteUInt8(Status);
         }
 
-        public ulong EventID;
-        public uint Flags;
-        public long Date;
-        public byte Status;
+        public ulong EventID = 0ul;
+        public uint Flags = 0;
+        public long Date = 0L;
+        public byte Status = 0;
     }
 
     class CalendarInviteNotesAlert : ServerPacket
@@ -710,10 +710,10 @@ namespace Game.Networking.Packets
             _worldPacket.WriteString(Notes);
         }
 
-        public ObjectGuid InviteGuid;
-        public ulong EventID;
+        public ObjectGuid InviteGuid = ObjectGuid.Empty;
+        public ulong EventID = 0ul;
         public string Notes = "";
-        public bool ClearPending;
+        public bool ClearPending = false;
     }
 
     class CalendarComplain : ClientPacket

@@ -126,8 +126,7 @@ namespace Game.Collision
             // child bounds are defined in object space:
             Vector3 pModel = iInvRot * (point - iPos) * iInvScale;
             Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            float zDist;
-            if (iModel.IntersectPoint(pModel, zDirModel, out zDist, info))
+            if (iModel.IntersectPoint(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
                 float world_Z = ((modelGround * iInvRot) * iScale + iPos).Z;

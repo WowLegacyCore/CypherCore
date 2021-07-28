@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -36,7 +36,7 @@ namespace Framework.Constants
         QuestNone = 14,              // Quest_Id         0              0                  True If Doesn'T Have Quest Saved
         Class = 15,                  // Class            0              0                  True If Player'S Class Is Equal To Class
         Race = 16,                   // Race             0              0                  True If Player'S Race Is Equal To Race
-        Achievement = 17,            // Achievement_Id   0              0                  True If Achievement Is Complete
+        // Achievement = 17,            // Achievement_Id   0              0                  True If Achievement Is Complete
         Title = 18,                  // Title Id         0              0                  True If Player Has Title
         SpawnmaskDeprecated = 19,    // Deprecated
         Gender = 20,                 // Gender           0              0                  True If Player'S Gender Is Equal To Gender
@@ -58,7 +58,7 @@ namespace Framework.Constants
         Alive = 36,                  // 0                0              0                  True If Unit Is Alive
         HpVal = 37,                  // Hpval            Comparisontype 0                  True If Unit'S Hp Matches Given Value
         HpPct = 38,                  // Hppct            Comparisontype 0                  True If Unit'S Hp Matches Given Pct
-        RealmAchievement = 39,       // achievement_id   0              0                  true if realm achievement is complete
+        // RealmAchievement = 39,       // achievement_id   0              0                  true if realm achievement is complete
         InWater = 40,                // 0                0              0                  true if unit in water
         TerrainSwap = 41,            // terrainSwap      0              0                  true if object is in terrainswap
         StandState = 42,             // stateType        state          0                  true if unit matches specified sitstate (0,x: has exactly state x; 1,0: any standing state; 1,1: any sitting state;)

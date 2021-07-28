@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -111,43 +111,43 @@ namespace Game
                         break;
                     case DisableType.Map:
                     case DisableType.LFGMap:
+                    {
+                        MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
+                        if (mapEntry == null)
                         {
-                            MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
-                            if (mapEntry == null)
-                            {
-                                Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
-                                continue;
-                            }
-                            bool isFlagInvalid = false;
-                            switch (mapEntry.InstanceType)
-                            {
-                                case MapTypes.Common:
-                                    if (flags != 0)
-                                        isFlagInvalid = true;
-                                    break;
-                                case MapTypes.Instance:
-                                case MapTypes.Raid:
-                                    if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Heroic) == null)
-                                        flags -= DisableFlags.DungeonStatusHeroic;
-                                    if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic10Man) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Raid10HC) == null)
-                                        flags -= DisableFlags.DungeonStatusHeroic10Man;
-                                    if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic25Man) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Raid25HC) == null)
-                                        flags -= DisableFlags.DungeonStatusHeroic25Man;
-                                    if (flags == 0)
-                                        isFlagInvalid = true;
-                                    break;
-                                case MapTypes.Battleground:
-                                case MapTypes.Arena:
-                                    Log.outError(LogFilter.Sql, "Battlegroundmap {0} specified to be disabled in map case, skipped.", entry);
-                                    continue;
-                            }
-                            if (isFlagInvalid)
-                            {
-                                Log.outError(LogFilter.Sql, "Disable flags for map {0} are invalid, skipped.", entry);
-                                continue;
-                            }
-                            break;
+                            Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
+                            continue;
                         }
+                        bool isFlagInvalid = false;
+                        switch (mapEntry.InstanceType)
+                        {
+                            case MapTypes.Common:
+                                if (flags != 0)
+                                    isFlagInvalid = true;
+                                break;
+                            case MapTypes.Instance:
+                            case MapTypes.Raid:
+                                if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Heroic) == null)
+                                    flags -= DisableFlags.DungeonStatusHeroic;
+                                if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic10Man) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Raid10HC) == null)
+                                    flags -= DisableFlags.DungeonStatusHeroic10Man;
+                                if (flags.HasAnyFlag(DisableFlags.DungeonStatusHeroic25Man) && Global.DB2Mgr.GetMapDifficultyData(entry, Difficulty.Raid25HC) == null)
+                                    flags -= DisableFlags.DungeonStatusHeroic25Man;
+                                if (flags == 0)
+                                    isFlagInvalid = true;
+                                break;
+                            case MapTypes.Battleground:
+                            case MapTypes.Arena:
+                                Log.outError(LogFilter.Sql, "Battlegroundmap {0} specified to be disabled in map case, skipped.", entry);
+                                continue;
+                        }
+                        if (isFlagInvalid)
+                        {
+                            Log.outError(LogFilter.Sql, "Disable flags for map {0} are invalid, skipped.", entry);
+                            continue;
+                        }
+                        break;
+                    }
                     case DisableType.Battleground:
                         if (!CliDB.BattlemasterListStorage.ContainsKey(entry))
                         {
@@ -166,83 +166,74 @@ namespace Game
                         if (flags != 0)
                             Log.outError(LogFilter.Sql, "Disable flags specified for outdoor PvP {0}, useless data.", entry);
                         break;
-                    case DisableType.Criteria:
-                        if (Global.CriteriaMgr.GetCriteria(entry) == null)
+                    case DisableType.VMAP:
+                    {
+                        MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
+                        if (mapEntry == null)
                         {
-                            Log.outError(LogFilter.Sql, "Criteria entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
+                            Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
                             continue;
                         }
-                        if (flags != 0)
-                            Log.outError(LogFilter.Sql, "Disable flags specified for Criteria {0}, useless data.", entry);
+                        switch (mapEntry.InstanceType)
+                        {
+                            case MapTypes.Common:
+                                if (flags.HasAnyFlag(DisableFlags.VmapAreaFlag))
+                                    Log.outInfo(LogFilter.Server, "Areaflag disabled for world map {0}.", entry);
+                                if (flags.HasAnyFlag(DisableFlags.VmapLiquidStatus))
+                                    Log.outInfo(LogFilter.Server, "Liquid status disabled for world map {0}.", entry);
+                                break;
+                            case MapTypes.Instance:
+                            case MapTypes.Raid:
+                                if (flags.HasAnyFlag(DisableFlags.VmapHeight))
+                                    Log.outInfo(LogFilter.Server, "Height disabled for instance map {0}.", entry);
+                                if (flags.HasAnyFlag(DisableFlags.VmapLOS))
+                                    Log.outInfo(LogFilter.Server, "LoS disabled for instance map {0}.", entry);
+                                break;
+                            case MapTypes.Battleground:
+                                if (flags.HasAnyFlag(DisableFlags.VmapHeight))
+                                    Log.outInfo(LogFilter.Server, "Height disabled for Battlegroundmap {0}.", entry);
+                                if (flags.HasAnyFlag(DisableFlags.VmapLOS))
+                                    Log.outInfo(LogFilter.Server, "LoS disabled for Battlegroundmap {0}.", entry);
+                                break;
+                            case MapTypes.Arena:
+                                if (flags.HasAnyFlag(DisableFlags.VmapHeight))
+                                    Log.outInfo(LogFilter.Server, "Height disabled for arena map {0}.", entry);
+                                if (flags.HasAnyFlag(DisableFlags.VmapLOS))
+                                    Log.outInfo(LogFilter.Server, "LoS disabled for arena map {0}.", entry);
+                                break;
+                            default:
+                                break;
+                        }
                         break;
-                    case DisableType.VMAP:
-                        {
-                            MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
-                            if (mapEntry == null)
-                            {
-                                Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
-                                continue;
-                            }
-                            switch (mapEntry.InstanceType)
-                            {
-                                case MapTypes.Common:
-                                    if (flags.HasAnyFlag(DisableFlags.VmapAreaFlag))
-                                        Log.outInfo(LogFilter.Server, "Areaflag disabled for world map {0}.", entry);
-                                    if (flags.HasAnyFlag(DisableFlags.VmapLiquidStatus))
-                                        Log.outInfo(LogFilter.Server, "Liquid status disabled for world map {0}.", entry);
-                                    break;
-                                case MapTypes.Instance:
-                                case MapTypes.Raid:
-                                    if (flags.HasAnyFlag(DisableFlags.VmapHeight))
-                                        Log.outInfo(LogFilter.Server, "Height disabled for instance map {0}.", entry);
-                                    if (flags.HasAnyFlag(DisableFlags.VmapLOS))
-                                        Log.outInfo(LogFilter.Server, "LoS disabled for instance map {0}.", entry);
-                                    break;
-                                case MapTypes.Battleground:
-                                    if (flags.HasAnyFlag(DisableFlags.VmapHeight))
-                                        Log.outInfo(LogFilter.Server, "Height disabled for Battlegroundmap {0}.", entry);
-                                    if (flags.HasAnyFlag(DisableFlags.VmapLOS))
-                                        Log.outInfo(LogFilter.Server, "LoS disabled for Battlegroundmap {0}.", entry);
-                                    break;
-                                case MapTypes.Arena:
-                                    if (flags.HasAnyFlag(DisableFlags.VmapHeight))
-                                        Log.outInfo(LogFilter.Server, "Height disabled for arena map {0}.", entry);
-                                    if (flags.HasAnyFlag(DisableFlags.VmapLOS))
-                                        Log.outInfo(LogFilter.Server, "LoS disabled for arena map {0}.", entry);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        }
+                    }
                     case DisableType.MMAP:
+                    {
+                        MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
+                        if (mapEntry == null)
                         {
-                            MapRecord mapEntry = CliDB.MapStorage.LookupByKey(entry);
-                            if (mapEntry == null)
-                            {
-                                Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
-                                continue;
-                            }
-                            switch (mapEntry.InstanceType)
-                            {
-                                case MapTypes.Common:
-                                    Log.outInfo(LogFilter.Server, "Pathfinding disabled for world map {0}.", entry);
-                                    break;
-                                case MapTypes.Instance:
-                                case MapTypes.Raid:
-                                    Log.outInfo(LogFilter.Server, "Pathfinding disabled for instance map {0}.", entry);
-                                    break;
-                                case MapTypes.Battleground:
-                                    Log.outInfo(LogFilter.Server, "Pathfinding disabled for Battlegroundmap {0}.", entry);
-                                    break;
-                                case MapTypes.Arena:
-                                    Log.outInfo(LogFilter.Server, "Pathfinding disabled for arena map {0}.", entry);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
+                            Log.outError(LogFilter.Sql, "Map entry {0} from `disables` doesn't exist in dbc, skipped.", entry);
+                            continue;
                         }
+                        switch (mapEntry.InstanceType)
+                        {
+                            case MapTypes.Common:
+                                Log.outInfo(LogFilter.Server, "Pathfinding disabled for world map {0}.", entry);
+                                break;
+                            case MapTypes.Instance:
+                            case MapTypes.Raid:
+                                Log.outInfo(LogFilter.Server, "Pathfinding disabled for instance map {0}.", entry);
+                                break;
+                            case MapTypes.Battleground:
+                                Log.outInfo(LogFilter.Server, "Pathfinding disabled for Battlegroundmap {0}.", entry);
+                                break;
+                            case MapTypes.Arena:
+                                Log.outInfo(LogFilter.Server, "Pathfinding disabled for arena map {0}.", entry);
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -297,45 +288,45 @@ namespace Game
             switch (type)
             {
                 case DisableType.Spell:
+                {
+                    byte spellFlags = data.flags;
+                    if (unit != null)
                     {
-                        byte spellFlags = data.flags;
-                        if (unit != null)
+                        if ((spellFlags.HasAnyFlag(DisableFlags.SpellPlayer) && unit.IsTypeId(TypeId.Player)) ||
+                            (unit.IsTypeId(TypeId.Unit) && ((unit.IsPet() && spellFlags.HasAnyFlag(DisableFlags.SpellPet)) || spellFlags.HasAnyFlag(DisableFlags.SpellCreature))))
                         {
-                            if ((spellFlags.HasAnyFlag(DisableFlags.SpellPlayer) && unit.IsTypeId(TypeId.Player)) ||
-                                (unit.IsTypeId(TypeId.Unit) && ((unit.IsPet() && spellFlags.HasAnyFlag(DisableFlags.SpellPet)) || spellFlags.HasAnyFlag(DisableFlags.SpellCreature))))
+                            if (spellFlags.HasAnyFlag(DisableFlags.SpellMap))
                             {
-                                if (spellFlags.HasAnyFlag(DisableFlags.SpellMap))
-                                {
-                                    List<uint> mapIds = data.param0;
-                                    if (mapIds.Contains(unit.GetMapId()))
-                                        return true;                                        // Spell is disabled on current map
+                                List<uint> mapIds = data.param0;
+                                if (mapIds.Contains(unit.GetMapId()))
+                                    return true;                                        // Spell is disabled on current map
 
-                                    if (!spellFlags.HasAnyFlag(DisableFlags.SpellArea))
-                                        return false;                                       // Spell is disabled on another map, but not this one, return false
+                                if (!spellFlags.HasAnyFlag(DisableFlags.SpellArea))
+                                    return false;                                       // Spell is disabled on another map, but not this one, return false
 
-                                    // Spell is disabled in an area, but not explicitly our current mapId. Continue processing.
-                                }
-
-                                if (spellFlags.HasAnyFlag(DisableFlags.SpellArea))
-                                {
-                                    var areaIds = data.param1;
-                                    if (areaIds.Contains(unit.GetAreaId()))
-                                        return true;                                        // Spell is disabled in this area
-                                    return false;                                           // Spell is disabled in another area, but not this one, return false
-                                }
-                                else
-                                    return true;                                            // Spell disabled for all maps
+                                // Spell is disabled in an area, but not explicitly our current mapId. Continue processing.
                             }
 
-                            return false;
+                            if (spellFlags.HasAnyFlag(DisableFlags.SpellArea))
+                            {
+                                var areaIds = data.param1;
+                                if (areaIds.Contains(unit.GetAreaId()))
+                                    return true;                                        // Spell is disabled in this area
+                                return false;                                           // Spell is disabled in another area, but not this one, return false
+                            }
+                            else
+                                return true;                                            // Spell disabled for all maps
                         }
-                        else if (spellFlags.HasAnyFlag(DisableFlags.SpellDeprecatedSpell))    // call not from spellcast
-                            return true;
-                        else if (flags.HasAnyFlag(DisableFlags.SpellLOS))
-                            return spellFlags.HasAnyFlag(DisableFlags.SpellLOS);
 
-                        break;
+                        return false;
                     }
+                    else if (spellFlags.HasAnyFlag(DisableFlags.SpellDeprecatedSpell))    // call not from spellcast
+                        return true;
+                    else if (flags.HasAnyFlag(DisableFlags.SpellLOS))
+                        return spellFlags.HasAnyFlag(DisableFlags.SpellLOS);
+
+                    break;
+                }
                 case DisableType.Map:
                 case DisableType.LFGMap:
                     Player player = unit.ToPlayer();
@@ -375,7 +366,6 @@ namespace Game
                     return true;
                 case DisableType.Battleground:
                 case DisableType.OutdoorPVP:
-                case DisableType.Criteria:
                 case DisableType.MMAP:
                     return true;
                 case DisableType.VMAP:
@@ -401,8 +391,8 @@ namespace Game
         Spell = 0,
         Quest = 1,
         Map = 2,
-        Battleground= 3,
-        Criteria = 4,
+        Battleground = 3,
+        // Criteria = 4,
         OutdoorPVP = 5,
         VMAP = 6,
         MMAP = 7,

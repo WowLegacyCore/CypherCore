@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +22,6 @@ using Game.Chat;
 using Game.DataStorage;
 using Game.Entities;
 using Game.Groups;
-using Game.Guilds;
 using Game.Maps;
 using Game.Networking;
 using Game.Networking.Packets;
@@ -159,7 +158,7 @@ namespace Game.BattleGrounds
             if (m_ValidStartPositionTimer >= BattlegroundConst.CheckPlayerPositionInverval)
             {
                 m_ValidStartPositionTimer = 0;
-                
+
                 foreach (var guid in GetPlayers().Keys)
                 {
                     Player player = Global.ObjAccessor.FindPlayer(guid);
@@ -531,7 +530,7 @@ namespace Game.BattleGrounds
         {
             return _battlegroundTemplate.MaxStartDistSq;
         }
-        
+
         void SendPacketToAll(ServerPacket packet)
         {
             foreach (var pair in m_Players)
@@ -654,8 +653,6 @@ namespace Game.BattleGrounds
         {
             RemoveFromBGFreeSlotQueue();
 
-            bool guildAwarded = false;
-
             if (winner == Team.Alliance)
             {
                 if (IsBattleground())
@@ -699,12 +696,13 @@ namespace Game.BattleGrounds
             //we must set it this way, because end time is sent in packet!
             SetRemainingTime(BattlegroundConst.AutocloseBattleground);
 
-            PVPMatchComplete pvpMatchComplete = new();
-            pvpMatchComplete.Winner = (byte)GetWinner();
-            pvpMatchComplete.Duration = (int)Math.Max(0, (GetElapsedTime() - (int)BattlegroundStartTimeIntervals.Delay2m) / Time.InMilliseconds);
-            pvpMatchComplete.LogData.HasValue = true;
-            BuildPvPLogDataPacket(out pvpMatchComplete.LogData.Value);
-            pvpMatchComplete.Write();
+            // @TODO: FIX PVPMATCHES
+            // PVPMatchComplete pvpMatchComplete = new();
+            // pvpMatchComplete.Winner = (byte)GetWinner();
+            // pvpMatchComplete.Duration = (int)Math.Max(0, (GetElapsedTime() - (int)BattlegroundStartTimeIntervals.Delay2m) / Time.InMilliseconds);
+            // pvpMatchComplete.LogData.HasValue = true;
+            // BuildPvPLogDataPacket(out pvpMatchComplete.LogData.Value);
+            // pvpMatchComplete.Write();
 
             foreach (var pair in m_Players)
             {
@@ -775,19 +773,6 @@ namespace Game.BattleGrounds
                     {
                         // TODO: lose honor xp
                     }
-
-                    player.UpdateCriteria(CriteriaTypes.WinBg, player.GetMapId());
-                    if (!guildAwarded)
-                    {
-                        guildAwarded = true;
-                        uint guildId = GetBgMap().GetOwnerGuildId(player.GetBGTeam());
-                        if (guildId != 0)
-                        {
-                            Guild guild = Global.GuildMgr.GetGuildById(guildId);
-                            if (guild)
-                                guild.UpdateCriteria(CriteriaTypes.WinBg, player.GetMapId(), 0, 0, null, player);
-                        }
-                    }
                 }
                 else
                 {
@@ -799,10 +784,6 @@ namespace Game.BattleGrounds
                 player.CombatStopWithPets(true);
 
                 BlockMovement(player);
-
-                player.SendPacket(pvpMatchComplete);
-
-                player.UpdateCriteria(CriteriaTypes.CompleteBattleground, player.GetMapId());
             }
         }
 
@@ -810,7 +791,7 @@ namespace Game.BattleGrounds
         {
             return _battlegroundTemplate.ScriptId;
         }
-        
+
         public uint GetBonusHonorFromKill(uint kills)
         {
             //variable kills means how many honorable kills you scored (so we need kills * honor_for_one_kill)
@@ -845,7 +826,7 @@ namespace Game.BattleGrounds
 
             Player player = Global.ObjAccessor.FindPlayer(guid);
             if (player)
-            { 
+            {
                 // should remove spirit of redemption
                 if (player.HasAuraType(AuraType.SpiritOfRedemption))
                     player.RemoveAurasByType(AuraType.ModShapeshift);
@@ -880,8 +861,7 @@ namespace Game.BattleGrounds
                     }
                     if (SendPacket)
                     {
-                        BattlefieldStatusNone battlefieldStatus;
-                        Global.BattlegroundMgr.BuildBattlegroundStatusNone(out battlefieldStatus, player, player.GetBattlegroundQueueIndex(bgQueueTypeId), player.GetBattlegroundQueueJoinTime(bgQueueTypeId));
+                        Global.BattlegroundMgr.BuildBattlegroundStatusNone(out BattlefieldStatusNone battlefieldStatus, player, player.GetBattlegroundQueueIndex(bgQueueTypeId), player.GetBattlegroundQueueJoinTime(bgQueueTypeId));
                         player.SendPacket(battlefieldStatus);
                     }
 
@@ -916,9 +896,6 @@ namespace Game.BattleGrounds
                 player.SetBattlegroundId(0, BattlegroundTypeId.None);  // We're not in BG.
                 // reset destination bg team
                 player.SetBGTeam(0);
-
-                // remove all criterias on bg leave
-                player.ResetCriteria(CriteriaFailEvent.LeaveBattleground, GetMapId(), true);
 
                 if (Transport)
                     player.TeleportToBGEntryPoint();
@@ -1003,36 +980,35 @@ namespace Game.BattleGrounds
             playerJoined.Guid = player.GetGUID();
             SendPacketToTeam(team, playerJoined, player);
 
-            PVPMatchInitialize pvpMatchInitialize = new();
-            pvpMatchInitialize.MapID = GetMapId();
-            switch (GetStatus())
-            {
-                case BattlegroundStatus.None:
-                case BattlegroundStatus.WaitQueue:
-                    pvpMatchInitialize.State = PVPMatchInitialize.MatchState.Inactive;
-                    break;
-                case BattlegroundStatus.WaitJoin:
-                case BattlegroundStatus.InProgress:
-                    pvpMatchInitialize.State = PVPMatchInitialize.MatchState.InProgress;
-                    break;
-                case BattlegroundStatus.WaitLeave:
-                    pvpMatchInitialize.State = PVPMatchInitialize.MatchState.Complete;
-                    break;
-                default:
-                    break;
-            }
-
-            if (GetElapsedTime() >= (int)BattlegroundStartTimeIntervals.Delay2m)
-            {
-                pvpMatchInitialize.Duration = (int)(GetElapsedTime() - (int)BattlegroundStartTimeIntervals.Delay2m) / Time.InMilliseconds;
-                pvpMatchInitialize.StartTime = GameTime.GetGameTime() - pvpMatchInitialize.Duration;
-            }
-            pvpMatchInitialize.ArenaFaction = (byte)(player.GetBGTeam() == Team.Horde ? BattlegroundTeamId.Horde : BattlegroundTeamId.Alliance);
-            pvpMatchInitialize.BattlemasterListID = (uint)GetTypeID();
-            pvpMatchInitialize.Registered = false;
-            pvpMatchInitialize.AffectsRating = IsRated();
-
-            player.SendPacket(pvpMatchInitialize);
+            // @TODO: FIX PVPMATCHES
+            // PVPMatchInitialize pvpMatchInitialize = new();
+            // pvpMatchInitialize.MapID = GetMapId();
+            // switch (GetStatus())
+            // {
+            //     case BattlegroundStatus.None:
+            //     case BattlegroundStatus.WaitQueue:
+            //         pvpMatchInitialize.State = PVPMatchInitialize.MatchState.Inactive;
+            //         break;
+            //     case BattlegroundStatus.WaitJoin:
+            //     case BattlegroundStatus.InProgress:
+            //         pvpMatchInitialize.State = PVPMatchInitialize.MatchState.InProgress;
+            //         break;
+            //     case BattlegroundStatus.WaitLeave:
+            //         pvpMatchInitialize.State = PVPMatchInitialize.MatchState.Complete;
+            //         break;
+            //     default:
+            //         break;
+            // }
+            //
+            // if (GetElapsedTime() >= (int)BattlegroundStartTimeIntervals.Delay2m)
+            // {
+            //     pvpMatchInitialize.Duration = (int)(GetElapsedTime() - (int)BattlegroundStartTimeIntervals.Delay2m) / Time.InMilliseconds;
+            //     pvpMatchInitialize.StartTime = GameTime.GetGameTime() - pvpMatchInitialize.Duration;
+            // }
+            // pvpMatchInitialize.ArenaFaction = (byte)(player.GetBGTeam() == Team.Horde ? BattlegroundTeamId.Horde : BattlegroundTeamId.Alliance);
+            // pvpMatchInitialize.BattlemasterListID = (uint)GetTypeID();
+            // pvpMatchInitialize.Registered = false;
+            // pvpMatchInitialize.AffectsRating = IsRated();
 
             player.RemoveAurasByType(AuraType.Mounted);
 
@@ -1065,9 +1041,6 @@ namespace Game.BattleGrounds
                     player.SendPacket(timer);
                 }
             }
-
-            // reset all map criterias on map enter
-            player.ResetCriteria(CriteriaFailEvent.LeaveBattleground, GetMapId(), true);
 
             // setup BG group membership
             PlayerAddedToBGCheckIfBGIsRunning(player);
@@ -1242,7 +1215,7 @@ namespace Game.BattleGrounds
         {
             return !IsArena();
         }
-        
+
         public bool HasFreeSlots()
         {
             return GetPlayersSize() < GetMaxPlayers();
@@ -1254,9 +1227,8 @@ namespace Game.BattleGrounds
 
             foreach (var score in PlayerScores)
             {
-                PVPMatchStatistics.PVPMatchPlayerStatistics playerData;
 
-                score.Value.BuildPvPLogPlayerDataPacket(out playerData);
+                score.Value.BuildPvPLogPlayerDataPacket(out PVPMatchStatistics.PVPMatchPlayerStatistics playerData);
 
                 Player player = Global.ObjAccessor.GetPlayer(GetBgMap(), playerData.PlayerGUID);
                 if (player)
@@ -1437,7 +1409,7 @@ namespace Game.BattleGrounds
         {
             return (uint)_battlegroundTemplate.BattlemasterEntry.MapId[0];
         }
-        
+
         public void SpawnBGObject(int type, uint respawntime)
         {
             Map map = FindBgMap();
@@ -1562,7 +1534,7 @@ namespace Game.BattleGrounds
                 // creature.SetVisibleAura(0, SPELL_SPIRIT_HEAL_CHANNEL);
                 // casting visual effect
                 creature.SetChannelSpellId(BattlegroundConst.SpellSpiritHealChannel);
-                creature.SetChannelVisual(new SpellCastVisual(BattlegroundConst.SpellSpiritHealChannelVisual, 0));
+                creature.SetChannelSpellXSpellVisualId(BattlegroundConst.SpellSpiritHealChannelVisual);
                 //creature.CastSpell(creature, SPELL_SPIRIT_HEAL_CHANNEL, true);
                 return true;
             }
@@ -1605,7 +1577,7 @@ namespace Game.BattleGrounds
         {
             _playerPositions.RemoveAll(playerPosition => playerPosition.Guid == guid);
         }
-        
+
         void EndNow()
         {
             RemoveFromBGFreeSlotQueue();
@@ -1772,17 +1744,6 @@ namespace Game.BattleGrounds
         {
             return Global.ObjectMgr.GetClosestGraveYard(player, player.GetTeam(), player);
         }
-
-        public void StartCriteriaTimer(CriteriaStartEvent startEvent, uint entry)
-        {
-            foreach (var guid in GetPlayers().Keys)
-            {
-                Player player = Global.ObjAccessor.FindPlayer(guid);
-                if (player)
-                    player.StartCriteriaTimer(startEvent, entry);
-            }
-        }
-
         public void SetBracket(PvpDifficultyRecord bracketEntry)
         {
             _pvpDifficultyEntry = bracketEntry;

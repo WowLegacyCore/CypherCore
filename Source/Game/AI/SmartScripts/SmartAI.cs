@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -119,8 +119,8 @@ namespace Game.AI
 
             if (invoker && invoker.IsPlayer())
             {
-                _escortNPCFlags = me.m_unitData.NpcFlags[0];
-                me.SetNpcFlags((NPCFlags)0);
+                _escortNPCFlags = me.GetUpdateField<uint>(UnitFields.NpcFlags);
+                me.SetNpcFlags(0);
             }
 
             GetScript().ProcessEventsFor(SmartEvents.WaypointStart, null, _currentWaypointNode, GetScript().GetPathId());
@@ -1124,7 +1124,7 @@ namespace Game.AI
         }
 
         public override void SetData(uint id, uint value) { SetData(id, value, null); }
-        
+
         public void SetData(uint id, uint value, Unit invoker)
         {
             GetScript().ProcessEventsFor(SmartEvents.DataSet, invoker, id, value);

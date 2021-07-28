@@ -364,7 +364,6 @@ namespace Game.Chat.Commands
             // optional
             string path_number = args.NextString();
 
-            uint pathid;
             Creature target = handler.GetSelectedCreature();
 
             // Did player provide a path_id?
@@ -383,7 +382,7 @@ namespace Game.Chat.Commands
                 return false;
             }
 
-            if (!uint.TryParse(path_number, out pathid) || pathid == 0)
+            if (!uint.TryParse(path_number, out uint pathid) || pathid == 0)
             {
                 handler.SendSysMessage("|cffff33ffNo valid path number provided.|r");
                 return true;

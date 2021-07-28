@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -135,8 +135,8 @@ namespace Framework.Constants
         CommandAccountSetAddon = 227,
         CommandAccountSetSecLevel = 228,
         CommandAccountSetPassword = 229,
-        CommandAchievement = 230,
-        CommandAchievementAdd = 231,
+        CommandAchievement = 230, // DEPRECATED, DO NOT USE
+        CommandAchievementAdd = 231, // DEPRECATED, DO NOT USE
         CommandArena = 232,
         CommandArenaCaptain = 233,
         CommandArenaCreate = 234,
@@ -255,7 +255,7 @@ namespace Framework.Constants
         CommandDeserterInstanceRemove = 347,
         CommandDisable = 348,
         CommandDisableAdd = 349,
-        CommandDisableAddCriteria = 350,
+        CommandDisableAddCriteria = 350, // DEPRECATED: DON'T REUSE
         CommandDisableAddBattleground = 351,
         CommandDisableAddMap = 352,
         CommandDisableAddMmap = 353,
@@ -264,7 +264,7 @@ namespace Framework.Constants
         CommandDisableAddSpell = 356,
         CommandDisableAddVmap = 357,
         CommandDisableRemove = 358,
-        CommandDisableRemoveCriteria = 359,
+        CommandDisableRemoveCriteria = 359, // DEPRECATED: DON'T REUSE
         CommandDisableRemoveBattleground = 360,
         CommandDisableRemoveMap = 361,
         CommandDisableRemoveMmap = 362,
@@ -464,7 +464,7 @@ namespace Framework.Constants
         CommandModifyPhase = 556,
         CommandModifyRage = 557,
         CommandModifyReputation = 558,
-        CommandModifyRunicpower = 559,
+        CommandModifyRunicpower = 559, // DEPRECATED: DO NOT REUSE
         CommandModifyScale = 560,
         CommandModifySpeed = 561,
         CommandModifySpeedAll = 562,
@@ -514,10 +514,10 @@ namespace Framework.Constants
         CommandQuestReward = 606,
         CommandReload = 607,
         CommandReloadAccessRequirement = 608,
-        CommandReloadCriteriaData = 609,
-        CommandReloadAchievementReward = 610,
+        CommandReloadCriteriaData = 609,// DEPRECATED: DO NOT REUSE
+        CommandReloadAchievementReward = 610, // DEPRECATED: DO NOT REUSE
         CommandReloadAll = 611,
-        CommandReloadAllAchievement = 612,
+        CommandReloadAllAchievement = 612, // DEPRECATED: DO NOT REUSE
         CommandReloadAllArea = 613,
         CommandReloadBroadcastText = 614,
         CommandReloadAllGossip = 615,
@@ -562,7 +562,7 @@ namespace Framework.Constants
         CommandReloadItemLootTemplate = 654,
         CommandReloadItemSetNames = 655,
         CommandReloadLfgDungeonRewards = 656,
-        CommandReloadAchievementRewardLocale = 657,
+        CommandReloadAchievementRewardLocale = 657, // DEPRECATED, DO NOT USE
         CommandReloadCreatureTemplateLocale = 658,
         CommandReloadCreatureTextLocale = 659,
         CommandReloadGameobjectTemplateLocale = 660,
@@ -616,7 +616,7 @@ namespace Framework.Constants
         CommandReloadVehicleAccesory = 708,
         CommandReloadVehicleTemplateAccessory = 709,
         CommandReset = 710,
-        CommandResetAchievements = 711,
+        CommandResetAchievements = 711, // Deprecated since BCC Don't reuse
         CommandResetHonor = 712,
         CommandResetLevel = 713,
         CommandResetSpells = 714,

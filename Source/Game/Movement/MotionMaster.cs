@@ -295,8 +295,7 @@ namespace Game.Movement
 
         public void MoveLand(uint id, Position pos)
         {
-            float x, y, z;
-            pos.GetPosition(out x, out y, out z);
+            pos.GetPosition(out float x, out float y, out float z);
 
             MoveSplineInit init = new(_owner);
             init.MoveTo(x, y, z);
@@ -307,8 +306,7 @@ namespace Game.Movement
 
         public void MoveTakeoff(uint id, Position pos)
         {
-            float x, y, z;
-            pos.GetPosition(out x, out y, out z);
+            pos.GetPosition(out float x, out float y, out float z);
 
             MoveSplineInit init = new(_owner);
             init.MoveTo(x, y, z);
@@ -354,12 +352,11 @@ namespace Game.Movement
             if (speedXY < 0.01f)
                 return;
 
-            float x, y, z;
             float moveTimeHalf = (float)(speedZ / gravity);
             float dist = 2 * moveTimeHalf * speedXY;
             float max_height = -MoveSpline.ComputeFallElevation(moveTimeHalf, false, -speedZ);
 
-            _owner.GetNearPoint(_owner, out x, out y, out z, _owner.GetCombatReach(), dist, _owner.GetAngle(srcX, srcY) + MathFunctions.PI);
+            _owner.GetNearPoint(_owner, out float x, out float y, out float z, _owner.GetCombatReach(), dist, _owner.GetAngle(srcX, srcY) + MathFunctions.PI);
 
             MoveSplineInit init = new(_owner);
             init.MoveTo(x, y, z);

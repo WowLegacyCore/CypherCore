@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -361,7 +361,7 @@ namespace Game.Spells
                 // shoot spells used equipped item cooldown values already assigned in GetAttackTime(RANGED_ATTACK)
                 // prevent 0 cooldowns set by another way
                 if (cooldown <= 0 && categoryCooldown <= 0 && (categoryId == 76 || (spellInfo.IsAutoRepeatRangedSpell() && spellInfo.Id != 75)))
-                    cooldown = (int)(uint)_owner.m_unitData.RangedAttackRoundBaseTime;
+                    cooldown = (int)(uint)_owner.GetUpdateField<float>(UnitFields.RangedAttackRoundBaseTime);
 
                 // Now we have cooldown data (if found any), time to apply mods
                 Player modOwner = _owner.GetSpellModOwner();
@@ -376,14 +376,14 @@ namespace Game.Spells
 
                 if (_owner.HasAuraTypeWithAffectMask(AuraType.ModSpellCooldownByHaste, spellInfo))
                 {
-                    cooldown = (int)(cooldown * _owner.m_unitData.ModSpellHaste);
-                    categoryCooldown = (int)(categoryCooldown * _owner.m_unitData.ModSpellHaste);
+                    cooldown = (int)(cooldown * _owner.GetUpdateField<float>(UnitFields.ModSpellHaste));
+                    categoryCooldown = (int)(categoryCooldown * _owner.GetUpdateField<float>(UnitFields.ModSpellHaste));
                 }
 
                 if (_owner.HasAuraTypeWithAffectMask(AuraType.ModCooldownByHasteRegen, spellInfo))
                 {
-                    cooldown = (int)(cooldown * _owner.m_unitData.ModHasteRegen);
-                    categoryCooldown = (int)(categoryCooldown * _owner.m_unitData.ModHasteRegen);
+                    cooldown = (int)(cooldown * _owner.GetUpdateField<float>(UnitFields.ModHasteRegen));
+                    categoryCooldown = (int)(categoryCooldown * _owner.GetUpdateField<float>(UnitFields.ModHasteRegen));
                 }
 
                 int cooldownMod = _owner.GetTotalAuraModifier(AuraType.ModCooldown);
@@ -542,7 +542,7 @@ namespace Game.Spells
             else
                 ModifySpellCooldown(spellInfo.Id, cooldownMod);
         }
-        
+
         public void ResetCooldown(uint spellId, bool update = false)
         {
             var entry = _spellCooldowns.LookupByKey(spellId);
@@ -843,10 +843,10 @@ namespace Game.Spells
             recoveryTimeF *= _owner.GetTotalAuraMultiplierByMiscValue(AuraType.ChargeRecoveryMultiplier, (int)chargeCategoryId);
 
             if (_owner.HasAuraType(AuraType.ChargeRecoveryAffectedByHaste))
-                recoveryTimeF *= _owner.m_unitData.ModSpellHaste;
+                recoveryTimeF *= _owner.GetUpdateField<float>(UnitFields.ModSpellHaste);
 
             if (_owner.HasAuraType(AuraType.ChargeRecoveryAffectedByHasteRegen))
-                recoveryTimeF *= _owner.m_unitData.ModHasteRegen;
+                recoveryTimeF *= _owner.GetUpdateField<float>(UnitFields.ModHasteRegen);
 
             return (int)Math.Floor(recoveryTimeF);
         }
@@ -897,7 +897,7 @@ namespace Game.Spells
                 player.SendPacket(setSpellCharges);
             }
         }
-        
+
         void GetCooldownDurations(SpellInfo spellInfo, uint itemId, ref uint categoryId)
         {
             int notUsed = 0;

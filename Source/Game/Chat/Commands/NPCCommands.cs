@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -125,7 +125,7 @@ namespace Game.Chat
             CreatureTemplate cInfo = target.GetCreatureTemplate();
 
             uint faction = target.GetFaction();
-            ulong npcflags = (ulong)target.m_unitData.NpcFlags[1] << 32 | target.m_unitData.NpcFlags[0];
+            uint npcflags = target.GetUpdateField<uint>(UnitFields.NpcFlags);
             uint mechanicImmuneMask = cInfo.MechanicImmuneMask;
             uint displayid = target.GetDisplayId();
             uint nativeid = target.GetNativeDisplayId();
@@ -150,20 +150,20 @@ namespace Game.Chat
             handler.SendSysMessage(CypherStrings.NpcinfoHealth, target.GetCreateHealth(), target.GetMaxHealth(), target.GetHealth());
             handler.SendSysMessage(CypherStrings.NpcinfoInhabitType, cInfo.InhabitType);
 
-            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags, (uint)target.m_unitData.Flags);
+            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags, target.GetUpdateField<uint>(UnitFields.Flags));
             foreach (UnitFlags value in Enum.GetValues(typeof(UnitFlags)))
                 if (target.HasUnitFlag(value))
-                    handler.SendSysMessage("{0} (0x{1:X})", (UnitFlags)value, value);
+                    handler.SendSysMessage("{0} (0x{1:X})", value, value);
 
-            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags2, (uint)target.m_unitData.Flags2);
+            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags2, target.GetUpdateField<uint>(UnitFields.Flags2));
             foreach (UnitFlags2 value in Enum.GetValues(typeof(UnitFlags2)))
                 if (target.HasUnitFlag2(value))
-                    handler.SendSysMessage("{0} (0x{1:X})", (UnitFlags2)value, value);
+                    handler.SendSysMessage("{0} (0x{1:X})", value, value);
 
-            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags3, (uint)target.m_unitData.Flags3);
+            handler.SendSysMessage(CypherStrings.NpcinfoUnitFieldFlags3, target.GetUpdateField<uint>(UnitFields.Flags3));
             foreach (UnitFlags3 value in Enum.GetValues(typeof(UnitFlags3)))
                 if (target.HasUnitFlag3(value))
-                    handler.SendSysMessage("{0} (0x{1:X})", (UnitFlags3)value, value);
+                    handler.SendSysMessage("{0} (0x{1:X})", value, value);
 
             handler.SendSysMessage(CypherStrings.NpcinfoDynamicFlags, target.GetDynamicFlags());
             handler.SendSysMessage(CypherStrings.CommandRawpawntimes, defRespawnDelayStr, curRespawnDelayStr);
@@ -184,7 +184,7 @@ namespace Game.Chat
                 if (cInfo.FlagsExtra.HasAnyFlag((CreatureFlagsExtra)value))
                     handler.SendSysMessage("{0} (0x{1:X})", (CreatureFlagsExtra)value, value);
 
-            handler.SendSysMessage(CypherStrings.NpcinfoNpcFlags, target.m_unitData.NpcFlags[0]);
+            handler.SendSysMessage(CypherStrings.NpcinfoNpcFlags, target.GetUpdateField<uint>(UnitFields.NpcFlags));
             foreach (uint value in Enum.GetValues(typeof(NPCFlags)))
                 if (npcflags.HasAnyFlag(value))
                     handler.SendSysMessage("{0} (0x{1:X})", (NPCFlags)value, value);
@@ -493,8 +493,7 @@ namespace Game.Chat
             }
 
             // place pet before player
-            float x, y, z;
-            player.GetClosePoint(out x, out y, out z, creatureTarget.GetCombatReach(), SharedConst.ContactDistance);
+            player.GetClosePoint(out float x, out float y, out float z, creatureTarget.GetCombatReach(), SharedConst.ContactDistance);
             pet.Relocate(x, y, z, MathFunctions.PI - player.GetOrientation());
 
             // set pet to defensive mode by default (some classes can't control controlled pets in fact).

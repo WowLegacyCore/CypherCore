@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,9 +21,7 @@ using Game.BattleGrounds;
 using Game.DataStorage;
 using Game.Entities;
 using Game.Groups;
-using Game.Guilds;
 using Game.Maps;
-using Game.Misc;
 using Game.Networking;
 using Game.Networking.Packets;
 using Game.PvP;
@@ -441,12 +439,6 @@ namespace Game
             GetPlayer().SendMessageToSet(specialMountAnim, false);
         }
 
-        [WorldPacketHandler(ClientOpcodes.MountSetFavorite)]
-        void HandleMountSetFavorite(MountSetFavorite mountSetFavorite)
-        {
-            _collectionMgr.MountSetFavorite(mountSetFavorite.MountSpellID, mountSetFavorite.IsFavorite);
-        }
-
         [WorldPacketHandler(ClientOpcodes.CloseInteraction)]
         void HandleCloseInteraction(CloseInteraction closeInteraction)
         {
@@ -517,16 +509,16 @@ namespace Game
         {
             if (farSight.Enable)
             {
-                Log.outDebug(LogFilter.Network, "Added FarSight {0} to player {1}", GetPlayer().m_activePlayerData.FarsightObject.ToString(), GetPlayer().GetGUID().ToString());
+                Log.outDebug(LogFilter.Network, $"Added FarSight {GetPlayer().GetUpdateField<ObjectGuid>(ActivePlayerFields.FarsightObject)} to player {GetPlayer().GetGUID()}");
                 WorldObject target = GetPlayer().GetViewpoint();
                 if (target)
                     GetPlayer().SetSeer(target);
                 else
-                    Log.outDebug(LogFilter.Network, "Player {0} (GUID: {1}) requests non-existing seer {2}", GetPlayer().GetName(), GetPlayer().GetGUID().ToString(), GetPlayer().m_activePlayerData.FarsightObject.ToString());
+                    Log.outDebug(LogFilter.Network, $"Player {GetPlayer().GetName()} (GUID: {GetPlayer().GetGUID()}) requests non-existing seer {GetPlayer().GetUpdateField<ObjectGuid>(ActivePlayerFields.FarsightObject)}");
             }
             else
             {
-                Log.outDebug(LogFilter.Network, "Player {0} set vision to self", GetPlayer().GetGUID().ToString());
+                Log.outDebug(LogFilter.Network, $"Player {GetPlayer().GetGUID()} set vision to self");
                 GetPlayer().SetSeer(GetPlayer());
             }
 
@@ -726,14 +718,6 @@ namespace Game
                 _player.AddPlayerFlag(PlayerFlags.TaxiBenchmark);
             else
                 _player.RemovePlayerFlag(PlayerFlags.TaxiBenchmark);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.GuildSetFocusedAchievement)]
-        void HandleGuildSetFocusedAchievement(GuildSetFocusedAchievement setFocusedAchievement)
-        {
-            Guild guild = Global.GuildMgr.GetGuildById(GetPlayer().GetGuildId());
-            if (guild)
-                guild.GetAchievementMgr().SendAchievementInfo(GetPlayer(), setFocusedAchievement.AchievementID);
         }
 
         [WorldPacketHandler(ClientOpcodes.InstanceLockResponse)]

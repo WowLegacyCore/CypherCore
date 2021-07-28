@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,6 @@ using Framework.Constants;
 using Game.BattleGrounds;
 using Game.DataStorage;
 using Game.Entities;
-using Game.Garrisons;
 using Game.Maps;
 using Game.Movement;
 using Game.Networking;
@@ -205,7 +204,7 @@ namespace Game
                     plrMover.RemovePlayerFlag(PlayerFlags.IsOutOfBounds);
 
                 if (opcode == ClientOpcodes.MoveJump)
-                { 
+                {
                     plrMover.RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags2.Jump); // Mind Control
                     Unit.ProcSkillsAndAuras(plrMover, null, ProcFlags.Jump, ProcFlags.None, ProcFlagsSpellType.MaskAll, ProcFlagsSpellPhase.None, ProcFlagsHit.None, null, null, null);
                 }
@@ -266,7 +265,7 @@ namespace Game
 
             float z = loc.GetPositionZ();
             if (GetPlayer().HasUnitMovementFlag(MovementFlag.Hover))
-                z += GetPlayer().m_unitData.HoverHeight;
+                z += GetPlayer().GetHoverHeight();
 
             GetPlayer().Relocate(loc.GetPositionX(), loc.GetPositionY(), z, loc.GetOrientation());
             GetPlayer().SetFallInformation(0, GetPlayer().GetPositionZ());
@@ -319,12 +318,7 @@ namespace Game
             if (!seamlessTeleport)
                 GetPlayer().SendInitialPacketsAfterAddToMap();
             else
-            {
                 GetPlayer().UpdateVisibilityForPlayer();
-                Garrison garrison = GetPlayer().GetGarrison();
-                if (garrison != null)
-                    garrison.SendRemoteInfo();
-            }
 
             // flight fast teleport case
             if (GetPlayer().GetMotionMaster().GetCurrentMovementGeneratorType() == MovementGeneratorType.Flight)
@@ -347,7 +341,7 @@ namespace Game
 
             // resurrect character at enter into instance where his corpse exist after add to map
             if (mapEntry.IsDungeon() && !GetPlayer().IsAlive())
-            { 
+            {
                 if (GetPlayer().GetCorpseLocation().GetMapId() == mapEntry.Id)
                 {
                     GetPlayer().ResurrectPlayer(0.5f, false);
@@ -387,8 +381,7 @@ namespace Game
                 GetPlayer().RemoveAurasByType(AuraType.Mounted);
 
             // update zone immediately, otherwise leave channel will cause crash in mtmap
-            uint newzone, newarea;
-            GetPlayer().GetZoneAndAreaId(out newzone, out newarea);
+            GetPlayer().GetZoneAndAreaId(out uint newzone, out uint newarea);
             GetPlayer().UpdateZone(newzone, newarea);
 
             // honorless target
@@ -451,8 +444,7 @@ namespace Game
             plMover.UpdatePosition(dest, true);
             plMover.SetFallInformation(0, GetPlayer().GetPositionZ());
 
-            uint newzone, newarea;
-            plMover.GetZoneAndAreaId(out newzone, out newarea);
+            plMover.GetZoneAndAreaId(out uint newzone, out uint newarea);
             plMover.UpdateZone(newzone, newarea);
 
             // new zone

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,10 +23,13 @@ using Game.BattleFields;
 using Game.Maps;
 using Game.Networking;
 using Game.Networking.Packets;
-using Game.Scenarios;
 using System;
 using System.Collections.Generic;
 using Game.DataStorage;
+using System.Collections;
+using Framework.IO;
+using System.Runtime.InteropServices;
+using Framework.Collections;
 
 namespace Game.Entities
 {
@@ -43,12 +46,8 @@ namespace Game.Entities
             ObjectTypeId = TypeId.Object;
             ObjectTypeMask = TypeMask.Object;
 
-            m_values = new UpdateFieldHolder(this);
-
             m_movementInfo = new MovementInfo();
             m_updateFlag.Clear();
-
-            m_objectData = new ObjectFieldData();
 
             m_staticFloorZ = MapConst.VMAPInvalidHeightValue;
         }
@@ -83,8 +82,32 @@ namespace Game.Entities
 
         public void _Create(ObjectGuid guid)
         {
+            if (m_updateValues == null)
+                InitializeUpdateFieldValues();
+
             m_objectUpdated = false;
             m_guid = guid;
+
+            SetUpdateField<ObjectGuid>(ObjectFields.Guid, guid);
+        }
+
+        private void InitializeUpdateFieldValues()
+        {
+            m_updateValues = new UpdateValues[(int)ValuesCount];
+            m_changesMask = new((int)ValuesCount);
+
+            if (m_dynamicValuesCount != 0)
+            {
+                m_dynamicValues = new uint[m_dynamicValuesCount][];
+                m_dynamicChangesArrayMask = new BitArray[m_dynamicValuesCount];
+
+                for (var i = 0; i < m_dynamicValuesCount; ++i)
+                {
+                    m_dynamicValues[i] = new uint[0];
+                    m_dynamicChangesArrayMask[i] = new(0);
+                    m_dynamicChangesMask[i] = DynamicFieldChangeType.Unchanged;
+                }
+            }
         }
 
         public virtual void AddToWorld()
@@ -93,7 +116,6 @@ namespace Game.Entities
                 return;
 
             IsInWorld = true;
-            ClearUpdateMask(true);
 
             if (GetMap() != null)
                 GetMap().GetZoneAndAreaId(_phaseShift, out m_zoneId, out m_areaId, GetPositionX(), GetPositionY(), GetPositionZ());
@@ -108,7 +130,6 @@ namespace Game.Entities
                 DestroyForNearbyPlayers();
 
             IsInWorld = false;
-            ClearUpdateMask(true);
         }
 
         public void UpdatePositionData()
@@ -129,7 +150,7 @@ namespace Game.Entities
 
             m_staticFloorZ = data.FloorZ;
         }
-        
+
         public virtual void BuildCreateUpdateBlockForPlayer(UpdateData data, Player target)
         {
             if (!target)
@@ -204,7 +225,10 @@ namespace Game.Entities
             buffer.WriteUInt8((byte)tempObjectType);
 
             BuildMovementUpdate(buffer, flags);
-            BuildValuesCreate(buffer, target);
+
+            BuildValuesUpdate(updateType, buffer, target);
+            BuildDynamicValuesUpdate(updateType, buffer, target);
+
             data.AddUpdateBlock(buffer);
         }
 
@@ -212,14 +236,13 @@ namespace Game.Entities
         {
             // send create update to player
             UpdateData upd = new(player.GetMapId());
-            UpdateObject packet;
 
             if (player.HaveAtClient(this))
                 BuildValuesUpdateBlockForPlayer(upd, player);
             else
                 BuildCreateUpdateBlockForPlayer(upd, player);
 
-            upd.BuildPacket(out packet);
+            upd.BuildPacket(out UpdateObject packet);
             player.SendPacket(packet);
         }
 
@@ -229,18 +252,8 @@ namespace Game.Entities
             buffer.WriteUInt8((byte)UpdateType.Values);
             buffer.WritePackedGuid(GetGUID());
 
-            BuildValuesUpdate(buffer, target);
-
-            data.AddUpdateBlock(buffer);
-        }
-
-        public void BuildValuesUpdateBlockForPlayerWithFlag(UpdateData data, UpdateFieldFlag flags, Player target)
-        {
-            WorldPacket buffer = new();
-            buffer.WriteUInt8((byte)UpdateType.Values);
-            buffer.WritePackedGuid(GetGUID());
-
-            BuildValuesUpdateWithFlag(buffer, flags, target);
+            BuildValuesUpdate(UpdateType.Values, buffer, target);
+            BuildDynamicValuesUpdate(UpdateType.Values, buffer, target);
 
             data.AddUpdateBlock(buffer);
         }
@@ -249,7 +262,7 @@ namespace Game.Entities
         {
             data.AddDestroyObject(GetGUID());
         }
-        
+
         public void BuildOutOfRangeUpdateBlock(UpdateData data)
         {
             data.AddOutOfRangeGUID(GetGUID());
@@ -259,8 +272,7 @@ namespace Game.Entities
         {
             UpdateData updateData = new(target.GetMapId());
             BuildDestroyUpdateBlock(updateData);
-            UpdateObject packet;
-            updateData.BuildPacket(out packet);
+            updateData.BuildPacket(out UpdateObject packet);
             target.SendPacket(packet);
         }
 
@@ -575,7 +587,7 @@ namespace Game.Entities
                 //    *data << *areaTrigger->GetMovementScript(); // AreaTriggerMovementScriptInfo
 
                 if (hasOrbit)
-                   areaTrigger.GetCircularMovementInfo().Value.Write(data);
+                    areaTrigger.GetCircularMovementInfo().Value.Write(data);
             }
 
             if (flags.GameObject)
@@ -715,11 +727,13 @@ namespace Game.Entities
 
             if (flags.ActivePlayer)
             {
-                bool HasSceneInstanceIDs = false;
-                bool HasRuneState = ToUnit().GetPowerIndex(PowerType.Runes) != (int)PowerType.Max;
+                bool hasSceneInstanceIDs = false;
+                bool hasRuneState = false;
+                bool hasUnkBCC = false;
 
-                data.WriteBit(HasSceneInstanceIDs);
-                data.WriteBit(HasRuneState);
+                data.WriteBit(hasSceneInstanceIDs);
+                data.WriteBit(hasRuneState);
+                data.WriteBit(hasUnkBCC);
                 data.FlushBits();
                 //if (HasSceneInstanceIDs)
                 //{
@@ -727,18 +741,19 @@ namespace Game.Entities
                 //    for (std::size_t i = 0; i < SceneInstanceIDs.size(); ++i)
                 //        *data << uint32(SceneInstanceIDs[i]);
                 //}
-                if (HasRuneState)
-                {
-                    Player player = ToPlayer();
-                    float baseCd = player.GetRuneBaseCooldown();
-                    uint maxRunes = (uint)player.GetMaxPower(PowerType.Runes);
-
-                    data.WriteUInt8((byte)((1 << (int)maxRunes) - 1u));
-                    data.WriteUInt8(player.GetRunesState());
-                    data.WriteUInt32(maxRunes);
-                    for (byte i = 0; i < maxRunes; ++i)
-                        data.WriteUInt8((byte)((baseCd - (float)player.GetRuneCooldown(i)) / baseCd * 255));
-                }
+                //if (hasRuneState)
+                //{
+                //    *data << uint8((1 << maxRunes) - 1);
+                //    *data << uint8(player->GetRunesState());
+                //    *data << uint32(maxRunes);
+                //    for (std::size_t i = 0; i < maxRunes; ++i)
+                //        *data << uint8((baseCd - float(player->GetruneCooldown(i))) / baseCd * 255);
+                //}
+                //if(hasUnkBCC)
+                //{
+                //    for (std::size_t i = 0; i < 132; ++i)
+                //        *data << int32(0);
+                //}
             }
 
             if (flags.Conversation)
@@ -748,6 +763,454 @@ namespace Game.Entities
                     data.WriteUInt32(self.GetTextureKitId());
                 data.FlushBits();
             }
+        }
+
+        #region UpdateFields Get/Set Methods
+        public void SetUpdateField<T>(object index, T value, byte offset = 0, bool update = false) where T : new()
+        {
+            if (value is sbyte || value is byte)
+            {
+                if (offset > 3)
+                {
+                    Log.outError(LogFilter.Server, $"SetUpdateField<UInt8>: Wrong offset: {offset}");
+                    return;
+                }
+
+                if (update || ((byte)(GetUpdateField<uint>(index) >> (offset * 8)) != Convert.ToByte(value)))
+                {
+                    if (value is byte)
+                    {
+                        m_updateValues[(int)index].UnsignedValue &= ~(uint)(0xFF << (offset * 8));
+                        m_updateValues[(int)index].UnsignedValue |= Convert.ToUInt32(value) << (offset * 8);
+                    }
+                    else
+                    {
+                        m_updateValues[(int)index].SignedValue &= ~(0xFF << (offset * 8));
+                        m_updateValues[(int)index].SignedValue |= Convert.ToInt32(value) << (offset * 8);
+                    }
+
+                    m_changesMask.Set((int)index, true);
+                }
+            }
+            else if (value is short || value is ushort)
+            {
+                if (offset > 2)
+                {
+                    Log.outError(LogFilter.Server, $"SetUpdateField<UInt16>: Wrong offset: {offset}");
+                    return;
+                }
+
+                if (update || ((ushort)(GetUpdateField<uint>(index) >> (offset * 16)) != Convert.ToUInt16(value)))
+                {
+                    if (value is ushort)
+                    {
+                        m_updateValues[(int)index].UnsignedValue &= ~((uint)0xFFFF << (offset * 16));
+                        m_updateValues[(int)index].UnsignedValue |= Convert.ToUInt32(value) << (offset * 16);
+                    }
+                    else
+                    {
+                        m_updateValues[(int)index].SignedValue &= ~(0xFFFF << (offset * 16));
+                        m_updateValues[(int)index].SignedValue |= Convert.ToInt32(value) << (offset * 16);
+                    }
+
+                    m_changesMask.Set((int)index, true);
+                }
+            }
+            else if (value is int || value is uint || value is float)
+            {
+                if (update || (value is uint && GetUpdateField<uint>(index) != Convert.ToUInt32(value)))
+                {
+                    m_updateValues[(int)index].UnsignedValue = Convert.ToUInt32(value);
+                    m_changesMask.Set((int)index, true);
+                }
+                else if (update || (value is int && GetUpdateField<int>(index) != Convert.ToInt32(value)))
+                {
+                    m_updateValues[(int)index].SignedValue = Convert.ToInt32(value);
+                    m_changesMask.Set((int)index, true);
+                }
+                else if (update || (value is float && GetUpdateField<float>(index) != Convert.ToSingle(value)))
+                {
+                    m_updateValues[(int)index].FloatValue = Convert.ToSingle(value);
+                    m_changesMask.Set((int)index, true);
+                }
+            }
+            else if (value is long || value is ulong)
+            {
+                if (update || (value is long && GetUpdateField<long>(index) != Convert.ToInt64(value)))
+                {
+                    m_updateValues[(int)index].SignedValue = (int)MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
+                    m_updateValues[(int)index + 1].SignedValue = (int)MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
+                    m_changesMask.Set((int)index, true);
+                    m_changesMask.Set((int)index + 1, true);
+                }
+                else if (update || (value is ulong && GetUpdateField<ulong>(index) != Convert.ToUInt64(value)))
+                {
+                    m_updateValues[(int)index].UnsignedValue = MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
+                    m_updateValues[(int)index + 1].UnsignedValue = MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
+                    m_changesMask.Set((int)index, true);
+                    m_changesMask.Set((int)index + 1, true);
+                }
+            }
+            else if (value is ObjectGuid)
+            {
+                var objectValue = (ObjectGuid)Convert.ChangeType(value, typeof(ObjectGuid));
+                if (GetUpdateField<ObjectGuid>(index) != objectValue)
+                {
+                    SetUpdateField<ulong>(index, objectValue.GetLowValue());
+                    SetUpdateField<ulong>((int)index + 2, objectValue.GetHighValue());
+                }
+            }
+
+            if (!update)
+                AddToObjectUpdateIfNeeded();
+        }
+
+        public T GetUpdateField<T>(object index, byte offset = 0) where T : new() =>
+            default(T) switch
+            {
+                sbyte => (T)Convert.ChangeType(Convert.ToSByte(m_updateValues[(int)index].SignedValue >> (offset * 8)) & 0xFF, typeof(T)),
+                byte => (T)Convert.ChangeType(Convert.ToByte(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) & 0xFF, typeof(T)),
+                short => (T)Convert.ChangeType(Convert.ToInt16(m_updateValues[(int)index].SignedValue >> (offset * 16)) & 0xFF, typeof(T)),
+                ushort => (T)Convert.ChangeType(Convert.ToUInt16(m_updateValues[(int)index].UnsignedValue >> (offset * 16)) & 0xFF, typeof(T)),
+                int => (T)Convert.ChangeType(Convert.ToInt32(m_updateValues[(int)index].SignedValue), typeof(T)),
+                uint => (T)Convert.ChangeType(Convert.ToUInt32(m_updateValues[(int)index].UnsignedValue), typeof(T)),
+                float => (T)Convert.ChangeType(Convert.ToSingle(m_updateValues[(int)index].FloatValue), typeof(T)),
+                long => (T)Convert.ChangeType(Convert.ToInt64(m_updateValues[(int)index + 1].SignedValue) << 32 | (uint)m_updateValues[(int)index].SignedValue, typeof(T)),
+                ulong => (T)Convert.ChangeType(Convert.ToUInt64(m_updateValues[(int)index + 1].UnsignedValue) << 32 | m_updateValues[(int)index].UnsignedValue, typeof(T)),
+                ObjectGuid => (T)Convert.ChangeType(new ObjectGuid(GetUpdateField<ulong>((int)index + 2), GetUpdateField<ulong>(index)), typeof(T)),
+                _ => throw new Exception($"{typeof(T)} is not implemented in GetUpdateField<T>"),
+            };
+
+
+        public void _LoadIntoDataField(string data, uint startOffset, uint count)
+        {
+            if (string.IsNullOrEmpty(data))
+                return;
+
+            var lines = new StringArray(data, ' ');
+            if (lines.Length != count)
+                return;
+
+            for (var index = 0; index < count; ++index)
+            {
+                if (uint.TryParse(lines[index], out uint value))
+                {
+                    m_updateValues[(int)startOffset + index].UnsignedValue = value;
+                    m_changesMask.Set((int)(startOffset + index), true);
+                }
+            }
+        }
+        public bool HasFlag(object index, object flag)
+        {
+            if ((int)index >= ValuesCount)
+                return false;
+
+            return (GetUpdateField<uint>(index) & (uint)flag) != 0;
+        }
+
+        public void AddFlag(object index, object newFlag)
+        {
+            var oldValue = m_updateValues[(int)index].UnsignedValue;
+            var newValue = oldValue | Convert.ToUInt32(newFlag);
+
+            if (oldValue != newValue)
+                SetUpdateField<uint>(index, newValue);
+        }
+
+        public void RemoveFlag(object index, object newFlag)
+        {
+            var oldValue = m_updateValues[(int)index].UnsignedValue;
+            var newValue = oldValue & ~Convert.ToUInt32(newFlag);
+
+            if (oldValue != newValue)
+            {
+                SetUpdateField<uint>(index, newValue);
+            }
+        }
+
+        public void ApplyFlag<T>(object index, T flag, bool apply)
+        {
+            if (apply)
+                AddFlag(index, flag);
+            else
+                RemoveFlag(index, flag);
+        }
+
+        public void AddFlag64(object index, object newFlag)
+        {
+            var oldValue = GetUpdateField<ulong>(index);
+            var newValue = oldValue | Convert.ToUInt64(newFlag);
+
+            if (oldValue != newValue)
+                SetUpdateField<ulong>(index, newValue);
+        }
+
+        public void RemoveFlag64(object index, object newFlag)
+        {
+            var oldValue = GetUpdateField<ulong>(index);
+            var newValue = oldValue & ~Convert.ToUInt64(newFlag);
+
+            if (oldValue != newValue)
+                SetUpdateField<ulong>(index, newValue);
+        }
+
+        public void ApplyFlag64<T>(object index, T flag, bool apply)
+        {
+            if (apply)
+                AddFlag(index, flag);
+            else
+                RemoveFlag(index, flag);
+        }
+
+        public void AddByteFlag(object index, byte offset, object newFlag)
+        {
+            if (offset > 4)
+            {
+                Log.outError(LogFilter.Server, $"Object.SetByteFlag: Wrong offset {offset}");
+                return;
+            }
+
+            if (((byte)m_updateValues[(int)index].UnsignedValue >> (offset * 8) & (int)newFlag) == 0)
+            {
+                m_updateValues[(int)index].UnsignedValue |= (uint)newFlag << (offset * 8);
+                m_changesMask.Set((int)index, true);
+
+                AddToObjectUpdateIfNeeded();
+            }
+        }
+
+        public void RemoveByteFlag(object index, byte offset, object oldFlag)
+        {
+            if (offset > 4)
+            {
+                Log.outError(LogFilter.Server, $"Object.RemoveByteFlag: Wrong offset {offset}");
+                return;
+            }
+
+            if (((byte)m_updateValues[(int)index].UnsignedValue >> (offset * 8) & (int)oldFlag) != 0)
+            {
+                m_updateValues[(int)index].UnsignedValue &= ~((uint)oldFlag << (offset * 8));
+                m_changesMask.Set((int)index, true);
+
+                AddToObjectUpdateIfNeeded();
+            }
+        }
+
+        public virtual void BuildValuesUpdate(UpdateType updateType, ByteBuffer data, Player target)
+        {
+            if (!target)
+                return;
+
+            var fieldBuffer = new ByteBuffer();
+            var updateMask = new UpdateMask(ValuesCount);
+
+            var visibleFlag = GetUpdateFieldData(target, out var flags);
+            for (var index = 0; index < ValuesCount; ++index)
+            {
+                if (m_fieldNotifyFlags.HasAnyFlag(flags[index]) ||
+                    ((updateType == UpdateType.Values ? m_changesMask.Get(index) : m_updateValues[index].UnsignedValue != 0) && flags[index].HasAnyFlag(visibleFlag)))
+                {
+                    updateMask.SetBit(index);
+                    fieldBuffer.WriteUInt32(m_updateValues[index].UnsignedValue);
+                }
+            }
+
+            updateMask.AppendToPacket(data);
+            data.WriteBytes(fieldBuffer);
+        }
+
+        public virtual void BuildDynamicValuesUpdate(UpdateType updateType, WorldPacket data, Player target)
+        {
+            if (!target)
+                return;
+
+            var valueCount = m_dynamicValuesCount;
+            if (target != this && !IsPlayer())
+                valueCount = (uint)PlayerDynamicFields.End;
+
+            var fieldBuffer = new ByteBuffer();
+            var updateMask = new UpdateMask(valueCount);
+
+            var visibleFlag = GetDynamicUpdateFieldData(target, out var flags);
+            for (var index = 0; index < valueCount; ++index)
+            {
+                var valueBuffer = new ByteBuffer();
+                var values = m_dynamicValues[index];
+                if (m_fieldNotifyFlags.HasAnyFlag(flags[index]) ||
+                    ((updateType == UpdateType.Values ? m_dynamicChangesMask[index] != DynamicFieldChangeType.Unchanged : !values.Empty()) && flags[index].HasAnyFlag(visibleFlag)))
+                {
+                    updateMask.SetBit(index);
+
+                    var arrayMask = new DynamicUpdateMask((uint)values.Length);
+                    arrayMask.EncodeDynamicFieldChangeType(m_dynamicChangesMask[index], updateType);
+                    if (updateType == UpdateType.Values && m_dynamicChangesMask[index] == DynamicFieldChangeType.ValueAndSizeChanged)
+                        arrayMask.SetCount(values.Length);
+
+                    for (var v = 0; v < values.Length; ++v)
+                    {
+                        if (updateType != UpdateType.Values || m_dynamicChangesArrayMask[index].Get(v))
+                        {
+                            arrayMask.SetBit(v);
+                            valueBuffer.WriteUInt32(values[v]);
+                        }
+                    }
+
+                    arrayMask.AppendToPacket(fieldBuffer);
+                    fieldBuffer.WriteBytes(valueBuffer);
+                }
+            }
+
+            updateMask.AppendToPacket(data);
+            data.WriteBytes(fieldBuffer);
+        }
+
+        public void ApplyModUpdateField<T>(object index, T val, bool apply, byte offset = 0) where T : new()
+        {
+            if (val is int || val is uint)
+            {
+                var cur = GetUpdateField<int>(index) + (apply ? Convert.ToInt32(val) : -Convert.ToInt32(val));
+                if (cur < 0)
+                    cur = 0;
+                SetUpdateField<int>(index, cur);
+            }
+            else if (val is float)
+            {
+                var cur = GetUpdateField<float>(index) + (apply ? Convert.ToSingle(val) : -Convert.ToSingle(val));
+                SetUpdateField<float>(index, cur);
+            }
+            else if (val is short || val is ushort)
+            {
+                var cur = (short)(GetUpdateField<short>(index, offset) + (apply ? Convert.ToInt16(val) : -Convert.ToInt16(val)));
+                if (cur < 0)
+                    cur = 0;
+                SetUpdateField<short>(index, cur, offset);
+            }
+        }
+
+        public void SetStatUpdateField<T>(object index, T val) where T : new()
+        {
+            if (val is int intVal)
+            {
+                if (intVal < 0)
+                    intVal = 0;
+                val = (T)Convert.ChangeType(intVal, typeof(T));
+            }
+            else if (val is float floatVal)
+            {
+                if (floatVal < 0.0f)
+                    floatVal = 0.0f;
+                val = (T)Convert.ChangeType(floatVal, typeof(T));
+            }
+            else
+                throw new Exception($"Object::SetStatUpdateField<T>: Unknown type: {typeof(T)}");
+
+            SetUpdateField<T>(index, val);
+        }
+
+        public void ApplyPercentModUpdateField(object index, float val, bool apply)
+        {
+            float value = GetUpdateField<float>(index);
+            MathFunctions.ApplyPercentModFloatVar(ref value, val, apply);
+            SetUpdateField<float>(index, value);
+        }
+
+        public uint[] GetDynamicValues(object index) => m_dynamicValues[(int)index];
+
+        public uint GetDynamicValue(object index, ushort offset)
+        {
+            if (offset >= m_dynamicValues[(int)index].Length)
+                return 0;
+
+            return m_dynamicValues[(int)index][offset];
+        }
+
+        public bool HasDynamicValue(object index, uint value)
+        {
+            var values = m_dynamicValues[(int)index];
+            for (var i = 0; i < values.Length; ++i)
+                if (values[i] == value)
+                    return true;
+
+            return false;
+        }
+
+        public void AddDynamicValue(object index, uint value) =>
+            SetDynamicValue(index, (byte)m_dynamicValues[(int)index].Length, value);
+
+        public void SetDynamicValue(object index, ushort offset, uint value)
+        {
+            var changeType = DynamicFieldChangeType.ValueChanged;
+            if (m_dynamicValues[(int)index].Length <= offset)
+            {
+                Array.Resize(ref m_dynamicValues[(int)index], offset + 1);
+                changeType = DynamicFieldChangeType.ValueAndSizeChanged;
+            }
+
+            if (m_dynamicChangesArrayMask[(int)index].Count <= offset)
+                m_dynamicChangesArrayMask[(int)index].Length = offset + 1;
+
+            if (m_dynamicValues[(int)index][offset] != value || changeType == DynamicFieldChangeType.ValueAndSizeChanged)
+            {
+                m_dynamicValues[(int)index][offset] = value;
+                m_dynamicChangesMask[(int)index] = changeType;
+                m_dynamicChangesArrayMask[(int)index].Set(offset, true);
+
+                AddToObjectUpdateIfNeeded();
+            }
+        }
+
+        public void RemoveDynamicValue(object index, uint value)
+        {
+            for (var i = 0; i < m_dynamicValues[(int)index].Length; ++i)
+            {
+                if (m_dynamicValues[(int)index][i] == value)
+                {
+                    m_dynamicValues[(int)index][i] = 0;
+                    m_dynamicChangesMask[(int)index] = DynamicFieldChangeType.ValueChanged;
+                    m_dynamicChangesArrayMask[(int)index].Set(i, true);
+
+                    AddToObjectUpdateIfNeeded();
+                }
+            }
+        }
+
+        public void ClearDynamicValue(object index)
+        {
+            if (!m_dynamicValues[(int)index].Empty())
+            {
+                m_dynamicValues[(int)index] = new uint[0];
+                m_dynamicChangesMask[(int)index] = DynamicFieldChangeType.ValueAndSizeChanged;
+                m_dynamicChangesArrayMask[(int)index].SetAll(false);
+
+                AddToObjectUpdateIfNeeded();
+            }
+        }
+
+        public List<T> GetDynamicStructuredValues<T>(object index)
+        {
+            var values = m_dynamicValues[(int)index];
+            return values.DeserializeObjects<T>();
+        }
+
+        public T GetDynamicStructuredValue<T>(object index, ushort offset) =>
+            GetDynamicStructuredValues<T>(index)[offset];
+
+        public void SetDynamicStructuredValue<T>(object index, ushort offset, T value)
+        {
+            var blockCount = Marshal.SizeOf<T>() / sizeof(uint);
+            SetDynamicValue(index, (ushort)((offset + 1) * blockCount - 1), 0); // reserve space
+
+            for (var i = 0; i < blockCount; ++i)
+                SetDynamicValue(index, (ushort)(offset * blockCount + i), value.SerializeObject()[i]);
+        }
+
+        public void AddDynamicStructuredValue<T>(object index, T value)
+        {
+            var blockCount = Marshal.SizeOf<T>() / sizeof(uint);
+            var offset = (ushort)(m_dynamicValues[(int)index].Length / blockCount);
+            SetDynamicValue(index, (ushort)((offset + 1) * blockCount - 1), 0); // reserve space
+            for (var i = 0; i < blockCount; ++i)
+                SetDynamicValue(index, (ushort)(offset * blockCount + i), value.SerializeObject()[i]);
         }
 
         public void DoWithSuppressingObjectUpdates(Action action)
@@ -761,15 +1224,28 @@ namespace Game.Entities
             }
         }
 
-        public virtual UpdateFieldFlag GetUpdateFieldFlagsFor(Player target)
+        public void ClearUpdateMask(bool remove)
         {
-            return UpdateFieldFlag.None;
+            m_changesMask.SetAll(false);
+            for (int i = 0; i < m_dynamicValuesCount; ++i)
+            {
+                m_dynamicChangesMask[i] = DynamicFieldChangeType.Unchanged;
+                m_dynamicChangesArrayMask[i].SetAll(false);
+            }
+
+            if (m_objectUpdated)
+            {
+                if (remove)
+                    RemoveFromObjectUpdate();
+
+                m_objectUpdated = false;
+            }
         }
 
-        public virtual void BuildValuesUpdateWithFlag(WorldPacket data, UpdateFieldFlag flags, Player target)
+        public void ForceValuesUpdateAtIndex(object index)
         {
-            data.WriteUInt32(0);
-            data.WriteUInt32(0);
+            m_changesMask.Set((int)index, true);
+            AddToObjectUpdateIfNeeded();
         }
 
         public void AddToObjectUpdateIfNeeded()
@@ -781,19 +1257,6 @@ namespace Game.Entities
             }
         }
 
-        public virtual void ClearUpdateMask(bool remove)
-        {
-            m_values.ClearChangesMask(m_objectData);
-
-            if (m_objectUpdated)
-            {
-                if (remove)
-                    RemoveFromObjectUpdate();
-
-                m_objectUpdated = false;
-            }
-        }
-
         public void BuildFieldsUpdate(Player player, Dictionary<Player, UpdateData> data_map)
         {
             if (!data_map.ContainsKey(player))
@@ -802,143 +1265,124 @@ namespace Game.Entities
             BuildValuesUpdateBlockForPlayer(data_map[player], player);
         }
 
-        public abstract void BuildValuesCreate(WorldPacket data, Player target);
-        public abstract void BuildValuesUpdate(WorldPacket data, Player target);
+        public void ForceUpdateFieldChange() => AddToObjectUpdateIfNeeded();
 
-        public void SetUpdateFieldValue<T>(IUpdateField<T> updateField, T newValue) where T : new()
+        MirrorFlags GetUpdateFieldData(Player target, out MirrorFlags[] flags)
         {
-            if (!newValue.Equals(updateField.GetValue()))
+            var visibleFlag = MirrorFlags.All;
+            flags = null;
+
+            if (target == this)
+                visibleFlag |= MirrorFlags.Self;
+
+            switch (GetTypeId())
             {
-                updateField.SetValue(newValue);
-                AddToObjectUpdateIfNeeded();
+                case TypeId.Item:
+                case TypeId.Container:
+                    flags = UpdateFieldFlags.ContainerUpdateFieldFlags;
+                    if (((Item)this).GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner | MirrorFlags.ItemOwner;
+                    break;
+                case TypeId.Unit:
+                case TypeId.Player:
+                {
+                    Player plr = ToUnit().GetCharmerOrOwnerPlayerOrPlayerItself();
+                    flags = UpdateFieldFlags.UnitUpdateFieldFlags;
+                    if (ToUnit().GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner;
+
+                    if (HasDynamicFlag(UnitDynFlags.SpecialInfo))
+                        if (ToUnit().HasAuraTypeWithCaster(AuraType.Empathy, target.GetGUID()))
+                            visibleFlag |= MirrorFlags.Empath;
+
+                    if (plr != null && plr.IsInSameGroupWith(target))
+                        visibleFlag |= MirrorFlags.Party;
+                    break;
+                }
+                case TypeId.GameObject:
+                    flags = UpdateFieldFlags.GameObjectUpdateFieldFlags;
+                    if (ToGameObject().GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner;
+                    break;
+                case TypeId.DynamicObject:
+                    flags = UpdateFieldFlags.DynamicObjectUpdateFieldFlags;
+                    if (ToDynamicObject().GetCasterGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner;
+                    break;
+                case TypeId.Corpse:
+                    flags = UpdateFieldFlags.CorpseUpdateFieldFlags;
+                    if (ToCorpse().GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner;
+                    break;
+                case TypeId.AreaTrigger:
+                    flags = UpdateFieldFlags.AreaTriggerUpdateFieldFlags;
+                    break;
+                case TypeId.SceneObject:
+                    flags = UpdateFieldFlags.SceneObjectUpdateFieldFlags;
+                    break;
+                case TypeId.Conversation:
+                    flags = UpdateFieldFlags.ConversationUpdateFieldFlags;
+                    break;
+                case TypeId.Object:
+                case TypeId.ActivePlayer:
+                    Cypher.Assert(true);
+                    break;
             }
+            return visibleFlag;
         }
 
-        public void SetUpdateFieldValue<T>(ref T value, T newValue) where T : new()
+        public MirrorFlags GetDynamicUpdateFieldData(Player target, out MirrorFlags[] flags)
         {
-            if (!newValue.Equals(value))
+            var visibleFlag = MirrorFlags.All;
+
+            if (target == this)
+                visibleFlag |= MirrorFlags.Self;
+
+            switch (GetTypeId())
             {
-                value = newValue;
-                AddToObjectUpdateIfNeeded();
+                case TypeId.Item:
+                case TypeId.Container:
+                    flags = UpdateFieldFlags.ItemDynamicUpdateFieldFlags;
+                    if (((Item)this).GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner | MirrorFlags.ItemOwner;
+                    break;
+                case TypeId.Unit:
+                case TypeId.Player:
+                {
+                    Player plr = ToUnit().GetCharmerOrOwnerPlayerOrPlayerItself();
+                    flags = UpdateFieldFlags.UnitDynamicUpdateFieldFlags;
+                    if (ToUnit().GetOwnerGUID() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Owner;
+
+                    if (HasDynamicFlag(UnitDynFlags.SpecialInfo))
+                        if (ToUnit().HasAuraTypeWithCaster(AuraType.Empathy, target.GetGUID()))
+                            visibleFlag |= MirrorFlags.Empath;
+
+                    if (plr && plr.IsInSameRaidWith(target))
+                        visibleFlag |= MirrorFlags.Party;
+                    break;
+                }
+                case TypeId.GameObject:
+                    flags = UpdateFieldFlags.GameObjectDynamicUpdateFieldFlags;
+                    break;
+                case TypeId.Conversation:
+                    flags = UpdateFieldFlags.ConversationDynamicUpdateFieldFlags;
+
+                    if (ToConversation().GetCreatorGuid() == target.GetGUID())
+                        visibleFlag |= MirrorFlags.Unk0x100;
+                    break;
+                default:
+                    flags = null;
+                    break;
             }
+
+            return visibleFlag;
         }
 
-        public void SetUpdateFieldValue<T>(DynamicUpdateField<T> updateField, int index, T newValue) where T : new()
-        {
-            if (!newValue.Equals(updateField[index]))
-            {
-                updateField[index] = newValue;
-                AddToObjectUpdateIfNeeded();
-            }
-        }
+        public void AddFieldNotifyFlag(MirrorFlags flags) => m_fieldNotifyFlags |= flags;
+        public void RemoveFieldNotifyFlag(MirrorFlags flags) => m_fieldNotifyFlags &= ~flags;
 
-        public void SetUpdateFieldFlagValue<T>(IUpdateField<T> updateField, T flag) where T : new()
-        {
-            //static_assert(std::is_integral < T >::value, "SetUpdateFieldFlagValue must be used with integral types");
-            SetUpdateFieldValue(updateField, (T)(updateField.GetValue() | (dynamic)flag));
-        }
-
-        public void SetUpdateFieldFlagValue<T>(ref T value, T flag) where T : new()
-        {
-            //static_assert(std::is_integral < T >::value, "SetUpdateFieldFlagValue must be used with integral types");
-            SetUpdateFieldValue(ref value, (T)(value | (dynamic)flag));
-        }
-
-        public void RemoveUpdateFieldFlagValue<T>(IUpdateField<T> updateField, T flag) where T : new()
-        {
-            //static_assert(std::is_integral < T >::value, "SetUpdateFieldFlagValue must be used with integral types");
-            SetUpdateFieldValue(updateField, (T)(updateField.GetValue() & ~(dynamic)flag));
-        }
-
-        public void RemoveUpdateFieldFlagValue<T>(ref T value, T flag) where T : new()
-        {
-            //static_assert(std::is_integral < T >::value, "RemoveUpdateFieldFlagValue must be used with integral types");
-            SetUpdateFieldValue(ref value, (T)(value & ~(dynamic)flag));
-        }
-
-        public void AddDynamicUpdateFieldValue<T>(DynamicUpdateField<T> updateField, T value) where T : new()
-        {
-            AddToObjectUpdateIfNeeded();
-            updateField.AddValue(value);
-        }
-
-        public void InsertDynamicUpdateFieldValue<T>(DynamicUpdateField<T> updateField, int index, T value) where T : new()
-        {
-            AddToObjectUpdateIfNeeded();
-            updateField.InsertValue(index, value);
-        }
-
-        public void RemoveDynamicUpdateFieldValue<T>(DynamicUpdateField<T> updateField, int index) where T : new()
-        {
-            AddToObjectUpdateIfNeeded();
-            updateField.RemoveValue(index);
-        }
-
-        public void ClearDynamicUpdateFieldValues<T>(DynamicUpdateField<T> updateField) where T : new()
-        {
-            AddToObjectUpdateIfNeeded();
-            updateField.Clear();
-        }
-
-        // stat system helpers
-        public void SetUpdateFieldStatValue<T>(IUpdateField<T> updateField, T value) where T : new()
-        {
-            SetUpdateFieldValue(updateField, (T)Math.Max((dynamic)value, 0));
-        }
-
-        public void SetUpdateFieldStatValue<T>(ref T oldValue, T value) where T : new()
-        {      
-            SetUpdateFieldValue(ref oldValue, (T)Math.Max((dynamic)value, 0));
-        }
-
-        public void ApplyModUpdateFieldValue<T>(IUpdateField<T> updateField, T mod, bool apply) where T : new()
-        {
-            dynamic value = updateField.GetValue();
-            if (apply)
-                value += mod;
-            else
-                value -= mod;
-
-            SetUpdateFieldValue(updateField, (T)value);
-        }
-
-        public void ApplyModUpdateFieldValue<T>(ref T oldvalue, T mod, bool apply) where T : new()
-        {
-            dynamic value = oldvalue;
-            if (apply)
-                value += mod;
-            else
-                value -= mod;
-
-            SetUpdateFieldValue(ref oldvalue, (T)value);
-        }
-
-        public void ApplyPercentModUpdateFieldValue<T>(IUpdateField<T> updateField, float percent, bool apply) where T : new()
-        {
-            dynamic value = updateField.GetValue();
-
-            if (percent == -100.0f)
-                percent = -99.99f;
-            value *= (apply ? (100.0f + percent) / 100.0f : 100.0f / (100.0f + percent));
-
-            SetUpdateFieldValue(updateField, (T)value);
-        }
-
-        public void ApplyPercentModUpdateFieldValue<T>(ref T oldValue, float percent, bool apply) where T : new()
-        {
-            dynamic value = oldValue;
-
-            if (percent == -100.0f)
-                percent = -99.99f;
-            value *= (apply ? (100.0f + percent) / 100.0f : 100.0f / (100.0f + percent));
-
-            SetUpdateFieldValue(ref oldValue, (T)value);
-        }
-
-        public void ForceUpdateFieldChange()
-        {
-            AddToObjectUpdateIfNeeded();
-        }
+        #endregion
 
         public bool IsWorldObject()
         {
@@ -990,7 +1434,7 @@ namespace Game.Entities
             }
         }
 
-        bool IsVisibilityOverridden() { return m_visibilityDistanceOverride.HasValue; }
+        bool IsVisibilityOverridden() => m_visibilityDistanceOverride.HasValue;
 
         public void SetVisibilityDistanceOverride(VisibilityDistanceType type)
         {
@@ -1010,12 +1454,12 @@ namespace Game.Entities
             if (transport)
                 transport.RemovePassenger(this);
         }
-        
-        public uint GetZoneId()  { return m_zoneId; }
-        public uint GetAreaId()  { return m_areaId; }
+
+        public uint GetZoneId() => m_zoneId;
+        public uint GetAreaId() => m_areaId;
 
         public void GetZoneAndAreaId(out uint zoneid, out uint areaid) { zoneid = m_zoneId; areaid = m_areaId; }
-        
+
         public bool IsInWorldPvpZone()
         {
             switch (GetZoneId())
@@ -1110,7 +1554,7 @@ namespace Game.Entities
 
             return false;
         }
-        
+
         public bool CanSeeOrDetect(WorldObject obj, bool ignoreStealth = false, bool distanceCheck = false, bool checkAlert = false)
         {
             if (this == obj)
@@ -1207,12 +1651,9 @@ namespace Game.Entities
             return true;
         }
 
-        bool CanNeverSee(WorldObject obj)
-        {
-            return GetMap() != obj.GetMap() || !IsInPhase(obj);
-        }
+        bool CanNeverSee(WorldObject obj) => GetMap() != obj.GetMap() || !IsInPhase(obj);
 
-        public virtual bool CanAlwaysSee(WorldObject obj) { return false; }
+        public virtual bool CanAlwaysSee(WorldObject obj) => false;
 
         bool CanDetect(WorldObject obj, bool ignoreStealth, bool checkAlert = false)
         {
@@ -1383,7 +1824,7 @@ namespace Game.Entities
             _currMap = null;
         }
 
-        public Map GetMap() { return _currMap; }
+        public Map GetMap() => _currMap;
 
         public void AddObjectToRemoveList()
         {
@@ -1413,18 +1854,6 @@ namespace Game.Entities
                         m_zoneScript = Global.OutdoorPvPMgr.GetZoneScript(GetZoneId());
                 }
             }
-        }
-
-        public Scenario GetScenario()
-        {
-            if (IsInWorld)
-            {
-                InstanceMap instanceMap = GetMap().ToInstanceMap();
-                if (instanceMap != null)
-                    return instanceMap.GetInstanceScenario();
-            }
-
-            return null;
         }
 
         public TempSummon SummonCreature(uint entry, float x, float y, float z, float o = 0, TempSummonType despawnType = TempSummonType.ManualDespawn, uint despawnTime = 0, ObjectGuid privateObjectOwner = default)
@@ -1513,10 +1942,7 @@ namespace Game.Entities
             return summon;
         }
 
-        public void SummonCreatureGroup(byte group)
-        {
-            SummonCreatureGroup(group, out _);
-        }
+        public void SummonCreatureGroup(byte group) => SummonCreatureGroup(group, out _);
 
         public void SummonCreatureGroup(byte group, out List<TempSummon> list)
         {
@@ -1599,24 +2025,22 @@ namespace Game.Entities
         }
 
         public bool IsInPhase(WorldObject obj)
-        {
-            return GetPhaseShift().CanSee(obj.GetPhaseShift());
-        }
+        => GetPhaseShift().CanSee(obj.GetPhaseShift());
 
         public static bool InSamePhase(WorldObject a, WorldObject b)
         {
             return a != null && b != null && a.IsInPhase(b);
         }
-        
-        public virtual float GetCombatReach() { return 0.0f;    } // overridden (only) in Unit
-        public PhaseShift GetPhaseShift() { return _phaseShift; }
-        public void SetPhaseShift(PhaseShift phaseShift) { _phaseShift = new PhaseShift(phaseShift); }
-        public PhaseShift GetSuppressedPhaseShift() { return _suppressedPhaseShift; }
-        public void SetSuppressedPhaseShift(PhaseShift phaseShift) { _suppressedPhaseShift = new PhaseShift(phaseShift); }
-        public int GetDBPhase() { return _dbPhase; }
+
+        public virtual float GetCombatReach() => 0.0f;  // overridden (only) in Unit
+        public PhaseShift GetPhaseShift() => _phaseShift;
+        public void SetPhaseShift(PhaseShift phaseShift) => _phaseShift = new PhaseShift(phaseShift);
+        public PhaseShift GetSuppressedPhaseShift() => _suppressedPhaseShift;
+        public void SetSuppressedPhaseShift(PhaseShift phaseShift) => _suppressedPhaseShift = new PhaseShift(phaseShift);
+        public int GetDBPhase() => _dbPhase;
 
         // if negative it is used as PhaseGroupId
-        public void SetDBPhase(int p) { _dbPhase = p; }
+        public void SetDBPhase(int p) => _dbPhase = p;
 
         public void PlayDistanceSound(uint soundId, Player target = null)
         {
@@ -1677,106 +2101,95 @@ namespace Game.Entities
             Cell.VisitWorldObjects(this, notifier, GetVisibilityRange());
         }
 
-        public virtual void UpdateObjectVisibilityOnCreate()
-        {
-            UpdateObjectVisibility(true);
-        }
+        public virtual void UpdateObjectVisibilityOnCreate() => UpdateObjectVisibility(true);
 
         public virtual void BuildUpdate(Dictionary<Player, UpdateData> data)
         {
             var notifier = new WorldObjectChangeAccumulator(this, data);
             Cell.VisitWorldObjects(this, notifier, GetVisibilityRange());
-
-            ClearUpdateMask(false);
         }
 
-        public virtual void AddToObjectUpdate()
-        {
-            GetMap().AddUpdateObject(this);
-        }
+        public virtual void AddToObjectUpdate() => GetMap().AddUpdateObject(this);
 
-        public virtual void RemoveFromObjectUpdate()
-        {
-            GetMap().RemoveUpdateObject(this);
-        }
+        public virtual void RemoveFromObjectUpdate() => GetMap().RemoveUpdateObject(this);
 
-        public uint GetInstanceId() { return instanceId; }
+        public uint GetInstanceId() => instanceId;
 
-        public virtual ushort GetAIAnimKitId() { return 0; }
-        public virtual ushort GetMovementAnimKitId() { return 0; }
-        public virtual ushort GetMeleeAnimKitId() { return 0; }
+        public virtual ushort GetAIAnimKitId() => 0;
+        public virtual ushort GetMovementAnimKitId() => 0;
+        public virtual ushort GetMeleeAnimKitId() => 0;
 
         // Watcher
-        public bool IsPrivateObject() { return !_privateObjectOwner.IsEmpty(); }
-        public ObjectGuid GetPrivateObjectOwner() { return _privateObjectOwner; }
-        public void SetPrivateObjectOwner(ObjectGuid owner) { _privateObjectOwner = owner; }
-        
-        public virtual string GetName(Locale locale = Locale.enUS) { return _name; }
-        public void SetName(string name) { _name = name; }
+        public bool IsPrivateObject() => !_privateObjectOwner.IsEmpty();
+        public ObjectGuid GetPrivateObjectOwner() => _privateObjectOwner;
+        public void SetPrivateObjectOwner(ObjectGuid owner) => _privateObjectOwner = owner;
 
-        public ObjectGuid GetGUID() { return m_guid; }
-        public uint GetEntry() { return m_objectData.EntryId; }
-        public void SetEntry(uint entry) { SetUpdateFieldValue(m_values.ModifyValue(m_objectData).ModifyValue(m_objectData.EntryId), entry); }
+        public virtual string GetName(Locale locale = Locale.enUS) => _name;
+        public void SetName(string name) => _name = name;
 
-        public float GetObjectScale() { return m_objectData.Scale; }
-        public virtual void SetObjectScale(float scale) { SetUpdateFieldValue(m_values.ModifyValue(m_objectData).ModifyValue(m_objectData.Scale), scale); }
+        public ObjectGuid GetGUID() => m_guid;
+        public uint GetEntry() => GetUpdateField<uint>(ObjectFields.EntryID);
+        public void SetEntry(uint entry) => SetUpdateField<uint>(ObjectFields.EntryID, entry);
 
-        public UnitDynFlags GetDynamicFlags() { return (UnitDynFlags)(uint)m_objectData.DynamicFlags; }
-        public bool HasDynamicFlag(UnitDynFlags flag) { return (m_objectData.DynamicFlags & (uint)flag) != 0; }
-        public void AddDynamicFlag(UnitDynFlags flag) { SetUpdateFieldFlagValue(m_values.ModifyValue(m_objectData).ModifyValue(m_objectData.DynamicFlags), (uint)flag); }
-        public void RemoveDynamicFlag(UnitDynFlags flag) { RemoveUpdateFieldFlagValue(m_values.ModifyValue(m_objectData).ModifyValue(m_objectData.DynamicFlags), (uint)flag); }
-        public void SetDynamicFlags(UnitDynFlags flag) { SetUpdateFieldValue(m_values.ModifyValue(m_objectData).ModifyValue(m_objectData.DynamicFlags), (uint)flag); }
+        public float GetObjectScale() => GetUpdateField<float>(ObjectFields.Scale);
+        public virtual void SetObjectScale(float scale) => SetUpdateField<float>(ObjectFields.Scale, scale);
 
-        public TypeId GetTypeId() { return ObjectTypeId; }
-        public bool IsTypeId(TypeId typeId) { return GetTypeId() == typeId; }
-        public bool IsTypeMask(TypeMask mask) { return Convert.ToBoolean(mask & ObjectTypeMask); }
+        public UnitDynFlags GetDynamicFlags() => (UnitDynFlags)GetUpdateField<uint>(ObjectFields.DynamicFlags);
+        public bool HasDynamicFlag(UnitDynFlags flag) => GetDynamicFlags().HasAnyFlag(flag);
+        public void AddDynamicFlag(UnitDynFlags flag) => AddFlag(ObjectFields.DynamicFlags, (uint)flag);
+        public void RemoveDynamicFlag(UnitDynFlags flag) => RemoveFlag(ObjectFields.DynamicFlags, (uint)flag);
+        public void SetDynamicFlags(UnitDynFlags flag) => SetUpdateField<uint>(ObjectFields.DynamicFlags, (uint)flag);
 
-        public virtual bool HasQuest(uint questId) { return false; }
-        public virtual bool HasInvolvedQuest(uint questId) { return false; }
-        public void SetIsNewObject(bool enable) { _isNewObject = enable; }
+        public TypeId GetTypeId() => ObjectTypeId;
+        public bool IsTypeId(TypeId typeId) => GetTypeId() == typeId;
+        public bool IsTypeMask(TypeMask mask) => Convert.ToBoolean(mask & ObjectTypeMask);
 
-        public bool IsCreature() { return GetTypeId() == TypeId.Unit; }
-        public bool IsPlayer() { return GetTypeId() == TypeId.Player; }
-        public bool IsGameObject() { return GetTypeId() == TypeId.GameObject; }
-        public bool IsUnit() { return IsTypeMask(TypeMask.Unit); }
-        public bool IsCorpse() { return GetTypeId() == TypeId.Corpse; }
-        public bool IsDynObject() { return GetTypeId() == TypeId.DynamicObject; }
-        public bool IsAreaTrigger() { return GetTypeId() == TypeId.AreaTrigger; }
-        public bool IsConversation() { return GetTypeId() == TypeId.Conversation; }
+        public virtual bool HasQuest(uint questId) => false;
+        public virtual bool HasInvolvedQuest(uint questId) => false;
+        public void SetIsNewObject(bool enable) => _isNewObject = enable;
 
-        public Creature ToCreature() { return IsCreature() ? (this as Creature) : null; }
-        public Player ToPlayer() { return IsPlayer() ? (this as Player) : null; }
-        public GameObject ToGameObject() { return IsGameObject() ? (this as GameObject) : null; }
-        public Unit ToUnit() { return IsUnit() ? (this as Unit) : null; }
-        public Corpse ToCorpse() { return IsCorpse() ? (this as Corpse) : null; }
-        public DynamicObject ToDynamicObject() { return IsDynObject() ? (this as DynamicObject) : null; }
-        public AreaTrigger ToAreaTrigger() { return IsAreaTrigger() ? (this as AreaTrigger) : null; }
-        public Conversation ToConversation() { return IsConversation() ? (this as Conversation) : null; }
+        public bool IsCreature() => GetTypeId() == TypeId.Unit;
+        public bool IsPlayer() => GetTypeId() == TypeId.Player;
+        public bool IsGameObject() => GetTypeId() == TypeId.GameObject;
+        public bool IsUnit() => IsTypeMask(TypeMask.Unit);
+        public bool IsCorpse() => GetTypeId() == TypeId.Corpse;
+        public bool IsDynObject() => GetTypeId() == TypeId.DynamicObject;
+        public bool IsAreaTrigger() => GetTypeId() == TypeId.AreaTrigger;
+        public bool IsConversation() => GetTypeId() == TypeId.Conversation;
+
+        public Creature ToCreature() => IsCreature() ? (this as Creature) : null;
+        public Player ToPlayer() => IsPlayer() ? (this as Player) : null;
+        public GameObject ToGameObject() => IsGameObject() ? (this as GameObject) : null;
+        public Unit ToUnit() => IsUnit() ? (this as Unit) : null;
+        public Corpse ToCorpse() => IsCorpse() ? (this as Corpse) : null;
+        public DynamicObject ToDynamicObject() => IsDynObject() ? (this as DynamicObject) : null;
+        public AreaTrigger ToAreaTrigger() => IsAreaTrigger() ? (this as AreaTrigger) : null;
+        public Conversation ToConversation() => IsConversation() ? (this as Conversation) : null;
 
         public virtual void Update(uint diff) { }
 
-        public virtual uint GetLevelForTarget(WorldObject target) { return 1; }
+        public virtual uint GetLevelForTarget(WorldObject target) => 1;
 
         public virtual void SaveRespawnTime(uint forceDelay = 0, bool saveToDB = true) { }
 
-        public ZoneScript GetZoneScript() { return m_zoneScript; }
+        public ZoneScript GetZoneScript() => m_zoneScript;
 
-        public void AddToNotify(NotifyFlags f) { m_notifyflags |= f; }
-        public bool IsNeedNotify(NotifyFlags f) { return Convert.ToBoolean(m_notifyflags & f); }
+        public void AddToNotify(NotifyFlags f) => m_notifyflags |= f;
+        public bool IsNeedNotify(NotifyFlags f) => Convert.ToBoolean(m_notifyflags & f);
         NotifyFlags GetNotifyFlags() { return m_notifyflags; }
         public void ResetAllNotifies() { m_notifyflags = 0; }
 
-        public bool IsActiveObject() { return m_isActive; }
-        public bool IsPermanentWorldObject() { return m_isWorldObject; }
+        public bool IsActiveObject() => m_isActive;
+        public bool IsPermanentWorldObject() => m_isWorldObject;
 
-        public Transport GetTransport() { return m_transport; }
-        public float GetTransOffsetX() { return m_movementInfo.transport.pos.GetPositionX(); }
-        public float GetTransOffsetY() { return m_movementInfo.transport.pos.GetPositionY(); }
-        public float GetTransOffsetZ() { return m_movementInfo.transport.pos.GetPositionZ(); }
-        public float GetTransOffsetO() { return m_movementInfo.transport.pos.GetOrientation(); }
+        public Transport GetTransport() => m_transport;
+        public float GetTransOffsetX() => m_movementInfo.transport.pos.GetPositionX();
+        public float GetTransOffsetY() => m_movementInfo.transport.pos.GetPositionY();
+        public float GetTransOffsetZ() => m_movementInfo.transport.pos.GetPositionZ();
+        public float GetTransOffsetO() => m_movementInfo.transport.pos.GetOrientation();
         Position GetTransOffset() { return m_movementInfo.transport.pos; }
-        public uint GetTransTime() { return m_movementInfo.transport.time; }
-        public sbyte GetTransSeat() { return m_movementInfo.transport.seat; }
+        public uint GetTransTime() => m_movementInfo.transport.time;
+        public sbyte GetTransSeat() => m_movementInfo.transport.seat;
         public virtual ObjectGuid GetTransGUID()
         {
             if (GetTransport())
@@ -1784,22 +2197,22 @@ namespace Game.Entities
 
             return ObjectGuid.Empty;
         }
-        public void SetTransport(Transport t) { m_transport = t; }
+        public void SetTransport(Transport t) => m_transport = t;
 
-        public virtual float GetStationaryX() { return GetPositionX(); }
-        public virtual float GetStationaryY() { return GetPositionY(); }
-        public virtual float GetStationaryZ() { return GetPositionZ(); }
-        public virtual float GetStationaryO() { return GetOrientation(); }
+        public virtual float GetStationaryX() => GetPositionX();
+        public virtual float GetStationaryY() => GetPositionY();
+        public virtual float GetStationaryZ() => GetPositionZ();
+        public virtual float GetStationaryO() => GetOrientation();
 
-        public virtual float GetCollisionHeight() { return 0.0f;    }
-        public float GetMidsectionHeight() { return GetCollisionHeight() / 2.0f; }
-        
-        public virtual bool IsNeverVisibleFor(WorldObject seer) { return !IsInWorld; }
-        public virtual bool IsAlwaysVisibleFor(WorldObject seer) { return false; }
-        public virtual bool IsInvisibleDueToDespawn() { return false; }
-        public virtual bool IsAlwaysDetectableFor(WorldObject seer) { return false; }
+        public virtual float GetCollisionHeight() => 0.0f;
+        public float GetMidsectionHeight() => GetCollisionHeight() / 2.0f;
 
-        public virtual bool LoadFromDB(ulong spawnId, Map map, bool addToMap, bool allowDuplicate) { return true; }
+        public virtual bool IsNeverVisibleFor(WorldObject seer) => !IsInWorld;
+        public virtual bool IsAlwaysVisibleFor(WorldObject seer) => false;
+        public virtual bool IsInvisibleDueToDespawn() => false;
+        public virtual bool IsAlwaysDetectableFor(WorldObject seer) => false;
+
+        public virtual bool LoadFromDB(ulong spawnId, Map map, bool addToMap, bool allowDuplicate) => true;
 
         //Position
 
@@ -1879,35 +2292,13 @@ namespace Game.Entities
             return false;
         }
 
-        public bool IsWithinDist3d(float x, float y, float z, float dist)
-        {
-            return IsInDist(x, y, z, dist + GetCombatReach());
-        }
-
-        public bool IsWithinDist3d(Position pos, float dist)
-        {
-            return IsInDist(pos, dist + GetCombatReach());
-        }
-
-        public bool IsWithinDist2d(float x, float y, float dist)
-        {
-            return IsInDist2d(x, y, dist + GetCombatReach());
-        }
-
-        public bool IsWithinDist2d(Position pos, float dist)
-        {
-            return IsInDist2d(pos, dist + GetCombatReach());
-        }
-
-        public bool IsWithinDist(WorldObject obj, float dist2compare, bool is3D = true)
-        {
-            return obj != null && _IsWithinDist(obj, dist2compare, is3D);
-        }
-
-        public bool IsWithinDistInMap(WorldObject obj, float dist2compare, bool is3D = true, bool incOwnRadius = true, bool incTargetRadius = true)
-        {
-            return obj && IsInMap(obj) && IsInPhase(obj) && _IsWithinDist(obj, dist2compare, is3D, incOwnRadius, incTargetRadius);
-        }
+        public bool IsWithinDist3d(float x, float y, float z, float dist) => IsInDist(x, y, z, dist + GetCombatReach());
+        public bool IsWithinDist3d(Position pos, float dist) => IsInDist(pos, dist + GetCombatReach());
+        public bool IsWithinDist2d(float x, float y, float dist) => IsInDist2d(x, y, dist + GetCombatReach());
+        public bool IsWithinDist2d(Position pos, float dist) => IsInDist2d(pos, dist + GetCombatReach());
+        public bool IsWithinDist(WorldObject obj, float dist2compare, bool is3D = true) => obj != null && _IsWithinDist(obj, dist2compare, is3D);
+        public bool IsWithinDistInMap(WorldObject obj, float dist2compare, bool is3D = true, bool incOwnRadius = true, bool incTargetRadius = true) =>
+            obj && IsInMap(obj) && IsInPhase(obj) && _IsWithinDist(obj, dist2compare, is3D, incOwnRadius, incTargetRadius);
 
         public bool IsWithinLOS(float ox, float oy, float oz, LineOfSightChecks checks = LineOfSightChecks.All, ModelIgnoreFlags ignoreFlags = ModelIgnoreFlags.Nothing)
         {
@@ -1941,7 +2332,7 @@ namespace Game.Entities
                 oz += GetCollisionHeight();
             }
             else
-                obj.GetHitSpherePointFor(new (GetPositionX(), GetPositionY(), GetPositionZ() + GetCollisionHeight()), out ox, out oy, out oz);
+                obj.GetHitSpherePointFor(new(GetPositionX(), GetPositionY(), GetPositionZ() + GetCollisionHeight()), out ox, out oy, out oz);
 
             float x, y, z;
             if (IsPlayer())
@@ -1950,7 +2341,7 @@ namespace Game.Entities
                 z += GetCollisionHeight();
             }
             else
-                GetHitSpherePointFor(new (obj.GetPositionX(), obj.GetPositionY(), obj.GetPositionZ() + obj.GetCollisionHeight()), out x, out y, out z);
+                GetHitSpherePointFor(new(obj.GetPositionX(), obj.GetPositionY(), obj.GetPositionZ() + obj.GetCollisionHeight()), out x, out y, out z);
 
             return GetMap().IsInLineOfSight(GetPhaseShift(), x, y, z, ox, oy, oz, checks, ignoreFlags);
         }
@@ -2020,10 +2411,7 @@ namespace Game.Entities
             return distsq < maxdist * maxdist;
         }
 
-        public bool IsInBetween(WorldObject obj1, WorldObject obj2, float size = 0)
-        {
-            return obj1 && obj2 && IsInBetween(obj1.GetPosition(), obj2.GetPosition(), size);
-        }
+        public bool IsInBetween(WorldObject obj1, WorldObject obj2, float size = 0) => obj1 && obj2 && IsInBetween(obj1.GetPosition(), obj2.GetPosition(), size);
         bool IsInBetween(Position pos1, Position pos2, float size)
         {
             float dist = GetExactDist2d(pos1);
@@ -2041,15 +2429,8 @@ namespace Game.Entities
             return (size * size) >= GetExactDist2dSq(pos1.GetPositionX() + (float)Math.Cos(angle) * dist, pos1.GetPositionY() + (float)Math.Sin(angle) * dist);
         }
 
-        public bool IsInFront(WorldObject target, float arc = MathFunctions.PI)
-        {
-            return HasInArc(arc, target);
-        }
-
-        public bool IsInBack(WorldObject target, float arc = MathFunctions.PI)
-        {
-            return !HasInArc(2 * MathFunctions.PI - arc, target);
-        }
+        public bool IsInFront(WorldObject target, float arc = MathFunctions.PI) => HasInArc(arc, target);
+        public bool IsInBack(WorldObject target, float arc = MathFunctions.PI) => !HasInArc(2 * MathFunctions.PI - arc, target);
 
         public void GetRandomPoint(Position pos, float distance, out float rand_x, out float rand_y, out float rand_z)
         {
@@ -2075,15 +2456,11 @@ namespace Game.Entities
 
         public Position GetRandomPoint(Position srcPos, float distance)
         {
-            float x, y, z;
-            GetRandomPoint(srcPos, distance, out x, out y, out z);
+            GetRandomPoint(srcPos, distance, out float x, out float y, out float z);
             return new Position(x, y, z, GetOrientation());
         }
 
-        public void UpdateGroundPositionZ(float x, float y, ref float z)
-        {
-            z = GetMapHeight(x, y, z);
-        }
+        public void UpdateGroundPositionZ(float x, float y, ref float z) => z = GetMapHeight(x, y, z);
 
         public void UpdateAllowedPositionZ(float x, float y, ref float z)
         {
@@ -2094,62 +2471,62 @@ namespace Game.Entities
             switch (GetTypeId())
             {
                 case TypeId.Unit:
+                {
+                    // non fly unit don't must be in air
+                    // non swim unit must be at ground (mostly speedup, because it don't must be in water and water level check less fast
+                    if (!ToCreature().CanFly())
                     {
-                        // non fly unit don't must be in air
-                        // non swim unit must be at ground (mostly speedup, because it don't must be in water and water level check less fast
-                        if (!ToCreature().CanFly())
+                        bool canSwim = ToCreature().CanSwim();
+                        float ground_z = z;
+                        float max_z = canSwim
+                            ? GetMapWaterOrGroundLevel(x, y, z, ref ground_z)
+                            : (ground_z = GetMapHeight(x, y, z));
+                        if (max_z > MapConst.InvalidHeight)
                         {
-                            bool canSwim = ToCreature().CanSwim();
-                            float ground_z = z;
-                            float max_z = canSwim
-                                ? GetMapWaterOrGroundLevel(x, y, z, ref ground_z)
-                                : (ground_z = GetMapHeight(x, y, z));
-                            if (max_z > MapConst.InvalidHeight)
-                            {
-                                if (z > max_z)
-                                    z = max_z;
-                                else if (z < ground_z)
-                                    z = ground_z;
-                            }
-                        }
-                        else
-                        {
-                            float ground_z = GetMapHeight(x, y, z);
-                            if (z < ground_z)
+                            if (z > max_z)
+                                z = max_z;
+                            else if (z < ground_z)
                                 z = ground_z;
                         }
-                        break;
                     }
-                case TypeId.Player:
-                    {
-                        // for server controlled moves playr work same as creature (but it can always swim)
-                        if (!ToPlayer().CanFly())
-                        {
-                            float ground_z = z;
-                            float max_z = GetMapWaterOrGroundLevel(x, y, z, ref ground_z);
-                            if (max_z > MapConst.InvalidHeight)
-                            {
-                                if (z > max_z)
-                                    z = max_z;
-                                else if (z < ground_z)
-                                    z = ground_z;
-                            }
-                        }
-                        else
-                        {
-                            float ground_z = GetMapHeight(x, y, z);
-                            if (z < ground_z)
-                                z = ground_z;
-                        }
-                        break;
-                    }
-                default:
+                    else
                     {
                         float ground_z = GetMapHeight(x, y, z);
-                        if (ground_z > MapConst.InvalidHeight)
+                        if (z < ground_z)
                             z = ground_z;
-                        break;
                     }
+                    break;
+                }
+                case TypeId.Player:
+                {
+                    // for server controlled moves playr work same as creature (but it can always swim)
+                    if (!ToPlayer().CanFly())
+                    {
+                        float ground_z = z;
+                        float max_z = GetMapWaterOrGroundLevel(x, y, z, ref ground_z);
+                        if (max_z > MapConst.InvalidHeight)
+                        {
+                            if (z > max_z)
+                                z = max_z;
+                            else if (z < ground_z)
+                                z = ground_z;
+                        }
+                    }
+                    else
+                    {
+                        float ground_z = GetMapHeight(x, y, z);
+                        if (z < ground_z)
+                            z = ground_z;
+                    }
+                    break;
+                }
+                default:
+                {
+                    float ground_z = GetMapHeight(x, y, z);
+                    if (ground_z > MapConst.InvalidHeight)
+                        z = ground_z;
+                    break;
+                }
             }
         }
 
@@ -2197,11 +2574,8 @@ namespace Game.Entities
             z = first_z;
         }
 
-        public void GetClosePoint(out float x, out float y, out float z, float size, float distance2d = 0, float angle = 0)
-        {
-            // angle calculated from current orientation
+        public void GetClosePoint(out float x, out float y, out float z, float size, float distance2d = 0, float angle = 0) =>
             GetNearPoint(null, out x, out y, out z, size, distance2d, GetOrientation() + angle);
-        }
 
         public Position GetNearPosition(float dist, float angle)
         {
@@ -2224,11 +2598,8 @@ namespace Game.Entities
             return pos;
         }
 
-        public void GetContactPoint(WorldObject obj, out float x, out float y, out float z, float distance2d = 0.5f)
-        {
-            // angle to face `obj` to `this` using distance includes size of `obj`
+        public void GetContactPoint(WorldObject obj, out float x, out float y, out float z, float distance2d = 0.5f) =>
             GetNearPoint(obj, out x, out y, out z, obj.GetCombatReach(), distance2d, GetAngle(obj));
-        }
 
         public void MovePosition(Position pos, float dist, float angle)
         {
@@ -2359,8 +2730,8 @@ namespace Game.Entities
 
             return GetMap().GetHeight(GetPhaseShift(), x, y, z, vmap, distanceToSearch);
         }
-        
-        public void SetLocationInstanceId(uint _instanceId) { instanceId = _instanceId; }
+
+        public void SetLocationInstanceId(uint _instanceId) => instanceId = _instanceId;
 
         #region Fields
         public TypeMask ObjectTypeMask { get; set; }
@@ -2369,11 +2740,19 @@ namespace Game.Entities
         ObjectGuid m_guid;
         bool _isNewObject;
 
-        public UpdateFieldHolder m_values;
-        public ObjectFieldData m_objectData;
+        protected BitArray m_changesMask;
+        protected UpdateValues[] m_updateValues;
+
+        protected uint[][] m_dynamicValues;
+        protected Dictionary<int, DynamicFieldChangeType> m_dynamicChangesMask = new Dictionary<int, DynamicFieldChangeType>();
+        protected BitArray[] m_dynamicChangesArrayMask;
+
+        public uint ValuesCount;
+        protected uint m_dynamicValuesCount;
 
         public uint LastUsedScriptID;
 
+        protected MirrorFlags m_fieldNotifyFlags { get; set; }
         bool m_objectUpdated;
 
         uint m_zoneId;
@@ -2390,7 +2769,7 @@ namespace Game.Entities
         Transport m_transport;
         Map _currMap;
         uint instanceId;
-        PhaseShift _phaseShift= new();
+        PhaseShift _phaseShift = new();
         PhaseShift _suppressedPhaseShift = new();                   // contains phases for current area but not applied due to conditions
         int _dbPhase;
         public bool IsInWorld { get; set; }
@@ -2409,10 +2788,20 @@ namespace Game.Entities
         public FlaggedArray<ServerSideVisibilityType> m_serverSideVisibilityDetect = new(2);
         #endregion
 
-        public static implicit operator bool(WorldObject obj)
-        {
-            return obj != null;
-        }
+        public static implicit operator bool(WorldObject obj) => obj != null;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct UpdateValues
+    {
+        [FieldOffset(0)]
+        public uint UnsignedValue;
+
+        [FieldOffset(0)]
+        public int SignedValue;
+
+        [FieldOffset(0)]
+        public float FloatValue;
     }
 
     public class MovementInfo
@@ -2440,31 +2829,23 @@ namespace Game.Entities
             jump.Reset();
         }
 
-        public MovementFlag GetMovementFlags() { return flags; }
-        public void SetMovementFlags(MovementFlag f) { flags = f; }
-        public void AddMovementFlag(MovementFlag f) { flags |= f; }
-        public void RemoveMovementFlag(MovementFlag f) { flags &= ~f; }
-        public bool HasMovementFlag(MovementFlag f) { return Convert.ToBoolean(flags & f); }
+        public MovementFlag GetMovementFlags() => flags;
+        public void SetMovementFlags(MovementFlag f) => flags = f;
+        public void AddMovementFlag(MovementFlag f) => flags |= f;
+        public void RemoveMovementFlag(MovementFlag f) => flags &= ~f;
+        public bool HasMovementFlag(MovementFlag f) => Convert.ToBoolean(flags & f);
 
-        public MovementFlag2 GetMovementFlags2() { return flags2; }
-        public void SetMovementFlags2(MovementFlag2 f) { flags2 = f; }
-        public void AddMovementFlag2(MovementFlag2 f) { flags2 |= f; }
-        public void RemoveMovementFlag2(MovementFlag2 f) { flags2 &= ~f; }
-        public bool HasMovementFlag2(MovementFlag2 f) { return Convert.ToBoolean(flags2 & f); }
+        public MovementFlag2 GetMovementFlags2() => flags2;
+        public void SetMovementFlags2(MovementFlag2 f) => flags2 = f;
+        public void AddMovementFlag2(MovementFlag2 f) => flags2 |= f;
+        public void RemoveMovementFlag2(MovementFlag2 f) => flags2 &= ~f;
+        public bool HasMovementFlag2(MovementFlag2 f) => Convert.ToBoolean(flags2 & f);
 
-        public void SetFallTime(uint time) { jump.fallTime = time; }
+        public void SetFallTime(uint time) => jump.fallTime = time;
 
-        public void ResetTransport()
-        {
-            transport.Reset();
-        }
+        public void ResetTransport() => transport.Reset();
 
-        public void ResetJump()
-        {
-            jump.Reset();
-        }
-
-
+        public void ResetJump() => jump.Reset();
 
         public struct TransportInfo
         {
@@ -2485,6 +2866,7 @@ namespace Game.Entities
             public uint prevTime;
             public uint vehicleId;
         }
+
         public struct JumpInfo
         {
             public void Reset()
@@ -2518,7 +2900,7 @@ namespace Game.Entities
             TransportID = data.ReadUInt32();
             Magnitude = data.ReadFloat();
             Type = data.ReadBits<byte>(2);
-            
+
         }
 
         public void Write(WorldPacket data)
@@ -2532,7 +2914,7 @@ namespace Game.Entities
         List<MovementForce> _forces = new();
         float _modMagnitude = 1.0f;
 
-        public List<MovementForce> GetForces() { return _forces; }
+        public List<MovementForce> GetForces() => _forces;
 
         public bool Add(MovementForce newForce)
         {
@@ -2558,15 +2940,12 @@ namespace Game.Entities
             return false;
         }
 
-        public float GetModMagnitude() { return _modMagnitude; }
-        public void SetModMagnitude(float modMagnitude) { _modMagnitude = modMagnitude; }
+        public float GetModMagnitude() => _modMagnitude;
+        public void SetModMagnitude(float modMagnitude) => _modMagnitude = modMagnitude;
 
-        public bool IsEmpty() { return _forces.Empty() && _modMagnitude == 1.0f; }
+        public bool IsEmpty() => _forces.Empty() && _modMagnitude == 1.0f;
 
-        MovementForce FindMovementForce(ObjectGuid id)
-        {
-            return _forces.Find(force => force.ID == id);
-        }
+        MovementForce FindMovementForce(ObjectGuid id) => _forces.Find(force => force.ID == id);
     }
 
     public struct CreateObjectBits

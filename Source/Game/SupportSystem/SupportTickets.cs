@@ -87,9 +87,8 @@ namespace Game.SupportSystem
         public ObjectGuid GetAssignedToGUID() { return _assignedTo; }
         public string GetAssignedToName()
         {
-            string name;
             if (!_assignedTo.IsEmpty())
-                if (Global.CharacterCacheStorage.GetCharacterNameByGuid(_assignedTo, out name))
+                if (Global.CharacterCacheStorage.GetCharacterNameByGuid(_assignedTo, out string name))
                     return name;
 
             return "";

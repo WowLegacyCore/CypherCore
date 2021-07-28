@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,10 +16,8 @@
  */
 
 using Framework.Constants;
-using Game.DataStorage;
 using Game.Entities;
 using Game.Networking.Packets;
-using System.Collections.Generic;
 
 namespace Game.BattleGrounds.Zones
 {
@@ -193,9 +191,6 @@ namespace Game.BattleGrounds.Zones
             SpawnBGObject(WSGObjectTypes.DoorA6, BattlegroundConst.RespawnOneDay);
             SpawnBGObject(WSGObjectTypes.DoorH3, BattlegroundConst.RespawnOneDay);
             SpawnBGObject(WSGObjectTypes.DoorH4, BattlegroundConst.RespawnOneDay);
-
-            // players joining later are not eligibles
-            StartCriteriaTimer(CriteriaStartEvent.SendEvent, 8563);
         }
 
         public override void AddPlayer(Player player)
@@ -446,7 +441,6 @@ namespace Game.BattleGrounds.Zones
                 UpdateFlagState(Team.Horde, WSGFlagState.OnPlayer);
                 UpdateWorldState(WSGWorldStates.FlagUnkAlliance, 1);
                 player.CastSpell(player, WSGSpellId.SilverwingFlag, true);
-                player.StartCriteriaTimer(CriteriaStartEvent.BeSpellTarget, WSGSpellId.SilverwingFlagPicked);
                 if (_flagState[1] == WSGFlagState.OnPlayer)
                     _bothFlagsKept = true;
             }
@@ -464,7 +458,6 @@ namespace Game.BattleGrounds.Zones
                 UpdateFlagState(Team.Alliance, WSGFlagState.OnPlayer);
                 UpdateWorldState(WSGWorldStates.FlagUnkHorde, 1);
                 player.CastSpell(player, WSGSpellId.WarsongFlag, true);
-                player.StartCriteriaTimer(CriteriaStartEvent.BeSpellTarget, WSGSpellId.WarsongFlagPicked);
                 if (_flagState[0] == WSGFlagState.OnPlayer)
                     _bothFlagsKept = true;
             }
@@ -756,21 +749,7 @@ namespace Game.BattleGrounds.Zones
 
         public override bool UpdatePlayerScore(Player player, ScoreType type, uint value, bool doAddHonor = true)
         {
-            if (!base.UpdatePlayerScore(player, type, value, doAddHonor))
-                return false;
-
-            switch (type)
-            {
-                case ScoreType.FlagCaptures:                           // flags captured
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, WSObjectives.CaptureFlag);
-                    break;
-                case ScoreType.FlagReturns:                            // flags returned
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, WSObjectives.ReturnFlag);
-                    break;
-                default:
-                    break;
-            }
-            return true;
+            return base.UpdatePlayerScore(player, type, value, doAddHonor);
         }
 
         public override WorldSafeLocsEntry GetClosestGraveYard(Player player)

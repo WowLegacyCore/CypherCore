@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,6 @@
 
 using Framework.Constants;
 using Framework.Database;
-using Game.Networking;
 
 namespace Game.Entities
 {
@@ -28,7 +27,8 @@ namespace Game.Entities
             ObjectTypeMask |= TypeMask.Container;
             ObjectTypeId = TypeId.Container;
 
-            m_containerData = new ContainerData();
+            ValuesCount = (int)ContainerFields.End;
+            m_dynamicValuesCount = (int)ContainerDynamicFields.End;
         }
 
         public override void Dispose()
@@ -90,7 +90,7 @@ namespace Game.Entities
                 SetContainedIn(owner.GetGUID());
             }
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_itemData).ModifyValue(m_itemData.MaxDurability), itemProto.MaxDurability);
+            SetMaxDurability(itemProto.MaxDurability);
             SetDurability(itemProto.MaxDurability);
             SetCount(1);
             SetContext(context);
@@ -172,80 +172,6 @@ namespace Game.Entities
                     m_bagslot[i].BuildCreateUpdateBlockForPlayer(data, target);
         }
 
-        public override void BuildValuesCreate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
-
-            buffer.WriteUInt8((byte)flags);
-            m_objectData.WriteCreate(buffer, flags, this, target);
-            m_itemData.WriteCreate(buffer, flags, this, target);
-            m_containerData.WriteCreate(buffer, flags, this, target);
-
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteBytes(buffer);
-        }
-
-        public override void BuildValuesUpdate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
-
-            buffer.WriteUInt32(m_values.GetChangedObjectTypeMask());
-            if (m_values.HasChanged(TypeId.Object))
-                m_objectData.WriteUpdate(buffer, flags, this, target);
-
-            if (m_values.HasChanged(TypeId.Item))
-                m_itemData.WriteUpdate(buffer, flags, this, target);
-
-            if (m_values.HasChanged(TypeId.Container))
-                m_containerData.WriteUpdate(buffer, flags, this, target);
-
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteBytes(buffer);
-        }
-
-        void BuildValuesUpdateForPlayerWithMask(UpdateData data, UpdateMask requestedObjectMask, UpdateMask requestedItemMask, UpdateMask requestedContainerMask, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            UpdateMask valuesMask = new((int)TypeId.Max);
-            if (requestedObjectMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Object);
-
-            m_itemData.FilterDisallowedFieldsMaskForFlag(requestedItemMask, flags);
-            if (requestedItemMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Item);
-
-            if (requestedContainerMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Container);
-
-            WorldPacket buffer = new();
-            buffer.WriteUInt32(valuesMask.GetBlock(0));
-
-            if (valuesMask[(int)TypeId.Object])
-                m_objectData.WriteUpdate(buffer, requestedObjectMask, true, this, target);
-
-            if (valuesMask[(int)TypeId.Item])
-                m_itemData.WriteUpdate(buffer, requestedItemMask, true, this, target);
-
-            if (valuesMask[(int)TypeId.Container])
-                m_containerData.WriteUpdate(buffer, requestedContainerMask, true, this, target);
-
-            WorldPacket buffer1 = new();
-            buffer1.WriteUInt8((byte)UpdateType.Values);
-            buffer1.WritePackedGuid(GetGUID());
-            buffer1.WriteUInt32(buffer.GetSize());
-            buffer1.WriteBytes(buffer.GetData());
-
-            data.AddUpdateBlock(buffer1);
-        }
-
-        public override void ClearUpdateMask(bool remove)
-        {
-            m_values.ClearChangesMask(m_containerData);
-            base.ClearUpdateMask(remove);
-        }
-
         public bool IsEmpty()
         {
             for (var i = 0; i < GetBagSize(); ++i)
@@ -273,12 +199,11 @@ namespace Game.Entities
             return null;
         }
 
-        public uint GetBagSize() { return m_containerData.NumSlots; }
-        void SetBagSize(uint numSlots) { SetUpdateFieldValue(m_values.ModifyValue(m_containerData).ModifyValue(m_containerData.NumSlots), numSlots); }
+        public uint GetBagSize() => GetUpdateField<uint>(ContainerFields.NumSlots);
+        void SetBagSize(uint numSlots) => SetUpdateField<uint>(ContainerFields.NumSlots, numSlots);
 
-        void SetSlot(int slot, ObjectGuid guid) { SetUpdateFieldValue(ref m_values.ModifyValue(m_containerData).ModifyValue(m_containerData.Slots, slot), guid); }
+        void SetSlot(int slot, ObjectGuid guid) => SetUpdateField<ObjectGuid>(ContainerFields.Slots + slot, guid);
 
-        ContainerData m_containerData;
         Item[] m_bagslot = new Item[36];
     }
 }

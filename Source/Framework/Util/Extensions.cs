@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +18,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -43,7 +42,7 @@ namespace System
             else
                 return byteArray.Aggregate("", (current, b) => current + b.ToString("X2"));
         }
-        
+
         public static byte[] ToByteArray(this string str)
         {
             str = str.Replace(" ", String.Empty);
@@ -200,7 +199,7 @@ namespace System
         public static string ConvertFormatSyntax(this string str)
         {
             string pattern = @"(%\W*\d*[a-zA-Z]*)";
-            
+
             int count = 0;
             string result = Regex.Replace(str, pattern, m => string.Concat("{", count++, "}"));
 

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2016 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,6 @@ using Framework.Constants;
 using System.Collections.Generic;
 using Game.Networking.Packets;
 using Game.DataStorage;
-using Game.BattleGrounds;
 
 namespace Game.BattleGrounds.Zones
 {
@@ -130,9 +129,6 @@ namespace Game.BattleGrounds.Zones
                 byte buff = (byte)RandomHelper.URand(0, 2);
                 SpawnBGObject(EotSObjectTypes.SpeedbuffFelReaver + buff + i * 3, BattlegroundConst.RespawnImmediately);
             }
-
-            // Achievement: Flurry
-            StartCriteriaTimer(CriteriaStartEvent.SendEvent, EotSMisc.EventStartBattle);
         }
 
         void AddPoints(Team Team, uint Points)
@@ -163,7 +159,7 @@ namespace Game.BattleGrounds.Zones
                 ? BattlegroundPointCaptureStatus.AllianceCapturing
                 : BattlegroundPointCaptureStatus.HordeCapturing;
         }
-        
+
         void CheckSomeoneJoinedPoint()
         {
             GameObject obj;
@@ -250,7 +246,7 @@ namespace Game.BattleGrounds.Zones
                 if (!m_PlayersNearPoint[point].Empty())
                 {
                     //count new point bar status:
-                    int pointDelta = (int)(m_CurrentPointPlayersCount[2 * point]) - (int)(m_CurrentPointPlayersCount[2 * point + 1]);
+                    int pointDelta = m_CurrentPointPlayersCount[2 * point] - m_CurrentPointPlayersCount[2 * point + 1];
                     MathFunctions.RoundToInterval(ref pointDelta, -(int)EotSProgressBarConsts.PointMaxCapturersCount, EotSProgressBarConsts.PointMaxCapturersCount);
                     m_PointBarStatus[point] += pointDelta;
 
@@ -833,18 +829,7 @@ namespace Game.BattleGrounds.Zones
 
         public override bool UpdatePlayerScore(Player player, ScoreType type, uint value, bool doAddHonor = true)
         {
-            if (!base.UpdatePlayerScore(player, type, value, doAddHonor))
-                return false;
-
-            switch (type)
-            {
-                case ScoreType.FlagCaptures:
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, EotSMisc.ObjectiveCaptureFlag);
-                    break;
-                default:
-                    break;
-            }
-            return true;
+            return base.UpdatePlayerScore(player, type, value, doAddHonor);
         }
 
         public override void FillInitialWorldStates(InitWorldStates packet)

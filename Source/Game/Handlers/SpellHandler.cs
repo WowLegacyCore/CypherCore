@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -111,7 +111,6 @@ namespace Game
                 {
                     item.SetState(ItemUpdateState.Changed, user);
                     item.SetBinding(true);
-                    GetCollectionMgr().AddItemAppearance(item);
                 }
             }
 
@@ -263,8 +262,6 @@ namespace Game
             {
                 if (go.GetAI().GossipHello(GetPlayer()))
                     return;
-
-                GetPlayer().UpdateCriteria(CriteriaTypes.UseGameobject, go.GetEntry());
             }
         }
 
@@ -482,10 +479,10 @@ namespace Game
             if (_player.HasAuraType(AuraType.PreventResurrection))
                 return; // silent return, client should display error by itself and not send this opcode
 
-            List<uint> selfResSpells = _player.m_activePlayerData.SelfResSpells;
+            uint[] selfResSpells = _player.GetDynamicValues(ActivePlayerDynamicFields.SelfResSpells);
             if (!selfResSpells.Contains(selfRes.SpellId))
                 return;
-            
+
             _player.CastSpell(_player, selfRes.SpellId, new CastSpellExtraArgs(_player.GetMap().GetDifficultyID()));
             _player.RemoveSelfResSpell(selfRes.SpellId);
         }
@@ -533,11 +530,13 @@ namespace Game
                 mirrorImageComponentedData.Gender = (byte)creator.GetGender();
                 mirrorImageComponentedData.ClassID = (byte)creator.GetClass();
 
-                foreach (var customization in player.m_playerData.Customizations)
+                foreach (var customization in player.GetCustomizationChoices())
                 {
-                    var chrCustomizationChoice = new ChrCustomizationChoice();
-                    chrCustomizationChoice.ChrCustomizationOptionID = customization.ChrCustomizationOptionID;
-                    chrCustomizationChoice.ChrCustomizationChoiceID = customization.ChrCustomizationChoiceID;
+                    var chrCustomizationChoice = new ChrCustomizationChoice
+                    {
+                        ChrCustomizationOptionID = customization.ChrCustomizationOptionID,
+                        ChrCustomizationChoiceID = customization.ChrCustomizationChoiceID
+                    };
                     mirrorImageComponentedData.Customizations.Add(chrCustomizationChoice);
                 }
 

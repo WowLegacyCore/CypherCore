@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +18,6 @@
 using Framework.Constants;
 using Framework.Database;
 using Framework.IO;
-using Game.Achievements;
 using Game.DataStorage;
 using Game.Entities;
 using System.Collections.Generic;
@@ -28,31 +27,13 @@ namespace Game.Chat
     [CommandGroup("reset", RBACPermissions.CommandReset, true)]
     class ResetCommands
     {
-        [Command("achievements", RBACPermissions.CommandResetAchievements, true)]
-        static bool HandleResetAchievementsCommand(StringArguments args, CommandHandler handler)
-        {
-            Player target;
-            ObjectGuid targetGuid;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid))
-                return false;
-
-            if (target)
-                target.ResetAchievements();
-            else
-                PlayerAchievementMgr.DeleteFromDB(targetGuid);
-
-            return true;
-        }
-
         [Command("honor", RBACPermissions.CommandResetHonor, true)]
         static bool HandleResetHonorCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             target.ResetHonorStats();
-            target.UpdateCriteria(CriteriaTypes.EarnHonorableKill);
 
             return true;
         }
@@ -91,8 +72,7 @@ namespace Game.Chat
         [Command("level", RBACPermissions.CommandResetLevel, true)]
         static bool HandleResetLevelCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             if (!HandleResetStatsOrLevelHelper(target))
@@ -105,7 +85,6 @@ namespace Game.Chat
 
             target._ApplyAllLevelScaleItemMods(false);
             target.SetLevel(startLevel);
-            target.InitRunes();
             target.InitStatsForLevel(true);
             target.InitTaxiNodesForLevel();
             target.InitTalentForLevel();
@@ -126,10 +105,7 @@ namespace Game.Chat
         [Command("spells", RBACPermissions.CommandResetSpells, true)]
         static bool HandleResetSpellsCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             if (target)
@@ -156,14 +132,12 @@ namespace Game.Chat
         [Command("stats", RBACPermissions.CommandResetStats, true)]
         static bool HandleResetStatsCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             if (!HandleResetStatsOrLevelHelper(target))
                 return false;
 
-            target.InitRunes();
             target.InitStatsForLevel(true);
             target.InitTaxiNodesForLevel();
             target.InitTalentForLevel();
@@ -174,11 +148,8 @@ namespace Game.Chat
         [Command("talents", RBACPermissions.CommandResetTalents, true)]
         static bool HandleResetTalentsCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
 
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
             {
                 /* TODO: 6.x remove/update pet talents
                 // Try reset talents as Hunter Pet

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -143,49 +143,6 @@ namespace Scripts.Spells.Mage
             OnEffectHit.Add(new EffectHandler(RemoveAlterTimeAura, 0, SpellEffectName.Dummy));
         }
     }
-    
-    [Script] // 44425 - Arcane Barrage
-    class spell_mage_arcane_barrage : SpellScript
-    {
-        ObjectGuid _primaryTarget;
-
-        public override bool Validate(SpellInfo spellInfo)
-        {
-            return ValidateSpellInfo(SpellIds.ArcaneBarrageR3, SpellIds.ArcaneBarrageEnergize) && spellInfo.GetEffect(1) != null;
-        }
-
-        void ConsumeArcaneCharges()
-        {
-            Unit caster = GetCaster();
-
-            // Consume all arcane charges
-            int arcaneCharges = -caster.ModifyPower(PowerType.ArcaneCharges, -caster.GetMaxPower(PowerType.ArcaneCharges), false);
-            if (arcaneCharges != 0)
-            {
-                AuraEffect auraEffect = caster.GetAuraEffect(SpellIds.ArcaneBarrageR3, 0, caster.GetGUID());
-                if (auraEffect != null)
-                    caster.CastSpell(caster, SpellIds.ArcaneBarrageEnergize, new CastSpellExtraArgs(SpellValueMod.BasePoint0, arcaneCharges * auraEffect.GetAmount() / 100));
-            }
-        }
-
-        void HandleEffectHitTarget(uint effIndex)
-        {
-            if (GetHitUnit().GetGUID() != _primaryTarget)
-                SetHitDamage(MathFunctions.CalculatePct(GetHitDamage(), GetEffectInfo(1).CalcValue(GetCaster())));
-        }
-
-        void MarkPrimaryTarget(uint effIndex)
-        {
-            _primaryTarget = GetHitUnit().GetGUID();
-        }
-
-        public override void Register()
-        {
-            OnEffectHitTarget.Add(new EffectHandler(HandleEffectHitTarget, 0, SpellEffectName.SchoolDamage));
-            OnEffectLaunchTarget.Add(new EffectHandler(MarkPrimaryTarget, 1, SpellEffectName.Dummy));
-            AfterCast.Add(new CastHandler(ConsumeArcaneCharges));
-        }
-    }
 
     [Script] // 195302 - Arcane Charge
     class spell_mage_arcane_charge_clear : SpellScript
@@ -205,7 +162,7 @@ namespace Scripts.Spells.Mage
             OnEffectHitTarget.Add(new EffectHandler(RemoveArcaneCharge, 0, SpellEffectName.Dummy));
         }
     }
-    
+
     [Script] // 1449 - Arcane Explosion
     class spell_mage_arcane_explosion : SpellScript
     {
@@ -227,7 +184,7 @@ namespace Scripts.Spells.Mage
         void HandleReverberate(uint effIndex)
         {
             bool procTriggered = false;
-            
+
             Unit caster = GetCaster();
             AuraEffect triggerChance = caster.GetAuraEffect(SpellIds.Reverberate, 0);
             if (triggerChance != null)
@@ -247,7 +204,7 @@ namespace Scripts.Spells.Mage
             OnEffectHitTarget.Add(new EffectHandler(HandleReverberate, 2, SpellEffectName.Energize));
         }
     }
-    
+
     [Script] // 235313 - Blazing Barrier
     class spell_mage_blazing_barrier : AuraScript
     {
@@ -457,7 +414,7 @@ namespace Scripts.Spells.Mage
             AfterEffectProc.Add(new EffectProcHandler(Trigger, 1, AuraType.Dummy));
         }
     }
-    
+
     [Script] // 11426 - Ice Barrier
     class spell_mage_ice_barrier : AuraScript
     {
@@ -566,7 +523,7 @@ namespace Scripts.Spells.Mage
             OnEffectHitTarget.Add(new EffectHandler(ApplyDamageMultiplier, 0, SpellEffectName.SchoolDamage));
         }
     }
-    
+
     [Script] // 11119 - Ignite
     class spell_mage_ignite : AuraScript
     {
@@ -921,7 +878,7 @@ namespace Scripts.Spells.Mage
             AfterEffectRemove.Add(new EffectApplyHandler(AfterRemove, 0, AuraType.Dummy, AuraEffectHandleModes.Real));
         }
     }
-    
+
     [Script] //228597 - Frostbolt   84721  - Frozen Orb   190357 - Blizzard
     class spell_mage_trigger_chilled : SpellScript
     {

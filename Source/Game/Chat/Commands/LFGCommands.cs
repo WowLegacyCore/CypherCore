@@ -30,8 +30,7 @@ namespace Game.Chat
         [Command("player", RBACPermissions.CommandLfgPlayer, true)]
         static bool HandleLfgPlayerInfoCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             GetPlayerInfo(handler, target);
@@ -46,10 +45,9 @@ namespace Game.Chat
 
             Player playerTarget;
             ObjectGuid guidTarget;
-            string nameTarget;
 
             ObjectGuid parseGUID = ObjectGuid.Create(HighGuid.Player, args.NextUInt64());
-            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out nameTarget))
+            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out string nameTarget))
             {
                 playerTarget = Global.ObjAccessor.FindPlayer(parseGUID);
                 guidTarget = parseGUID;

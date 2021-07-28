@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -123,7 +123,7 @@ namespace Game.Networking.Packets
         public Array<LootRequest> Loot = new(1000);
         public ObjectGuid Target;
     }
-    
+
     class LootRemoved : ServerPacket
     {
         public LootRemoved() : base(ServerOpcodes.LootRemoved, ConnectionType.Instance) { }
@@ -305,7 +305,7 @@ namespace Game.Networking.Packets
         public int Roll;             // Roll value can be negative, it means that it is an "offspec" roll but only during roll selection broadcast (not when sending the result)
         public RollType RollType;
         public LootItemData Item = new();
-        public bool Autopassed;    // Triggers message |HlootHistory:%d|h[Loot]|h: You automatically passed on: %s because you cannot loot that item.
+        public bool Autopassed = false;    // Triggers message |HlootHistory:%d|h[Loot]|h: You automatically passed on: %s because you cannot loot that item.
     }
 
     class LootRollWon : ServerPacket
@@ -376,7 +376,7 @@ namespace Game.Networking.Packets
 
     class AELootTargets : ServerPacket
     {
-        public AELootTargets(uint count) : base(ServerOpcodes.AeLootTargets, ConnectionType.Instance)
+        public AELootTargets(uint count) : base(ServerOpcodes.AELootTargets, ConnectionType.Instance)
         {
             Count = count;
         }
@@ -391,7 +391,7 @@ namespace Game.Networking.Packets
 
     class AELootTargetsAck : ServerPacket
     {
-        public AELootTargetsAck() : base(ServerOpcodes.AeLootTargetAck, ConnectionType.Instance) { }
+        public AELootTargetsAck() : base(ServerOpcodes.AELootTargetAck, ConnectionType.Instance) { }
 
         public override void Write() { }
     }

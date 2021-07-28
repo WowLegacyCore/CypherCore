@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,7 +27,7 @@ namespace Game.Entities
 {
     public partial class Unit
     {
-        public CharmInfo GetCharmInfo() { return m_charmInfo; }
+        public CharmInfo GetCharmInfo() => m_charmInfo;
 
         public CharmInfo InitCharmInfo()
         {
@@ -75,51 +75,51 @@ namespace Game.Entities
                     }
                     break;
                 case TypeId.Player:
+                {
+                    if (IsCharmed()) // if we are currently being charmed, then we should apply charm AI
                     {
-                        if (IsCharmed()) // if we are currently being charmed, then we should apply charm AI
-                        {
-                            i_disabledAI = i_AI;
+                        i_disabledAI = i_AI;
 
-                            UnitAI newAI = null;
-                            // first, we check if the creature's own AI specifies an override playerai for its owned players
-                            Unit charmer = GetCharmer();
-                            if (charmer)
-                            {
-                                Creature creatureCharmer = charmer.ToCreature();
-                                if (creatureCharmer)
-                                {
-                                    PlayerAI charmAI = creatureCharmer.IsAIEnabled ? creatureCharmer.GetAI().GetAIForCharmedPlayer(ToPlayer()) : null;
-                                    if (charmAI != null)
-                                        newAI = charmAI;
-                                }
-                                else
-                                {
-                                    Log.outError(LogFilter.Misc, "Attempt to assign charm AI to player {0} who is charmed by non-creature {1}.", GetGUID().ToString(), GetCharmerGUID().ToString());
-                                }
-                            }
-                            if (newAI == null) // otherwise, we default to the generic one
-                                newAI = new SimpleCharmedPlayerAI(ToPlayer());
-                            i_AI = newAI;
-                            newAI.OnCharmed(true);
-                        }
-                        else
+                        UnitAI newAI = null;
+                        // first, we check if the creature's own AI specifies an override playerai for its owned players
+                        Unit charmer = GetCharmer();
+                        if (charmer)
                         {
-                            if (i_AI != null)
+                            Creature creatureCharmer = charmer.ToCreature();
+                            if (creatureCharmer)
                             {
-                                // we allow the charmed PlayerAI to clean up
-                                i_AI.OnCharmed(false);
+                                PlayerAI charmAI = creatureCharmer.IsAIEnabled ? creatureCharmer.GetAI().GetAIForCharmedPlayer(ToPlayer()) : null;
+                                if (charmAI != null)
+                                    newAI = charmAI;
                             }
                             else
                             {
-                                Log.outError(LogFilter.Misc, "Attempt to remove charm AI from player {0} who doesn't currently have charm AI.", GetGUID().ToString());
+                                Log.outError(LogFilter.Misc, "Attempt to assign charm AI to player {0} who is charmed by non-creature {1}.", GetGUID().ToString(), GetCharmerGUID().ToString());
                             }
-                            // and restore our previous PlayerAI (if we had one)
-                            i_AI = i_disabledAI;
-                            i_disabledAI = null;
-                            // IsAIEnabled gets handled in the caller
                         }
-                        break;
+                        if (newAI == null) // otherwise, we default to the generic one
+                            newAI = new SimpleCharmedPlayerAI(ToPlayer());
+                        i_AI = newAI;
+                        newAI.OnCharmed(true);
                     }
+                    else
+                    {
+                        if (i_AI != null)
+                        {
+                            // we allow the charmed PlayerAI to clean up
+                            i_AI.OnCharmed(false);
+                        }
+                        else
+                        {
+                            Log.outError(LogFilter.Misc, "Attempt to remove charm AI from player {0} who doesn't currently have charm AI.", GetGUID().ToString());
+                        }
+                        // and restore our previous PlayerAI (if we had one)
+                        i_AI = i_disabledAI;
+                        i_disabledAI = null;
+                        // IsAIEnabled gets handled in the caller
+                    }
+                    break;
+                }
                 default:
                     Log.outError(LogFilter.Misc, "Attempt to update charm AI for unit {0}, which is neither player nor creature.", GetGUID().ToString());
                     break;
@@ -183,7 +183,7 @@ namespace Game.Entities
                     SetCritterGUID(minion.GetGUID());
                     Player thisPlayer = ToPlayer();
                     if (thisPlayer != null)
-                        minion.SetBattlePetCompanionGUID(thisPlayer.m_activePlayerData.SummonedBattlePetGUID);
+                        minion.SetBattlePetCompanionGUID(thisPlayer.GetUpdateField<ObjectGuid>(ActivePlayerFields.SummonedBattlePetGUID));
                 }
 
                 // PvP, FFAPvP
@@ -195,7 +195,7 @@ namespace Game.Entities
                         minion.SetSpeedRate(i, m_speed_rate[(int)i]);
 
                 // Send infinity cooldown - client does that automatically but after relog cooldown needs to be set again
-                SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(minion.m_unitData.CreatedBySpell, GetMap().GetDifficultyID());
+                SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(minion.GetUpdateField<uint>(UnitFields.CreatedBySpell), GetMap().GetDifficultyID());
                 if (spellInfo != null && spellInfo.IsCooldownStartedOnEvent())
                     GetSpellHistory().StartCooldown(spellInfo, 0, null, true);
             }
@@ -236,7 +236,7 @@ namespace Game.Entities
                     }
                 }
 
-                SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(minion.m_unitData.CreatedBySpell, GetMap().GetDifficultyID());
+                SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(minion.GetUpdateField<uint>(UnitFields.CreatedBySpell), GetMap().GetDifficultyID());
                 // Remove infinity cooldown
                 if (spellInfo != null && spellInfo.IsCooldownStartedOnEvent())
                     GetSpellHistory().SendCooldownEvent(spellInfo);

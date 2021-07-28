@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -228,7 +228,7 @@ namespace Game.Networking.Packets
 
     public class QueryNPCTextResponse : ServerPacket
     {
-        public QueryNPCTextResponse() : base(ServerOpcodes.QueryNpcTextResponse, ConnectionType.Instance) { }
+        public QueryNPCTextResponse() : base(ServerOpcodes.QueryNPCTextResponse, ConnectionType.Instance) { }
 
         public override void Write()
         {
@@ -412,29 +412,6 @@ namespace Game.Networking.Packets
         public uint[] MissingQuestPOIs = new uint[125];
     }
 
-    public class QuestPOIQueryResponse : ServerPacket
-    {
-        public QuestPOIQueryResponse() : base(ServerOpcodes.QuestPoiQueryResponse) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteInt32(QuestPOIDataStats.Count);
-            _worldPacket.WriteInt32(QuestPOIDataStats.Count);
-
-            bool useCache = WorldConfig.GetBoolValue(WorldCfg.CacheDataQueries);
-
-            foreach (QuestPOIData questPOIData in QuestPOIDataStats)
-            {
-                if (useCache)
-                    _worldPacket.WriteBytes(questPOIData.QueryDataBuffer);
-                else
-                    questPOIData.Write(_worldPacket);
-            }
-        }
-
-        public List<QuestPOIData> QuestPOIDataStats = new();
-    }
-
     class QueryQuestCompletionNPCs : ClientPacket
     {
         public QueryQuestCompletionNPCs(WorldPacket packet) : base(packet) { }
@@ -453,7 +430,7 @@ namespace Game.Networking.Packets
 
     class QuestCompletionNPCResponse : ServerPacket
     {
-        public QuestCompletionNPCResponse() : base(ServerOpcodes.QuestCompletionNpcResponse, ConnectionType.Instance) { }
+        public QuestCompletionNPCResponse() : base(ServerOpcodes.QuestCompletionNPCResponse, ConnectionType.Instance) { }
 
         public override void Write()
         {

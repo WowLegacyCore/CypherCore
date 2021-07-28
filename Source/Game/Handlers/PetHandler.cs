@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -57,8 +57,8 @@ namespace Game
             ObjectGuid guid1 = packet.PetGUID;         //pet guid
             ObjectGuid guid2 = packet.TargetGUID;      //tag guid
 
-            uint spellid = UnitActionBarEntry.UNIT_ACTION_BUTTON_ACTION(packet.Action);
-            ActiveStates flag = (ActiveStates)UnitActionBarEntry.UNIT_ACTION_BUTTON_TYPE(packet.Action);             //delete = 0x07 CastSpell = C1
+            uint spellid = UnitActionBarEntry.UnitActionButtonAction(packet.Action);
+            ActiveStates flag = (ActiveStates)UnitActionBarEntry.UnitActionButtonType(packet.Action);             //delete = 0x07 CastSpell = C1
 
             // used also for charmed creature
             Unit pet = Global.ObjAccessor.GetUnit(GetPlayer(), guid1);
@@ -385,7 +385,7 @@ namespace Game
                         else
                         {
                             if (pet.IsPossessed() || pet.IsVehicle()) // @todo: confirm this check
-                                Spell.SendCastResult(GetPlayer(), spellInfo, spell.m_SpellVisual, spell.m_castId, result);
+                                Spell.SendCastResult(GetPlayer(), spellInfo, spell.m_spellXSpellVisualId, spell.m_castId, result);
                             else
                                 spell.SendPetCastResult(result);
 
@@ -422,7 +422,7 @@ namespace Game
             if (unit)
             {
                 response.Allow = true;
-                response.Timestamp = unit.m_unitData.PetNameTimestamp;
+                response.Timestamp = unit.GetUpdateField<uint>(UnitFields.PetNameTimestamp);
                 response.Name = unit.GetName();
 
                 Pet pet = unit.ToPet();
@@ -484,8 +484,8 @@ namespace Game
             uint position = packet.Index;
             uint actionData = packet.Action;
 
-            uint spell_id = UnitActionBarEntry.UNIT_ACTION_BUTTON_ACTION(actionData);
-            ActiveStates act_state = (ActiveStates)UnitActionBarEntry.UNIT_ACTION_BUTTON_TYPE(actionData);
+            uint spell_id = UnitActionBarEntry.UnitActionButtonAction(actionData);
+            ActiveStates act_state = (ActiveStates)UnitActionBarEntry.UnitActionButtonType(actionData);
 
             Log.outDebug(LogFilter.Network, "Player {0} has changed pet spell action. Position: {1}, Spell: {2}, State: {3}", GetPlayer().GetName(), position, spell_id, act_state);
 

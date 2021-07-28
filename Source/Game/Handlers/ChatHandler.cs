@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -487,10 +487,6 @@ namespace Game
                 sender.ToggleAFK();
             }
 
-            Guild guild = sender.GetGuild();
-            if (guild != null)
-                guild.SendEventAwayChanged(sender.GetGUID(), sender.IsAFK(), sender.IsDND());
-
             Global.ScriptMgr.OnPlayerChat(sender, ChatMsg.Afk, Language.Universal, packet.Text);
         }
 
@@ -524,10 +520,6 @@ namespace Game
 
                 sender.ToggleDND();
             }
-
-            Guild guild = sender.GetGuild();
-            if (guild != null)
-                guild.SendEventAwayChanged(sender.GetGUID(), sender.IsAFK(), sender.IsDND());
 
             Global.ScriptMgr.OnPlayerChat(sender, ChatMsg.Dnd, Language.Universal, packet.Text);
         }
@@ -591,8 +583,6 @@ namespace Game
             GetPlayer().SendMessageToSetInRange(textEmote, WorldConfig.GetFloatValue(WorldCfg.ListenRangeTextemote), true);
 
             Unit unit = Global.ObjAccessor.GetUnit(GetPlayer(), packet.Target);
-
-            GetPlayer().UpdateCriteria(CriteriaTypes.DoEmote, (uint)packet.EmoteID, 0, 0, unit);
 
             // Send scripted event call
             if (unit)

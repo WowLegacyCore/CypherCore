@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -146,8 +146,6 @@ namespace Game.Entities
                 _restMgr.RemoveRestFlag(RestFlag.FactionArea);
 
             PushQuests();
-
-            UpdateCriteria(CriteriaTypes.TravelledToArea, newArea);
         }
 
         public void UpdateZone(uint newZone, uint newArea)
@@ -219,7 +217,7 @@ namespace Game.Entities
             // call enter script hooks after everyting else has processed
             Global.ScriptMgr.OnPlayerUpdateZone(this, newZone, newArea);
             if (oldZone != newZone)
-            { 
+            {
                 Global.OutdoorPvPMgr.HandlePlayerEnterZone(this, newZone);
                 Global.BattleFieldMgr.HandlePlayerEnterZone(this, newZone);
                 SendInitWorldStates(newZone, newArea);              // only if really enters to new zone, not just area change, works strange...
@@ -283,9 +281,9 @@ namespace Game.Entities
             pvpInfo.IsHostile = pvpInfo.IsInHostileArea || HasPvPForcingQuest();
         }
 
-        public ZonePVPTypeOverride GetOverrideZonePVPType() { return (ZonePVPTypeOverride)(uint)m_activePlayerData.OverrideZonePVPType; }
-        public void SetOverrideZonePVPType(ZonePVPTypeOverride type) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.OverrideZonePVPType), (uint)type); }  
-        
+        public ZonePVPTypeOverride GetOverrideZonePVPType() => (ZonePVPTypeOverride)GetUpdateField<int>(ActivePlayerFields.OverrideZonePVPType);
+        public void SetOverrideZonePVPType(ZonePVPTypeOverride type) => SetUpdateField<uint>(ActivePlayerFields.OverrideZonePVPType, (uint)type);
+
         public InstanceBind GetBoundInstance(uint mapid, Difficulty difficulty, bool withExpired = false)
         {
             // some instances only have one difficulty
@@ -560,10 +558,6 @@ namespace Game.Entities
                     ObjectGuid leaderGuid = GetGroup() != null ? GetGroup().GetLeaderGUID() : GetGUID();
                     if (leaderGuid != GetGUID())
                         leader = Global.ObjAccessor.FindPlayer(leaderGuid);
-
-                    if (ar.achievement != 0)
-                        if (leader == null || !leader.HasAchieved(ar.achievement))
-                            missingAchievement = ar.achievement;
                 }
 
                 if (LevelMin != 0 || LevelMax != 0 || failedMapDifficultyXCondition != 0 || missingItem != 0 || missingQuest != 0 || missingAchievement != 0)

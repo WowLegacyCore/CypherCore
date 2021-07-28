@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -366,8 +366,7 @@ namespace Game.DataStorage
                 if (node.Flags.HasAnyFlag(TaxiNodeFlags.Alliance))
                     AllianceTaxiNodesMask[field] |= submask;
 
-                int uiMapId;
-                if (!Global.DB2Mgr.GetUiMapPosition(node.Pos.X, node.Pos.Y, node.Pos.Z, node.ContinentID, 0, 0, 0, UiMapSystem.Adventure, false, out uiMapId))
+                if (!Global.DB2Mgr.GetUiMapPosition(node.Pos.X, node.Pos.Y, node.Pos.Z, node.ContinentID, 0, 0, 0, UiMapSystem.Adventure, false, out int uiMapId))
                     Global.DB2Mgr.GetUiMapPosition(node.Pos.X, node.Pos.Y, node.Pos.Z, node.ContinentID, 0, 0, 0, UiMapSystem.Taxi, false, out uiMapId);
 
                 if (uiMapId == 985 || uiMapId == 986)
@@ -737,20 +736,14 @@ namespace Game.DataStorage
                     return row.Rogue;
                 case Class.Priest:
                     return row.Priest;
-                case Class.Deathknight:
-                    return row.DeathKnight;
                 case Class.Shaman:
                     return row.Shaman;
                 case Class.Mage:
                     return row.Mage;
                 case Class.Warlock:
                     return row.Warlock;
-                case Class.Monk:
-                    return row.Monk;
                 case Class.Druid:
                     return row.Druid;
-                case Class.DemonHunter:
-                    return row.DemonHunter;
                 default:
                     break;
             }
@@ -772,20 +765,14 @@ namespace Game.DataStorage
                     return row.Rogue;
                 case (int)Class.Priest:
                     return row.Priest;
-                case (int)Class.Deathknight:
-                    return row.DeathKnight;
                 case (int)Class.Shaman:
                     return row.Shaman;
                 case (int)Class.Mage:
                     return row.Mage;
                 case (int)Class.Warlock:
                     return row.Warlock;
-                case (int)Class.Monk:
-                    return row.Monk;
                 case (int)Class.Druid:
                     return row.Druid;
-                case (int)Class.DemonHunter:
-                    return row.DemonHunter;
                 case -1:
                 case -7:
                     return row.Item;

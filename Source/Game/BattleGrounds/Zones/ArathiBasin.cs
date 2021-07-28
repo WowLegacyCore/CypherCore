@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +16,6 @@
  */
 
 using Framework.Constants;
-using Game.DataStorage;
 using Game.Entities;
 using Game.Networking.Packets;
 using System;
@@ -210,9 +209,6 @@ namespace Game.BattleGrounds.Zones
             }
             DoorOpen(ABObjectTypes.GateA);
             DoorOpen(ABObjectTypes.GateH);
-
-            // Achievement: Let's Get This Done
-            StartCriteriaTimer(CriteriaStartEvent.SendEvent, EventStartBattle);
         }
 
         public override void AddPlayer(Player player)
@@ -680,17 +676,7 @@ namespace Game.BattleGrounds.Zones
             if (!base.UpdatePlayerScore(player, type, value, doAddHonor))
                 return false;
 
-            switch (type)
-            {
-                case ScoreType.BasesAssaulted:
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)ABObjectives.AssaultBase);
-                    break;
-                case ScoreType.BasesDefended:
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)ABObjectives.DefendBase);
-                    break;
-                default:
-                    break;
-            }
+            PlayerScores[player.GetGUID()].UpdateScore(type, value);
             return true;
         }
 

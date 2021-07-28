@@ -165,10 +165,9 @@ namespace Game.Collision
                 var instanceTree = iInstanceMapTrees.LookupByKey(mapId);
                 if (instanceTree != null)
                 {
-                    Vector3 resultPos;
                     Vector3 pos1 = ConvertPositionToInternalRep(x1, y1, z1);
                     Vector3 pos2 = ConvertPositionToInternalRep(x2, y2, z2);
-                    bool result = instanceTree.GetObjectHitPos(pos1, pos2, out resultPos, modifyDist);
+                    bool result = instanceTree.GetObjectHitPos(pos1, pos2, out Vector3 resultPos, modifyDist);
                     resultPos = ConvertPositionToInternalRep(resultPos.X, resultPos.Y, resultPos.Z);
                     rx = resultPos.X;
                     ry = resultPos.Y;
@@ -256,9 +255,7 @@ namespace Game.Collision
             if (!Global.DisableMgr.IsDisabledFor(DisableType.VMAP, mapId, null, DisableFlags.VmapLiquidStatus))
             {
                 data.floorZ = z;
-                int adtId, rootId, groupId;
-                uint flags;
-                if (GetAreaInfo(mapId, x, y, ref data.floorZ, out flags, out adtId, out rootId, out groupId))
+                if (GetAreaInfo(mapId, x, y, ref data.floorZ, out uint flags, out int adtId, out int rootId, out int groupId))
                     data.areaInfo.Set(new AreaAndLiquidData.AreaInfo(adtId, rootId, groupId, flags));
                 return data;
             }

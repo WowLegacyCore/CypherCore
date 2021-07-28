@@ -19,7 +19,6 @@ using Framework.Constants;
 using Framework.Database;
 using Framework.IO;
 using System;
-using System.Linq;
 
 namespace Game.Chat.Commands
 {
@@ -47,8 +46,7 @@ namespace Game.Chat.Commands
             if (!bool.TryParse(args.NextString(), out bool createGameAccount))
                 createGameAccount = true;
 
-            string gameAccountName;
-            switch (Global.BNetAccountMgr.CreateBattlenetAccount(accountName, password, createGameAccount, out gameAccountName))
+            switch (Global.BNetAccountMgr.CreateBattlenetAccount(accountName, password, createGameAccount, out string gameAccountName))
             {
                 case AccountOpResult.Ok:
                     if (createGameAccount)
@@ -59,7 +57,7 @@ namespace Game.Chat.Commands
                     if (handler.GetSession() != null)
                     {
                         Log.outInfo(LogFilter.Player, "Account: {0} (IP: {1}) Character:[{2}] ({3}) created Battle.net account {4}{5}{6}",
-                            handler.GetSession().GetAccountId(), handler.GetSession().GetRemoteAddress(), handler.GetSession().GetPlayer().GetName(), 
+                            handler.GetSession().GetAccountId(), handler.GetSession().GetRemoteAddress(), handler.GetSession().GetPlayer().GetName(),
                             handler.GetSession().GetPlayer().GetGUID().ToString(), accountName, createGameAccount ? " with game account " : "", createGameAccount ? gameAccountName : "");
                     }
                     break;

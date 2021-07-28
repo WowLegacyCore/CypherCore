@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -50,7 +50,7 @@ namespace Game.Entities
                 }
             }
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.MaxTalentTiers), talentTiers);
+            SetUpdateField<uint>(ActivePlayerFields.MaxTalentTiers, talentTiers);
 
             if (!GetSession().PlayerLoading())
                 SendTalentsInfoData();   // update at client
@@ -127,7 +127,7 @@ namespace Game.Entities
                 return TalentLearnResult.FailedUnknown;
 
             // check if we have enough talent points
-            if (talentInfo.TierID >= m_activePlayerData.MaxTalentTiers)
+            if (talentInfo.TierID >= GetUpdateField<uint>(ActivePlayerFields.MaxTalentTiers))
                 return TalentLearnResult.FailedUnknown;
 
             // TODO: prevent changing talents that are on cooldown
@@ -164,7 +164,7 @@ namespace Game.Entities
 
                     if (!HasTalent(talent.Id, GetActiveTalentGroup()))
                         continue;
-                    
+
                     if (!HasPlayerFlag(PlayerFlags.Resting) && HasUnitFlag2(UnitFlags2.AllowChangingTalents))
                         return TalentLearnResult.FailedRestArea;
 
@@ -233,23 +233,20 @@ namespace Game.Entities
             return GetTalentMap(group).ContainsKey(talentId) && GetTalentMap(group)[talentId] != PlayerSpellState.Removed;
         }
 
-        uint GetTalentResetCost() { return _specializationInfo.ResetTalentsCost; }
-        void SetTalentResetCost(uint cost) { _specializationInfo.ResetTalentsCost = cost; }
-        long GetTalentResetTime() { return _specializationInfo.ResetTalentsTime; }
-        void SetTalentResetTime(long time_) { _specializationInfo.ResetTalentsTime = time_; }
-        public uint GetPrimarySpecialization() { return m_playerData.CurrentSpecID; }
-        void SetPrimarySpecialization(uint spec) { SetUpdateFieldValue(m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.CurrentSpecID), spec); }
-        public byte GetActiveTalentGroup() { return _specializationInfo.ActiveGroup; }
-        void SetActiveTalentGroup(byte group) { _specializationInfo.ActiveGroup = group; }
+        uint GetTalentResetCost() => _specializationInfo.ResetTalentsCost;
+        void SetTalentResetCost(uint cost) => _specializationInfo.ResetTalentsCost = cost;
+        long GetTalentResetTime() => _specializationInfo.ResetTalentsTime;
+        void SetTalentResetTime(long time_) => _specializationInfo.ResetTalentsTime = time_;
+        public uint GetPrimarySpecialization() => GetUpdateField<uint>(PlayerFields.CurrentSpecID);
+        void SetPrimarySpecialization(uint spec) => SetUpdateField<uint>(PlayerFields.CurrentSpecID, spec);
+        public byte GetActiveTalentGroup() => _specializationInfo.ActiveGroup;
+        void SetActiveTalentGroup(byte group) => _specializationInfo.ActiveGroup = group;
 
         // Loot Spec
-        public void SetLootSpecId(uint id) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.LootSpecID), (ushort)id); }
-        public uint GetLootSpecId() { return m_activePlayerData.LootSpecID; }
+        public void SetLootSpecId(uint id) => SetUpdateField<uint>(ActivePlayerFields.LootSpecID, id);
+        public uint GetLootSpecId() => GetUpdateField<uint>(ActivePlayerFields.LootSpecID);
 
-        public uint GetDefaultSpecId()
-        {
-            return Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass()).Id;
-        }
+        public uint GetDefaultSpecId() => Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass()).Id;
 
         public void ActivateTalentGroup(ChrSpecializationRecord spec)
         {
@@ -282,7 +279,6 @@ namespace Game.Entities
             }
 
             // Let client clear his current Actions
-            SendActionButtons(2);
             foreach (var talentInfo in CliDB.TalentStorage.Values)
             {
                 // unlearn only talents for character class
@@ -422,30 +418,6 @@ namespace Game.Entities
             activeGlyphs.IsFullUpdate = true;
             SendPacket(activeGlyphs);
 
-            Item item = GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.Everywhere);
-            if (item != null)
-            {
-                AzeriteItem azeriteItem = item.ToAzeriteItem();
-                if (azeriteItem != null)
-                {
-                    if (azeriteItem.IsEquipped())
-                    {
-                        ApplyAllAzeriteEmpoweredItemMods(false);
-                        ApplyAzeritePowers(azeriteItem, false);
-                    }
-
-                    azeriteItem.SetSelectedAzeriteEssences(spec.Id);
-
-                    if (azeriteItem.IsEquipped())
-                    {
-                        ApplyAzeritePowers(azeriteItem, true);
-                        ApplyAllAzeriteEmpoweredItemMods(true);
-                    }
-
-                    azeriteItem.SetState(ItemUpdateState.Changed, this);
-                }
-            }
-
             var shapeshiftAuras = GetAuraEffectsByType(AuraType.ModShapeshift);
             foreach (AuraEffect aurEff in shapeshiftAuras)
             {
@@ -454,8 +426,8 @@ namespace Game.Entities
             }
         }
 
-        public Dictionary<uint, PlayerSpellState> GetTalentMap(uint spec) { return _specializationInfo.Talents[spec]; }
-        public List<uint> GetGlyphs(byte spec) { return _specializationInfo.Glyphs[spec]; }
+        public Dictionary<uint, PlayerSpellState> GetTalentMap(uint spec) => _specializationInfo.Talents[spec];
+        public List<uint> GetGlyphs(byte spec) => _specializationInfo.Glyphs[spec];
 
         public uint GetNextResetTalentsCost()
         {
@@ -525,7 +497,7 @@ namespace Game.Entities
                     continue;
 
                 RemoveTalent(talentInfo);
-            }            
+            }
 
             SQLTransaction trans = new();
             _SaveTalents(trans);
@@ -535,8 +507,6 @@ namespace Game.Entities
             if (!noCost)
             {
                 ModifyMoney(-cost);
-                UpdateCriteria(CriteriaTypes.GoldSpentForTalents, cost);
-                UpdateCriteria(CriteriaTypes.NumberOfTalentResets, 1);
 
                 SetTalentResetCost(cost);
                 SetTalentResetTime(GameTime.GetGameTime());

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -255,7 +255,6 @@ namespace Game.Networking.Packets
             _worldPacket.WriteUInt32(BorderStyle);
             _worldPacket.WriteUInt32(BorderColor);
             _worldPacket.WriteUInt32(Background);
-            _worldPacket.WriteInt32(AchievementPoints);
 
             _worldPacket.WriteString(InviterName);
             _worldPacket.WriteString(GuildName);
@@ -264,7 +263,6 @@ namespace Game.Networking.Packets
 
         public ObjectGuid GuildGUID;
         public ObjectGuid OldGuildGUID;
-        public int AchievementPoints;
         public uint EmblemColor;
         public uint EmblemStyle;
         public uint BorderStyle;
@@ -276,23 +274,6 @@ namespace Game.Networking.Packets
         public string InviterName;
         public string GuildName;
         public string OldGuildName;
-    }
-
-    public class GuildEventStatusChange : ServerPacket
-    {
-        public GuildEventStatusChange() : base(ServerOpcodes.GuildEventStatusChange) { }
-
-        public override void Write()
-        {
-            _worldPacket.WritePackedGuid(Guid);
-            _worldPacket.WriteBit(AFK);
-            _worldPacket.WriteBit(DND);
-            _worldPacket.FlushBits();
-        }
-
-        public ObjectGuid Guid;
-        public bool AFK;
-        public bool DND;
     }
 
     public class GuildEventPresenceChange : ServerPacket
@@ -1622,7 +1603,7 @@ namespace Game.Networking.Packets
             data.WritePackedGuid(Guid);
             data.WriteInt32(RankID);
             data.WriteInt32(AreaID);
-            data.WriteInt32(PersonalAchievementPoints);
+            data.WriteInt32(0);
             data.WriteInt32(GuildReputation);
             data.WriteFloat(LastSave);
 
@@ -1651,7 +1632,6 @@ namespace Game.Networking.Packets
         public long TotalXP;
         public int RankID;
         public int AreaID;
-        public int PersonalAchievementPoints;
         public int GuildReputation;
         public int GuildRepToCap;
         public float LastSave;

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -291,13 +291,10 @@ namespace Framework.Constants
 
         public static ulong RaceMaskAllPlayable = (ulong)(GetMaskForRace(Race.Human) | GetMaskForRace(Race.Orc) | GetMaskForRace(Race.Dwarf) | GetMaskForRace(Race.NightElf) | GetMaskForRace(Race.Undead)
             | GetMaskForRace(Race.Tauren) | GetMaskForRace(Race.Gnome) | GetMaskForRace(Race.Troll) | GetMaskForRace(Race.BloodElf) | GetMaskForRace(Race.Draenei)
-            | GetMaskForRace(Race.Goblin) | GetMaskForRace(Race.Worgen) | GetMaskForRace(Race.PandarenNeutral) | GetMaskForRace(Race.PandarenAlliance) | GetMaskForRace(Race.PandarenHorde)
-            | GetMaskForRace(Race.Nightborne) | GetMaskForRace(Race.HighmountainTauren) | GetMaskForRace(Race.VoidElf) | GetMaskForRace(Race.LightforgedDraenei) | GetMaskForRace(Race.ZandalariTroll)
-            | GetMaskForRace(Race.KulTiran) | GetMaskForRace(Race.DarkIronDwarf) | GetMaskForRace(Race.Vulpera) | GetMaskForRace(Race.MagharOrc) | GetMaskForRace(Race.MechaGnome));
+            | GetMaskForRace(Race.Goblin));
 
         public static ulong RaceMaskAlliance = (ulong)(GetMaskForRace(Race.Human) | GetMaskForRace(Race.Dwarf) | GetMaskForRace(Race.NightElf) | GetMaskForRace(Race.Gnome)
-            | GetMaskForRace(Race.Draenei) | GetMaskForRace(Race.Worgen) | GetMaskForRace(Race.PandarenAlliance) | GetMaskForRace(Race.VoidElf) | GetMaskForRace(Race.LightforgedDraenei)
-            | GetMaskForRace(Race.KulTiran) | GetMaskForRace(Race.DarkIronDwarf) | GetMaskForRace(Race.MechaGnome));
+            | GetMaskForRace(Race.Draenei));
 
         public static ulong RaceMaskHorde = RaceMaskAllPlayable & ~RaceMaskAlliance;
 
@@ -543,18 +540,15 @@ namespace Framework.Constants
         Hunter = 3,
         Rogue = 4,
         Priest = 5,
-        Deathknight = 6,
         Shaman = 7,
         Mage = 8,
         Warlock = 9,
-        Monk = 10,
         Druid = 11,
-        DemonHunter = 12,
-        Max = 13,
+        Max = 12,
 
-        ClassMaskAllPlayable = ((1 << (Warrior - 1)) | (1 << (Paladin - 1)) | (1 << (Hunter - 1)) |
-            (1 << (Rogue - 1)) | (1 << (Priest - 1)) | (1 << (Deathknight - 1)) | (1 << (Shaman - 1)) |
-            (1 << (Mage - 1)) | (1 << (Warlock - 1)) | (1 << (Monk - 1)) | (1 << (Druid - 1)) | (1 << (DemonHunter - 1))),
+        ClassMaskAllPlayable = (1 << (Warrior - 1)) | (1 << (Paladin - 1)) | (1 << (Hunter - 1)) |
+            (1 << (Rogue - 1)) | (1 << (Priest - 1)) | (1 << (Shaman - 1)) |
+            (1 << (Mage - 1)) | (1 << (Warlock - 1)) | (1 << (Druid - 1)),
 
         ClassMaskAllCreatures = ((1 << (Warrior - 1)) | (1 << (Paladin - 1)) | (1 << (Rogue - 1)) | (1 << (Mage - 1))),
 
@@ -579,28 +573,7 @@ namespace Framework.Constants
         //Naga = 13,
         //Broken = 14,
         //Skeleton = 15,
-        //Vrykul = 16,
-        //Tuskarr = 17,
         //ForestTroll = 18,
-        //Taunka = 19,
-        //NorthrendSkeleton = 20,
-        //IceTroll = 21,
-        Worgen = 22,
-        //HumanGilneas = 23,
-        PandarenNeutral = 24,
-        PandarenAlliance = 25,
-        PandarenHorde = 26,
-        Nightborne = 27,
-        HighmountainTauren = 28,
-        VoidElf = 29,
-        LightforgedDraenei = 30,
-        ZandalariTroll = 31,
-        KulTiran = 32,
-        //RACE_THIN_HUMAN         = 33,
-        DarkIronDwarf = 34,
-        Vulpera = 35,
-        MagharOrc = 36,
-        MechaGnome = 37,
         Max
     }
 
@@ -626,24 +599,11 @@ namespace Framework.Constants
         Rage = 1,
         Focus = 2,
         Energy = 3,
-        ComboPoints = 4,
-        Runes = 5,
-        RunicPower = 6,
-        SoulShards = 7,
-        LunarPower = 8,
-        HolyPower = 9,
-        AlternatePower = 10,           // Used in some quests
-        Maelstrom = 11,
-        Chi = 12,
-        Insanity = 13,
-        BurningEmbers = 14,
-        DemonicFury = 15,
-        ArcaneCharges = 16,
-        Fury = 17,
-        Pain = 18,
-        Max = 19,
-        All = 127,          // default for class?
-        Health = -2,    // (-2 as signed value)
+        Happiness = 4,
+        ComboPoints = 14,
+        Max = 15,
+        All = 24,           // default for class?
+        Health = -2,        // (-2 as signed value)
         MaxPerClass = 6
     }
 

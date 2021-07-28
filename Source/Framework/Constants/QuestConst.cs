@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -60,9 +60,10 @@ namespace Framework.Constants
     public struct QuestSlotOffsets
     {
         public const int Id = 0;
-        public const int State = 1;
-        public const int Counts = 2;
-        public const int Time = 14;
+        public const int StateFlags = 1;
+        public const int EndTime = 2;
+        public const int AcceptTime = 3;
+        public const int Counts = 4;
         public const int Max = 16;
     }
 

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -317,8 +317,8 @@ namespace Game.Networking.Packets
             Item = new ItemInstance(item);
             Count = item.GetCount();
             Charges = item.GetSpellCharges();
-            MaxDurability = item.m_itemData.MaxDurability;
-            Durability = item.m_itemData.Durability;
+            MaxDurability = item.GetMaxDurability();
+            Durability = item.GetDurability();
             Unlocked = !item.IsLocked();
 
             for (EnchantmentSlot slot = 0; slot < EnchantmentSlot.MaxInspected; slot++)
@@ -326,11 +326,11 @@ namespace Game.Networking.Packets
                 if (item.GetEnchantmentId(slot) == 0)
                     continue;
 
-                Enchants.Add(new ItemEnchantData(item.GetEnchantmentId(slot), item.GetEnchantmentDuration(slot), (int)item.GetEnchantmentCharges(slot), (byte)slot));
+                Enchants.Add(new ItemEnchantData(item.GetEnchantmentId(slot), item.GetEnchantmentDuration(slot), item.GetEnchantmentCharges(slot), (byte)slot));
             }
 
             byte i = 0;
-            foreach (SocketedGem gemData in item.m_itemData.Gems)
+            foreach (ItemDynamicFieldGems gemData in item.GetGems())
             {
                 if (gemData.ItemId != 0)
                 {

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +16,6 @@
  */
 
 using Framework.Constants;
-using Game.DataStorage;
 using Game.Entities;
 using Game.Networking.Packets;
 using Game.Spells;
@@ -187,7 +186,7 @@ namespace Game.BattleFields
                 // Update faction of relic, only attacker can click on
                 relic.SetFaction(WGConst.WintergraspFaction[GetAttackerTeam()]);
                 // Set in use (not allow to click on before last door is broken)
-                relic.AddFlag(GameObjectFlags.InUse | GameObjectFlags.NotSelectable);
+                relic.AddGameObjectFlag(GameObjectFlags.InUse | GameObjectFlags.NotSelectable);
                 m_titansRelicGUID = relic.GetGUID();
             }
             else
@@ -235,8 +234,7 @@ namespace Game.BattleFields
                     Player player = Global.ObjAccessor.FindPlayer(guid);
                     if (player)
                     {
-                        float x, y, z;
-                        player.GetPosition(out x, out y, out z);
+                        player.GetPosition(out float x, out float y, out float z);
                         if (5500 > x && x > 5392 && y < 2880 && y > 2800 && z < 480)
                             player.TeleportTo(571, 5349.8686f, 2838.481f, 409.240f, 0.046328f);
                         SendInitWorldStatesTo(player);
@@ -339,11 +337,6 @@ namespace Game.BattleFields
                     // Complete victory quests
                     player.AreaExploredOrEventHappens(WintergraspQuests.VictoryAlliance);
                     player.AreaExploredOrEventHappens(WintergraspQuests.VictoryHorde);
-                    // Send Wintergrasp victory achievement
-                    DoCompleteOrIncrementAchievement(WGAchievements.WinWg, player);
-                    // Award achievement for succeeding in Wintergrasp in 10 minutes or less
-                    if (!endByTimer && GetTimer() <= 10000)
-                        DoCompleteOrIncrementAchievement(WGAchievements.WinWgTimer10, player);
                 }
             }
 
@@ -396,28 +389,6 @@ namespace Game.BattleFields
                 SendWarning((GetDefenderTeam() == TeamId.Alliance) ? WintergraspText.FortressCaptureAlliance : WintergraspText.FortressCaptureHorde);
             else // defend alli/horde
                 SendWarning((GetDefenderTeam() == TeamId.Alliance) ? WintergraspText.FortressDefendAlliance : WintergraspText.FortressDefendHorde);
-        }
-
-        public override void DoCompleteOrIncrementAchievement(uint achievement, Player player, byte incrementNumber = 1)
-        {
-            AchievementRecord achievementEntry = CliDB.AchievementStorage.LookupByKey(achievement);
-            if (achievementEntry == null)
-                return;
-
-            switch (achievement)
-            {
-                //removed by TC
-                //case ACHIEVEMENTS_WIN_WG_100:
-                    //{
-                        // player.UpdateAchievementCriteria();
-                    //}
-                default:
-                    {
-                        if (player)
-                            player.CompletedAchievement(achievementEntry);
-                        break;
-                    }
-            }
         }
 
         public override void OnStartGrouping()
@@ -845,7 +816,6 @@ namespace Game.BattleFields
                     {
                         player.CastSpell(player, WGSpells.TowerControl, true);
                         player.KilledMonsterCredit(WintergraspQuests.CreditTowersDestroyed);
-                        DoCompleteOrIncrementAchievement(WGAchievements.WgTowerDestroy, player);
                     }
                 }
 
@@ -1161,7 +1131,7 @@ namespace Game.BattleFields
                     }
                     _wg.SetRelicInteractible(true);
                     if (_wg.GetRelic())
-                        _wg.GetRelic().RemoveFlag(GameObjectFlags.InUse | GameObjectFlags.NotSelectable);
+                        _wg.GetRelic().RemoveGameObjectFlag(GameObjectFlags.InUse | GameObjectFlags.NotSelectable);
                     else
                         Log.outError(LogFilter.Server, "BattlefieldWG: Titan Relic not found.");
                     break;
@@ -1270,7 +1240,7 @@ namespace Game.BattleFields
             if (towerId >= 0)
             {
                 _staticTowerInfo = WGConst.TowerData[towerId];
-            
+
                 // Spawn Turret bottom
                 foreach (var turretPos in WGConst.TowerCannon[towerId].TowerCannonBottom)
                 {

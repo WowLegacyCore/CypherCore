@@ -84,9 +84,8 @@ namespace Game.Maps
         {
             while (true)
             {
-                MapUpdateRequest request;
 
-                _queue.WaitAndPop(out request);
+                _queue.WaitAndPop(out MapUpdateRequest request);
 
                 if (_cancelationToken)
                     return;

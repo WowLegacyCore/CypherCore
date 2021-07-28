@@ -110,8 +110,7 @@ namespace Game.Chat.Commands
             [Command("default", RBACPermissions.CommandLearnAllDefault)]
             static bool HandleLearnAllDefaultCommand(StringArguments args, CommandHandler handler)
             {
-                Player target;
-                if (!handler.ExtractPlayerTarget(args, out target))
+                if (!handler.ExtractPlayerTarget(args, out Player target))
                     return false;
 
                 target.LearnDefaultSkills();
@@ -125,8 +124,7 @@ namespace Game.Chat.Commands
             [Command("crafts", RBACPermissions.CommandLearnAllCrafts)]
             static bool HandleLearnAllCraftsCommand(StringArguments args, CommandHandler handler)
             {
-                Player target;
-                if (!handler.ExtractPlayerTarget(args, out target))
+                if (!handler.ExtractPlayerTarget(args, out Player target))
                     return false;
 
                 foreach (var skillInfo in CliDB.SkillLineStorage.Values)

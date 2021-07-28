@@ -49,8 +49,7 @@ namespace Game.Movement
 
         public bool CalculatePath(float destX, float destY, float destZ, bool forceDest = false, bool straightLine = false)
         {
-            float x, y, z;
-            _sourceUnit.GetPosition(out x, out y, out z);
+            _sourceUnit.GetPosition(out float x, out float y, out float z);
 
             if (!GridDefines.IsValidMapCoord(destX, destY, destZ) || !GridDefines.IsValidMapCoord(x, y, z))
                 return false;
@@ -578,7 +577,7 @@ namespace Game.Movement
             for (int i = (int)npath - 1; i >= 0; --i)
             {
                 bool found = false;
-                for (int j = (int)nvisited - 1; j >= 0; --j)
+                for (int j = nvisited - 1; j >= 0; --j)
                 {
                     if (path[i] == visited[j])
                     {
@@ -834,8 +833,7 @@ namespace Game.Movement
 
         NavTerrainFlag GetNavTerrain(float x, float y, float z)
         {
-            LiquidData data;
-            ZLiquidStatus liquidStatus = _sourceUnit.GetMap().GetLiquidStatus(_sourceUnit.GetPhaseShift(), x, y, z, LiquidHeaderTypeFlags.AllLiquids, out data, _sourceUnit.GetCollisionHeight());
+            ZLiquidStatus liquidStatus = _sourceUnit.GetMap().GetLiquidStatus(_sourceUnit.GetPhaseShift(), x, y, z, LiquidHeaderTypeFlags.AllLiquids, out LiquidData data, _sourceUnit.GetCollisionHeight());
             if (liquidStatus == ZLiquidStatus.NoWater)
                 return NavTerrainFlag.Ground;
 

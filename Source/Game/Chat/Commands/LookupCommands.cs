@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -540,7 +540,7 @@ namespace Game.Chat
                             if (handler.GetSession() != null)
                             {
                                 int maxLevel = 0;
-                                var questLevels = Global.DB2Mgr.GetContentTuningData(qInfo.ContentTuningId, handler.GetSession().GetPlayer().m_playerData.CtrOptions.GetValue().ContentTuningConditionMask);
+                                var questLevels = Global.DB2Mgr.GetContentTuningData(qInfo.ContentTuningId);
                                 if (questLevels.HasValue)
                                     maxLevel = questLevels.Value.MaxLevel;
 
@@ -603,7 +603,7 @@ namespace Game.Chat
                     if (handler.GetSession() != null)
                     {
                         int maxLevel = 0;
-                        var questLevels = Global.DB2Mgr.GetContentTuningData(qInfo.ContentTuningId, handler.GetSession().GetPlayer().m_playerData.CtrOptions.GetValue().ContentTuningConditionMask);
+                        var questLevels = Global.DB2Mgr.GetContentTuningData(qInfo.ContentTuningId);
                         if (questLevels.HasValue)
                             maxLevel = questLevels.Value.MaxLevel;
 
@@ -853,7 +853,7 @@ namespace Game.Chat
 
                         string knownStr = target && target.HasTitle(titleInfo) ? handler.GetCypherString(CypherStrings.Known) : "";
 
-                        string activeStr = target && target.m_playerData.PlayerTitle == titleInfo.MaskID
+                        string activeStr = target && target.GetUpdateField<uint>(PlayerFields.PlayerTitle) == titleInfo.MaskID
                             ? handler.GetCypherString(CypherStrings.Active) : "";
 
                         string titleNameStr = string.Format(name.ConvertFormatSyntax(), targetName);
@@ -911,7 +911,7 @@ namespace Game.Chat
                 }
 
                 if (locale < Locale.Total)
-                { 
+                {
                     if (maxResults != 0 && counter == maxResults)
                     {
                         handler.SendSysMessage(CypherStrings.CommandLookupMaxResults, maxResults);

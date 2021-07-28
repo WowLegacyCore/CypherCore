@@ -60,11 +60,10 @@ namespace Game.AI
             }
 
             MoveSplineInit init = new(owner);
-            float x, y, z, o;
             // at apply we can select more nice return points base at current movegen
-            if (owner.GetMotionMaster().Empty() || !owner.GetMotionMaster().Top().GetResetPosition(owner, out x, out y, out z))
+            if (owner.GetMotionMaster().Empty() || !owner.GetMotionMaster().Top().GetResetPosition(owner, out float x, out float y, out float z))
             {
-                owner.GetHomePosition(out x, out y, out z, out o);
+                owner.GetHomePosition(out x, out y, out z, out float o);
                 init.SetFacing(o);
             }
             init.MoveTo(x, y, z);

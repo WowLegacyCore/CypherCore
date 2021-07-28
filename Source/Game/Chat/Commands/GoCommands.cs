@@ -573,8 +573,7 @@ namespace Game.Chat.Commands
             string goZ = args.NextString();
             string port = args.NextString();
 
-            float x, y, z, o;
-            player.GetPosition(out x, out y, out z, out o);
+            player.GetPosition(out float x, out float y, out float z, out float o);
             if (!goX.IsEmpty())
                 x += float.Parse(goX);
             if (!goY.IsEmpty())

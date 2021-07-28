@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -48,6 +48,7 @@ namespace Framework.Constants
     [Flags]
     public enum UnitFlags : uint
     {
+        None = 0x0,
         ServerControlled = 0x01,
         NonAttackable = 0x02,
         RemoveClientControl = 0x04, // This is a legacy flag used to disable movement player's movement while controlling other units, SMSG_CLIENT_CONTROL replaces this functionality clientside now. CONFUSED and FLEEING flags have the same effect on client movement asDISABLE_MOVE_CONTROL in addition to preventing spell casts/autoattack (they all allow climbing steeper hills and emotes while moving)
@@ -82,8 +83,10 @@ namespace Framework.Constants
         Unk31 = 0x80000000
     }
 
+    [Flags]
     public enum UnitFlags2 : uint
     {
+        None = 0x0,
         FeignDeath = 0x01,
         Unk1 = 0x02,
         IgnoreReputation = 0x04,
@@ -106,11 +109,14 @@ namespace Framework.Constants
         NoActions = 0x800000
     }
 
+    [Flags]
     public enum UnitFlags3 : uint
     {
+        None = 0x0,
         Unk1 = 0x01,
     }
 
+    [Flags]
     public enum NPCFlags : uint
     {
         None = 0x00,
@@ -148,8 +154,9 @@ namespace Framework.Constants
         BlackMarket = 0x80000000,     // Black Market
     }
 
+    [Flags]
     public enum NPCFlags2
-    { 
+    {
         None = 0x00,
         ItemUpgradeMaster = 0x01,
         GarrisonArchitect = 0x02,
@@ -161,6 +168,7 @@ namespace Framework.Constants
         ContributionCollector = 0x400,
     }
 
+    [Flags]
     public enum CreatureTypeFlags : uint
     {
         TameablePet = 0x01, // Makes the mob tameable (must also be a beast and have family set)
@@ -197,6 +205,7 @@ namespace Framework.Constants
         UnitIsQuestBoss = 0x80000000 // Not verified
     }
 
+    [Flags]
     public enum CreatureFlagsExtra : uint
     {
         InstanceBind = 0x01,       // Creature Kill Bind Instance With Killer And Killer'S Group

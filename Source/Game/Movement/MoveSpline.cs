@@ -137,9 +137,8 @@ namespace Game.Movement
             if (seg_time > 0)
                 u = (time_point - spline.Length(point_index)) / (float)seg_time;
 
-            Vector3 c;
             float orientation = initialOrientation;
-            spline.Evaluate_Percent(point_index, u, out c);
+            spline.Evaluate_Percent(point_index, u, out Vector3 c);
 
             if (splineflags.HasFlag(SplineFlag.Parabolic))
                 ComputeParabolicElevation(time_point, ref c.Z);
@@ -158,8 +157,7 @@ namespace Game.Movement
             {
                 if (!splineflags.HasFlag(SplineFlag.OrientationFixed | SplineFlag.Falling | SplineFlag.Unknown_0x8))
                 {
-                    Vector3 hermite;
-                    spline.Evaluate_Derivative(point_Idx, u, out hermite);
+                    spline.Evaluate_Derivative(point_Idx, u, out Vector3 hermite);
                     orientation = (float)Math.Atan2(hermite.Y, hermite.X);
                 }
 

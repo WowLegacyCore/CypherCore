@@ -16,17 +16,14 @@
  */
 
 using Framework.Constants;
-using Game.Achievements;
 using Game.BattleGrounds;
 using Game.Chat;
 using Game.DataStorage;
-using Game.Garrisons;
 using Game.Groups;
 using Game.Mails;
 using Game.Maps;
 using Game.Misc;
 using Game.Spells;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -177,8 +174,6 @@ namespace Game.Entities
         bool m_SeasonalQuestChanged;
         long m_lastDailyQuestTime;
 
-        Garrison _garrison;
-
         CinematicManager _cinematicMgr;
 
         // variables to save health and mana before duel and restore them after duel
@@ -191,9 +186,6 @@ namespace Game.Entities
 
         //Core
         WorldSession Session;
-
-        public PlayerData m_playerData;
-        public ActivePlayerData m_activePlayerData;
 
         uint m_nextSave;
         byte m_cinematic;
@@ -213,7 +205,6 @@ namespace Game.Entities
         public uint m_timeSyncClient;
         public uint m_timeSyncServer;
         ReputationMgr reputationMgr;
-        QuestObjectiveCriteriaManager m_questObjectiveCriteriaMgr;
         public AtLoginFlags atLoginFlags;
         public bool m_itemUpdateQueueBlocked;
 
@@ -234,8 +225,6 @@ namespace Game.Entities
         uint m_HomebindTimer;
 
         ResurrectionData _resurrectionData;
-
-        PlayerAchievementMgr m_achievementSys;
 
         SceneMgr m_sceneMgr;
 
@@ -491,7 +480,7 @@ namespace Game.Entities
         // Data sent in EquipmentSet related packets
         public class EquipmentSetData
         {
-            public EquipmentSetType Type;
+            public int Type = 0;
             public ulong Guid; // Set Identifier
             public uint SetID; // Index
             public uint IgnoreMask ; // Mask of EquipmentSlot
@@ -503,12 +492,6 @@ namespace Game.Entities
             public int[] Enchants = new int[2];  // SpellItemEnchantmentID
             public int Unknown901_1;
             public int Unknown901_2;
-        }
-
-        public enum EquipmentSetType
-        {
-            Equipment = 0,
-            Transmog = 1
         }
     }
 
@@ -585,7 +568,7 @@ namespace Game.Entities
         {
             uint[] array = new uint[1];
             BoolOptions.CopyTo(array, 0);
-            return (ulong)array[0];
+            return array[0];
         }
 
         public string ProfileName;
@@ -632,5 +615,11 @@ namespace Game.Entities
     {
         public (uint QuestID, QuestStatusData Status) QuestStatusPair;
         public QuestObjective Objective;
+    }
+
+    public struct ChrCustomizationChoice
+    {
+        public uint ChrCustomizationOptionID;
+        public uint ChrCustomizationChoiceID;
     }
 }

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -150,7 +150,7 @@ namespace Game.Chat.Commands
 
             handler.SendSysMessage(CypherStrings.TitleRemoveRes, id, titleNameStr, tNameLink);
 
-            if (!target.HasTitle(target.m_playerData.PlayerTitle))
+            if (!target.HasTitle(target.GetUpdateField<uint>(PlayerFields.PlayerTitle)))
             {
                 target.SetChosenTitle(0);
                 handler.SendSysMessage(CypherStrings.CurrentTitleReset, tNameLink);
@@ -192,7 +192,7 @@ namespace Game.Chat.Commands
                 target.SetKnownTitles(0, titles);
                 handler.SendSysMessage(CypherStrings.Done);
 
-                if (!target.HasTitle(target.m_playerData.PlayerTitle))
+                if (!target.HasTitle(target.GetUpdateField<uint>(PlayerFields.PlayerTitle)))
                 {
                     target.SetChosenTitle(0);
                     handler.SendSysMessage(CypherStrings.CurrentTitleReset, handler.GetNameLink(target));

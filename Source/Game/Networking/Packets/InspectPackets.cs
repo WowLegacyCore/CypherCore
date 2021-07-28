@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -145,7 +145,7 @@ namespace Game.Networking.Packets
             }
 
             byte i = 0;
-            foreach (SocketedGem gemData in item.m_itemData.Gems)
+            foreach (ItemDynamicFieldGems gemData in item.GetGems())
             {
                 if (gemData.ItemId != 0)
                 {
@@ -155,30 +155,6 @@ namespace Game.Networking.Packets
                     Gems.Add(gem);
                 }
                 ++i;
-            }
-
-            AzeriteItem azeriteItem = item.ToAzeriteItem();
-            if (azeriteItem != null)
-            {
-                SelectedAzeriteEssences essences = azeriteItem.GetSelectedAzeriteEssences();
-                if (essences != null)
-                {
-                    for (byte slot = 0; slot < essences.AzeriteEssenceID.GetSize(); ++slot)
-                    {
-                        AzeriteEssenceData essence = new();
-                        essence.Index = slot;
-                        essence.AzeriteEssenceID = essences.AzeriteEssenceID[slot];
-                        if (essence.AzeriteEssenceID != 0)
-                        {
-                            essence.Rank = azeriteItem.GetEssenceRank(essence.AzeriteEssenceID);
-                            essence.SlotUnlocked = true;
-                        }
-                        else
-                            essence.SlotUnlocked = azeriteItem.HasUnlockedEssenceSlot(slot);
-
-                        AzeriteEssences.Add(essence);
-                    }
-                }
             }
         }
 
@@ -237,7 +213,7 @@ namespace Game.Networking.Packets
             Race = (byte)player.GetRace();
             ClassID = (byte)player.GetClass();
 
-            foreach (var customization in player.m_playerData.Customizations)
+            foreach (var customization in player.GetCustomizationChoices())
                 Customizations.Add(customization);
 
             for (byte i = 0; i < EquipmentSlot.End; ++i)

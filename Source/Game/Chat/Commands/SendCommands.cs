@@ -31,10 +31,7 @@ namespace Game.Chat.Commands
         static bool HandleSendMailCommand(StringArguments args, CommandHandler handler)
         {
             // format: name "subject text" "mail text"
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             string tail1 = args.NextString("");
@@ -72,10 +69,7 @@ namespace Game.Chat.Commands
         static bool HandleSendItemsCommand(StringArguments args, CommandHandler handler)
         {
             // format: name "subject text" "mail text" item1[:count1] item2[:count2] ... item12[:count12]
-            Player receiver;
-            ObjectGuid receiverGuid;
-            string receiverName;
-            if (!handler.ExtractPlayerTarget(args, out receiver, out receiverGuid, out receiverName))
+            if (!handler.ExtractPlayerTarget(args, out Player receiver, out ObjectGuid receiverGuid, out string receiverName))
                 return false;
 
             string tail1 = args.NextString("");
@@ -173,10 +167,7 @@ namespace Game.Chat.Commands
         {
             // format: name "subject text" "mail text" money
 
-            Player receiver;
-            ObjectGuid receiverGuid;
-            string receiverName;
-            if (!handler.ExtractPlayerTarget(args, out receiver, out receiverGuid, out receiverName))
+            if (!handler.ExtractPlayerTarget(args, out Player receiver, out ObjectGuid receiverGuid, out string receiverName))
                 return false;
 
             string tail1 = args.NextString("");
@@ -221,8 +212,7 @@ namespace Game.Chat.Commands
         static bool HandleSendMessageCommand(StringArguments args, CommandHandler handler)
         {
             // - Find the player
-            Player player;
-            if (!handler.ExtractPlayerTarget(args, out player))
+            if (!handler.ExtractPlayerTarget(args, out Player player))
                 return false;
 
             string msgStr = args.NextString("");

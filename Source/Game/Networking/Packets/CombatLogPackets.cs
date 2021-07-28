@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -67,7 +67,7 @@ namespace Game.Networking.Packets
             _worldPacket.WritePackedGuid(CasterGUID);
             _worldPacket.WritePackedGuid(CastID);
             _worldPacket.WriteInt32(SpellID);
-            Visual.Write(_worldPacket);
+            _worldPacket.WriteUInt32(SpellXSpellVisualID);
             _worldPacket.WriteInt32(Damage);
             _worldPacket.WriteInt32(OriginalDamage);
             _worldPacket.WriteInt32(Overkill);
@@ -91,7 +91,7 @@ namespace Game.Networking.Packets
         public ObjectGuid CasterGUID;
         public ObjectGuid CastID;
         public int SpellID;
-        public SpellCastVisual Visual;
+        public uint SpellXSpellVisualID;
         public int Damage;
         public int OriginalDamage;
         public int Overkill = -1;
@@ -277,8 +277,8 @@ namespace Game.Networking.Packets
 
         public struct PeriodicalAuraLogEffectDebugInfo
         {
-            public float CritRollMade;
-            public float CritRollNeeded;
+            public float CritRollMade { get; set; }
+            public float CritRollNeeded { get; set; }
         }
 
         public class SpellLogEffect
@@ -600,12 +600,12 @@ namespace Game.Networking.Packets
         public int OverDamage = -1; // (damage - health) or -1 if unit is still alive
         public Optional<SubDamage> SubDmg;
         public byte VictimState;
-        public uint AttackerState;
-        public uint MeleeSpellID;
+        public uint AttackerState = 0;
+        public uint MeleeSpellID = 0;
         public int BlockAmount;
-        public int RageGained;
-        public UnkAttackerState UnkState;
-        public float Unk;
+        public int RageGained = 0;
+        public UnkAttackerState UnkState = new();
+        public float Unk = 0.0f;
         public ContentTuningParams ContentTuning = new();
     }
 
@@ -637,9 +637,9 @@ namespace Game.Networking.Packets
         public uint AbsorbSpellID;
         public int Absorbed;
         public uint OriginalDamage;
-        public bool Unk;
+        public bool Unk = false;
     }
-    
+
     //Structs
     struct SpellLogEffectPowerDrainParams
     {
@@ -685,8 +685,8 @@ namespace Game.Networking.Packets
             data.WriteFloat(HitRollNeeded);
         }
 
-        public float HitRoll;
-        public float HitRollNeeded;
+        public float HitRoll { get; set; }
+        public float HitRollNeeded { get; set; }
     }
 
     public class SpellLogMissEntry

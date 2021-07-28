@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -167,10 +167,7 @@ namespace Game.Entities
             return false;
         }
 
-        void AddInstanceIdToSceneMap(uint sceneInstanceID, SceneTemplate sceneTemplate)
-        {
-            _scenesByInstance[sceneInstanceID] = sceneTemplate;
-        }
+        void AddInstanceIdToSceneMap(uint sceneInstanceID, SceneTemplate sceneTemplate) => _scenesByInstance[sceneInstanceID] = sceneTemplate;
 
         public void CancelSceneBySceneId(uint sceneId)
         {
@@ -196,10 +193,7 @@ namespace Game.Entities
                 CancelScene(sceneInstanceID);
         }
 
-        void RemoveSceneInstanceId(uint sceneInstanceID)
-        {
-            _scenesByInstance.Remove(sceneInstanceID);
-        }
+        void RemoveSceneInstanceId(uint sceneInstanceID) => _scenesByInstance.Remove(sceneInstanceID);
 
         void RemoveAurasDueToSceneId(uint sceneId)
         {
@@ -214,10 +208,7 @@ namespace Game.Entities
             }
         }
 
-        SceneTemplate GetSceneTemplateFromInstanceId(uint sceneInstanceID)
-        {
-            return _scenesByInstance.LookupByKey(sceneInstanceID);
-        }
+        SceneTemplate GetSceneTemplateFromInstanceId(uint sceneInstanceID) => _scenesByInstance.LookupByKey(sceneInstanceID);
 
         public uint GetActiveSceneCount(uint sceneScriptPackageId = 0)
         {
@@ -230,7 +221,7 @@ namespace Game.Entities
             return activeSceneCount;
         }
 
-        Player GetPlayer() { return _player; }
+        Player GetPlayer() => _player;
 
         void RecreateScene(uint sceneScriptPackageId, SceneFlags playbackflags = SceneFlags.Unk16, Position position = null)
         {
@@ -238,11 +229,11 @@ namespace Game.Entities
             PlaySceneByPackageId(sceneScriptPackageId, playbackflags, position);
         }
 
-        public Dictionary<uint, SceneTemplate> GetSceneTemplateByInstanceMap() { return _scenesByInstance; }
+        public Dictionary<uint, SceneTemplate> GetSceneTemplateByInstanceMap() => _scenesByInstance;
 
-        uint GetNewStandaloneSceneInstanceID() { return ++_standaloneSceneInstanceID; }
+        uint GetNewStandaloneSceneInstanceID() => ++_standaloneSceneInstanceID;
 
-        public void ToggleDebugSceneMode() { _isDebuggingScenes = !_isDebuggingScenes; }
-        public bool IsInDebugSceneMode() { return _isDebuggingScenes; }
+        public void ToggleDebugSceneMode() => _isDebuggingScenes = !_isDebuggingScenes;
+        public bool IsInDebugSceneMode() => _isDebuggingScenes;
     }
 }

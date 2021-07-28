@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,8 +17,6 @@
 
 using Framework.Constants;
 using Game.Spells;
-using Game.Networking;
-using Game.Networking.Packets;
 
 namespace Game.Entities
 {
@@ -31,7 +29,7 @@ namespace Game.Entities
 
             m_updateFlag.Stationary = true;
 
-            m_dynamicObjectData = new DynamicObjectData();
+            ValuesCount = (int)DynamicObjectFields.End;
         }
 
         public override void Dispose()
@@ -77,7 +75,7 @@ namespace Game.Entities
             }
         }
 
-        public bool CreateDynamicObject(ulong guidlow, Unit caster, SpellInfo spell, Position pos, float radius, DynamicObjectType type, SpellCastVisualField spellVisual)
+        public bool CreateDynamicObject(ulong guidlow, Unit caster, SpellInfo spell, Position pos, float radius, DynamicObjectType type, uint spellXSpellVisualId)
         {
             SetMap(caster.GetMap());
             Relocate(pos);
@@ -93,16 +91,14 @@ namespace Game.Entities
             SetEntry(spell.Id);
             SetObjectScale(1f);
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.Caster), caster.GetGUID());
-            SetUpdateFieldValue(m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.Type), (byte)type);
+            SetUpdateField<ObjectGuid>(DynamicObjectFields.Caster, caster.GetGUID());
+            SetUpdateField<uint>(DynamicObjectFields.Type, (uint)type);
 
-            SpellCastVisualField spellCastVisual = m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.SpellVisual);
-            SetUpdateFieldValue(ref spellCastVisual.SpellXSpellVisualID, spellVisual.SpellXSpellVisualID);
-            SetUpdateFieldValue(ref spellCastVisual.ScriptVisualID, spellVisual.ScriptVisualID);
+            SetUpdateField<uint>(DynamicObjectFields.SpellXSpellVisualID, spellXSpellVisualId);
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.SpellID), spell.Id);
-            SetUpdateFieldValue(m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.Radius), radius);
-            SetUpdateFieldValue(m_values.ModifyValue(m_dynamicObjectData).ModifyValue(m_dynamicObjectData.CastTime), GameTime.GetGameTimeMS());
+            SetUpdateField<uint>(DynamicObjectFields.SpellID, spell.Id);
+            SetUpdateField<float>(DynamicObjectFields.Radius, radius);
+            SetUpdateField<uint>(DynamicObjectFields.CastTime, GameTime.GetGameTimeMS());
 
             if (IsWorldObject())
                 SetActive(true);    //must before add to map to be put in world container
@@ -110,8 +106,7 @@ namespace Game.Entities
             Transport transport = caster.GetTransport();
             if (transport)
             {
-                float x, y, z, o;
-                pos.GetPosition(out x, out y, out z, out o);
+                pos.GetPosition(out float x, out float y, out float z, out float o);
                 transport.CalculatePassengerOffset(ref x, ref y, ref z, ref o);
                 m_movementInfo.transport.pos.Relocate(x, y, z, o);
 
@@ -186,10 +181,7 @@ namespace Game.Entities
                 _aura.SetDuration(newDuration);
         }
 
-        public void Delay(int delaytime)
-        {
-            SetDuration(GetDuration() - delaytime);
-        }
+        public void Delay(int delaytime) => SetDuration(GetDuration() - delaytime);
 
         public void SetAura(Aura aura)
         {
@@ -242,79 +234,13 @@ namespace Game.Entities
             _caster = null;
         }
 
-        public SpellInfo GetSpellInfo()
-        {
-            return Global.SpellMgr.GetSpellInfo(GetSpellId(), GetMap().GetDifficultyID());
-        }
+        public SpellInfo GetSpellInfo() => Global.SpellMgr.GetSpellInfo(GetSpellId(), GetMap().GetDifficultyID());
 
-        public override void BuildValuesCreate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
+        public Unit GetCaster() => _caster;
+        public uint GetSpellId() => GetUpdateField<uint>(DynamicObjectFields.SpellID);
+        public ObjectGuid GetCasterGUID() => GetUpdateField<ObjectGuid>(DynamicObjectFields.Caster);
+        public float GetRadius() => GetUpdateField<float>(DynamicObjectFields.Radius);
 
-            buffer.WriteUInt8((byte)flags);
-            m_objectData.WriteCreate(buffer, flags, this, target);
-            m_dynamicObjectData.WriteCreate(buffer, flags, this, target);
-
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteBytes(buffer);
-        }
-
-        public override void BuildValuesUpdate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
-
-            buffer.WriteUInt32(m_values.GetChangedObjectTypeMask());
-            if (m_values.HasChanged(TypeId.Object))
-                m_objectData.WriteUpdate(buffer, flags, this, target);
-
-            if (m_values.HasChanged(TypeId.DynamicObject))
-                m_dynamicObjectData.WriteUpdate(buffer, flags, this, target);
-
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteBytes(buffer);
-        }
-
-        void BuildValuesUpdateForPlayerWithMask(UpdateData data, UpdateMask requestedObjectMask, UpdateMask requestedDynamicObjectMask, Player target)
-        {
-            UpdateMask valuesMask = new((int)TypeId.Max);
-            if (requestedObjectMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Object);
-
-            if (requestedDynamicObjectMask.IsAnySet())
-                valuesMask.Set((int)TypeId.DynamicObject);
-
-            WorldPacket buffer = new();
-            buffer.WriteUInt32(valuesMask.GetBlock(0));
-
-            if (valuesMask[(int)TypeId.Object])
-                m_objectData.WriteUpdate(buffer, requestedObjectMask, true, this, target);
-
-            if (valuesMask[(int)TypeId.DynamicObject])
-                m_dynamicObjectData.WriteUpdate(buffer, requestedDynamicObjectMask, true, this, target);
-
-            WorldPacket buffer1 = new();
-            buffer1.WriteUInt8((byte)UpdateType.Values);
-            buffer1.WritePackedGuid(GetGUID());
-            buffer1.WriteUInt32(buffer.GetSize());
-            buffer1.WriteBytes(buffer.GetData());
-
-            data.AddUpdateBlock(buffer1);
-        }
-
-        public override void ClearUpdateMask(bool remove)
-        {
-            m_values.ClearChangesMask(m_dynamicObjectData);
-            base.ClearUpdateMask(remove);
-        }
-
-        public Unit GetCaster() { return _caster; }
-        public uint GetSpellId() { return m_dynamicObjectData.SpellID; }
-        public ObjectGuid GetCasterGUID() { return m_dynamicObjectData.Caster; }
-        public float GetRadius() { return m_dynamicObjectData.Radius; }
-
-        DynamicObjectData m_dynamicObjectData;
         Aura _aura;
         Aura _removedAura;
         Unit _caster;

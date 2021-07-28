@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -168,7 +168,7 @@ namespace Game.Networking.Packets
 
     class LFGUpdateStatus : ServerPacket
     {
-        public LFGUpdateStatus() : base(ServerOpcodes.LfgUpdateStatus) { }
+        public LFGUpdateStatus() : base(ServerOpcodes.LFGUpdateStatus) { }
 
         public override void Write()
         {
@@ -208,7 +208,7 @@ namespace Game.Networking.Packets
         public bool Joined;
         public bool LfgJoined;
         public bool Queued;
-        public bool Unused;
+        public bool Unused = false;
     }
 
     class RoleChosen : ServerPacket
@@ -230,7 +230,7 @@ namespace Game.Networking.Packets
 
     class LFGRoleCheckUpdate : ServerPacket
     {
-        public LFGRoleCheckUpdate() : base(ServerOpcodes.LfgRoleCheckUpdate) { }
+        public LFGRoleCheckUpdate() : base(ServerOpcodes.LFGRoleCheckUpdate) { }
 
         public override void Write()
         {
@@ -262,12 +262,12 @@ namespace Game.Networking.Packets
         public int GroupFinderActivityID = 0;
         public List<LFGRoleCheckUpdateMember> Members = new();
         public bool IsBeginning;
-        public bool IsRequeue;
+        public bool IsRequeue = false;
     }
 
     class LFGJoinResult : ServerPacket
     {
-        public LFGJoinResult() : base(ServerOpcodes.LfgJoinResult) { }
+        public LFGJoinResult() : base(ServerOpcodes.LFGJoinResult) { }
 
         public override void Write()
         {
@@ -298,7 +298,7 @@ namespace Game.Networking.Packets
 
     class LFGQueueStatus : ServerPacket
     {
-        public LFGQueueStatus() : base(ServerOpcodes.LfgQueueStatus) { }
+        public LFGQueueStatus() : base(ServerOpcodes.LFGQueueStatus) { }
 
         public override void Write()
         {
@@ -328,7 +328,7 @@ namespace Game.Networking.Packets
 
     class LFGPlayerReward : ServerPacket
     {
-        public LFGPlayerReward() : base(ServerOpcodes.LfgPlayerReward) { }
+        public LFGPlayerReward() : base(ServerOpcodes.LFGPlayerReward) { }
 
         public override void Write()
         {
@@ -363,7 +363,7 @@ namespace Game.Networking.Packets
 
     class LFGProposalUpdate : ServerPacket
     {
-        public LFGProposalUpdate() : base(ServerOpcodes.LfgProposalUpdate) { }
+        public LFGProposalUpdate() : base(ServerOpcodes.LFGProposalUpdate) { }
 
         public override void Write()
         {
@@ -392,8 +392,8 @@ namespace Game.Networking.Packets
         public uint Slot;
         public byte State;
         public uint CompletedMask;
-        public uint EncounterMask;
-        public byte Unused;
+        public uint EncounterMask = 0;
+        public byte Unused = 0;
         public bool ValidCompletedMask;
         public bool ProposalSilent;
         public bool IsRequeue;
@@ -402,14 +402,14 @@ namespace Game.Networking.Packets
 
     class LfgDisabled : ServerPacket
     {
-        public LfgDisabled() : base(ServerOpcodes.LfgDisabled, ConnectionType.Instance) { }
+        public LfgDisabled() : base(ServerOpcodes.LFGDisabled, ConnectionType.Instance) { }
 
         public override void Write() { }
     }
 
     class LfgOfferContinue : ServerPacket
     {
-        public LfgOfferContinue(uint slot) : base(ServerOpcodes.LfgOfferContinue, ConnectionType.Instance)
+        public LfgOfferContinue(uint slot) : base(ServerOpcodes.LFGOfferContinue, ConnectionType.Instance)
         {
             Slot = slot;
         }
@@ -424,7 +424,7 @@ namespace Game.Networking.Packets
 
     class LfgTeleportDenied : ServerPacket
     {
-        public LfgTeleportDenied(LfgTeleportResult reason) : base(ServerOpcodes.LfgTeleportDenied, ConnectionType.Instance)
+        public LfgTeleportDenied(LfgTeleportResult reason) : base(ServerOpcodes.LFGTeleportDenied, ConnectionType.Instance)
         {
             Reason = reason;
         }
@@ -440,7 +440,7 @@ namespace Game.Networking.Packets
 
     //Structs
     public class LFGBlackListSlot
-    {   
+    {
         public uint Slot;
         public uint Reason;
         public int SubReason1;
@@ -467,7 +467,7 @@ namespace Game.Networking.Packets
     }
 
     public class LFGBlackList
-    {     
+    {
         public Optional<ObjectGuid> PlayerGuid;
         public List<LFGBlackListSlot> Slot = new();
 

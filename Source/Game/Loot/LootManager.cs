@@ -71,8 +71,8 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet, lootIdSetUsed = new();
-            uint count = Creature.LoadAndCollectLootIds(out lootIdSet);
+            List<uint> lootIdSetUsed = new();
+            uint count = Creature.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // Remove real entries and check loot existence
             var ctc = Global.ObjectMgr.GetCreatureTemplates();
@@ -109,8 +109,8 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet, lootIdSetUsed = new();
-            uint count = Disenchant.LoadAndCollectLootIds(out lootIdSet);
+            List<uint> lootIdSetUsed = new();
+            uint count = Disenchant.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             foreach (var disenchant in CliDB.ItemDisenchantLootStorage.Values)
             {
@@ -139,8 +139,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Fishing.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Fishing.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             foreach (var areaEntry in CliDB.AreaTableStorage.Values)
@@ -162,8 +161,8 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet, lootIdSetUsed = new();
-            uint count = Gameobject.LoadAndCollectLootIds(out lootIdSet);
+            List<uint> lootIdSetUsed = new();
+            uint count = Gameobject.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             var gotc = Global.ObjectMgr.GetGameObjectTemplates();
@@ -197,8 +196,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Items.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Items.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             var its = Global.ObjectMgr.GetItemTemplates();
@@ -221,8 +219,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Milling.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Milling.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             var its = Global.ObjectMgr.GetItemTemplates();
@@ -250,9 +247,8 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
             List<uint> lootIdSetUsed = new();
-            uint count = Pickpocketing.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Pickpocketing.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // Remove real entries and check loot existence
             var ctc = Global.ObjectMgr.GetCreatureTemplates();
@@ -286,8 +282,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Prospecting.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Prospecting.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             var its = Global.ObjectMgr.GetItemTemplates();
@@ -315,8 +310,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Mail.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Mail.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             foreach (var mail in CliDB.MailTemplateStorage.Values)
@@ -338,9 +332,8 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
             List<uint> lootIdSetUsed = new();
-            uint count = Skinning.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Skinning.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             var ctc = Global.ObjectMgr.GetCreatureTemplates();
@@ -375,8 +368,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            uint count = Spell.LoadAndCollectLootIds(out lootIdSet);
+            uint count = Spell.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // remove real entries and check existence loot
             foreach (SpellNameRecord spellNameEntry in CliDB.SpellNameStorage.Values)
@@ -417,8 +409,7 @@ namespace Game.Loots
 
             uint oldMSTime = Time.GetMSTime();
 
-            List<uint> lootIdSet;
-            Reference.LoadAndCollectLootIds(out lootIdSet);
+            Reference.LoadAndCollectLootIds(out List<uint> lootIdSet);
 
             // check references and remove used
             Creature.CheckLootRefs(lootIdSet);

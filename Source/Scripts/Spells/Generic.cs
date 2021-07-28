@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -73,7 +73,7 @@ namespace Scripts.Spells.Generic
         //Clone
         public const uint NightmareFigmentMirrorImage = 57528;
 
-        //Cloneweaponspells        
+        //Cloneweaponspells
         public const uint WeaponAura = 41054;
         public const uint Weapon2Aura = 63418;
         public const uint Weapon3Aura = 69893;
@@ -87,7 +87,7 @@ namespace Scripts.Spells.Generic
         public const uint CreateLanceAlliance = 63914;
         public const uint CreateLanceHorde = 63919;
 
-        //Dalarandisguisespells        
+        //Dalarandisguisespells
         public const uint SunreaverTrigger = 69672;
         public const uint SunreaverFemale = 70973;
         public const uint SunreaverMale = 70974;
@@ -127,14 +127,14 @@ namespace Scripts.Spells.Generic
         //Interrupt
         public const uint GenThrowInterrupt = 32747;
 
-        //Genericlifebloomspells        
+        //Genericlifebloomspells
         public const uint HexlordMalacrass = 43422;
         public const uint TurragePaw = 52552;
         public const uint CenarionScout = 53692;
         public const uint TwistedVisage = 57763;
         public const uint FactionChampionsDru = 66094;
 
-        //Chargespells        
+        //Chargespells
         public const uint Damage8k5 = 62874;
         public const uint Damage20k = 68498;
         public const uint Damage45k = 64591;
@@ -159,7 +159,7 @@ namespace Scripts.Spells.Generic
         //Nightmarevine
         public const uint NightmarePollen = 28721;
 
-        //Obsidianarmorspells        
+        //Obsidianarmorspells
         public const uint Holy = 27536;
         public const uint Fire = 27533;
         public const uint Nature = 27538;
@@ -261,7 +261,7 @@ namespace Scripts.Spells.Generic
         //Gmfreeze
         public const uint GmFreeze = 9454;
 
-        //Landmineknockbackachievement        
+        //Landmineknockbackachievement
         public const uint LandmineKnockbackAchievement = 57064;
 
         //Ponyspells
@@ -3482,7 +3482,7 @@ namespace Scripts.Spells.Generic
                 return;
 
             Player owner = caster.GetOwner().ToPlayer();
-            if (!owner || !owner.HasAchieved(SpellIds.AchievementPonyup))
+            if (!owner)
                 return;
 
             if (owner.IsMounted())

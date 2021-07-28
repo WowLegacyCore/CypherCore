@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -71,11 +71,11 @@ namespace Game
                         unwrappedItem.Creator = item.GetCreator();
                         unwrappedItem.Charges = item.GetSpellCharges();
                         unwrappedItem.Lock = item.GetTemplate().GetLockID() != 0 && !item.HasItemFlag(ItemFieldFlags.Unlocked);
-                        unwrappedItem.MaxDurability = item.m_itemData.MaxDurability;
-                        unwrappedItem.Durability = item.m_itemData.Durability;
+                        unwrappedItem.MaxDurability = item.GetMaxDurability();
+                        unwrappedItem.Durability = item.GetDurability();
 
                         byte g = 0;
-                        foreach (SocketedGem gemData in item.m_itemData.Gems)
+                        foreach (ItemDynamicFieldGems gemData in item.GetGems())
                         {
                             if (gemData.ItemId != 0)
                             {
@@ -125,7 +125,7 @@ namespace Game
 
                         // adjust time (depends on /played)
                         if (myItems[i].HasItemFlag(ItemFieldFlags.BopTradeable))
-                            myItems[i].SetCreatePlayedTime(trader.GetTotalPlayedTime() - (GetPlayer().GetTotalPlayedTime() - myItems[i].m_itemData.CreatePlayedTime));
+                            myItems[i].SetCreatePlayedTime(trader.GetTotalPlayedTime() - (GetPlayer().GetTotalPlayedTime() - myItems[i].GetUpdateField<uint>(ItemFields.CreatePlayedTime)));
                         // store
                         trader.MoveItemToInventory(traderDst, myItems[i], true, true);
                     }
@@ -140,11 +140,11 @@ namespace Game
                                 trader.GetName(), trader.GetSession().GetAccountId(), hisItems[i].GetTemplate().GetName(), hisItems[i].GetEntry(), hisItems[i].GetCount(),
                                 GetPlayer().GetName(), GetPlayer().GetSession().GetAccountId());
                         }
-                        
+
 
                         // adjust time (depends on /played)
                         if (hisItems[i].HasItemFlag(ItemFieldFlags.BopTradeable))
-                            hisItems[i].SetCreatePlayedTime(GetPlayer().GetTotalPlayedTime() - (trader.GetTotalPlayedTime() - hisItems[i].m_itemData.CreatePlayedTime));
+                            hisItems[i].SetCreatePlayedTime(GetPlayer().GetTotalPlayedTime() - (trader.GetTotalPlayedTime() - hisItems[i].GetUpdateField<uint>(ItemFields.CreatePlayedTime)));
                         // store
                         GetPlayer().MoveItemToInventory(playerDst, hisItems[i], true, true);
                     }
@@ -466,7 +466,7 @@ namespace Game
                 // execute trade: 2. store
                 MoveItems(myItems, hisItems);
 
-                // logging money                
+                // logging money
                 if (HasPermission(RBACPermissions.LogGmTrade))
                 {
                     if (my_trade.GetMoney() > 0)
@@ -481,7 +481,7 @@ namespace Game
                             trader.GetName(), trader.GetSession().GetAccountId(), his_trade.GetMoney(), GetPlayer().GetName(), GetPlayer().GetSession().GetAccountId());
                     }
                 }
-                
+
 
                 // update money
                 GetPlayer().ModifyMoney(-(long)my_trade.GetMoney());
@@ -649,7 +649,7 @@ namespace Game
                 return;
             }
 
-            if ((pOther.GetTeam() != GetPlayer().GetTeam() || 
+            if ((pOther.GetTeam() != GetPlayer().GetTeam() ||
                 pOther.HasPlayerFlagEx(PlayerFlagsEx.MercenaryMode) ||
                 GetPlayer().HasPlayerFlagEx(PlayerFlagsEx.MercenaryMode)) &&
                 (!WorldConfig.GetBoolValue(WorldCfg.AllowTwoSideTrade) &&

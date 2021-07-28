@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -458,35 +458,6 @@ namespace Game
             uint pending = Global.CalendarMgr.GetPlayerNumPending(guid);
 
             SendPacket(new CalendarSendNumPending(pending));
-        }
-
-        [WorldPacketHandler(ClientOpcodes.SetSavedInstanceExtend)]
-        void HandleSetSavedInstanceExtend(SetSavedInstanceExtend setSavedInstanceExtend)
-        {
-            Player player = GetPlayer();
-            if (player)
-            {
-                InstanceBind instanceBind = player.GetBoundInstance((uint)setSavedInstanceExtend.MapID, (Difficulty)setSavedInstanceExtend.DifficultyID, setSavedInstanceExtend.Extend); // include expired instances if we are toggling extend on
-                if (instanceBind == null || instanceBind.save == null || !instanceBind.perm)
-                    return;
-
-                BindExtensionState newState;
-                if (!setSavedInstanceExtend.Extend || instanceBind.extendState == BindExtensionState.Expired)
-                    newState = BindExtensionState.Normal;
-                else
-                    newState = BindExtensionState.Extended;
-
-                player.BindToInstance(instanceBind.save, true, newState, false);
-            }
-            /*
-            InstancePlayerBind* instanceBind = GetPlayer().GetBoundInstance(setSavedInstanceExtend.MapID, Difficulty(setSavedInstanceExtend.DifficultyID);
-            if (!instanceBind || !instanceBind.save)
-                return;
-
-            InstanceSave* save = instanceBind.save;
-            // http://www.wowwiki.com/Instance_Lock_Extension
-            // SendCalendarRaidLockoutUpdated(save);
-            */
         }
 
         public void SendCalendarRaidLockout(InstanceSave save, bool add)

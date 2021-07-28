@@ -223,7 +223,6 @@ namespace Game.Movement
         }
         float SegLengthCatmullRom(int index)
         {
-            Vector3 nextPos;
             Span<Vector3> p = points.AsSpan(index - 1);
             Vector3 curPos = p[1];
 
@@ -231,7 +230,7 @@ namespace Game.Movement
             double length = 0;
             while (i <= 3)
             {
-                C_Evaluate(p, i / (float)3, s_catmullRomCoeffs, out nextPos);
+                C_Evaluate(p, i / (float)3, s_catmullRomCoeffs, out Vector3 nextPos);
                 length += (nextPos - curPos).GetLength();
                 curPos = nextPos;
                 ++i;
@@ -242,10 +241,9 @@ namespace Game.Movement
         {
             index *= (int)3u;
 
-            Vector3 nextPos;
             Span<Vector3> p = points.AsSpan(index);
 
-            C_Evaluate(p, 0.0f, s_Bezier3Coeffs, out nextPos);
+            C_Evaluate(p, 0.0f, s_Bezier3Coeffs, out Vector3 nextPos);
             Vector3 curPos = nextPos;
 
             int i = 1;

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +22,7 @@ namespace Game.Networking.Packets
 {
     public class MoveSetVehicleRecID : ServerPacket
     {
-        public MoveSetVehicleRecID() : base(ServerOpcodes.MoveSetVehicleRecId) { }
+        public MoveSetVehicleRecID() : base(ServerOpcodes.MoveSetVehicleRecID) { }
 
         public override void Write()
         {
@@ -52,7 +52,7 @@ namespace Game.Networking.Packets
 
     public class SetVehicleRecID : ServerPacket
     {
-        public SetVehicleRecID() : base(ServerOpcodes.SetVehicleRecId, ConnectionType.Instance) { }
+        public SetVehicleRecID() : base(ServerOpcodes.SetVehicleRecID, ConnectionType.Instance) { }
 
         public override void Write()
         {

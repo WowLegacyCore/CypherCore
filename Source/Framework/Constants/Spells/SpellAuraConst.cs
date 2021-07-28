@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -513,18 +513,6 @@ namespace Framework.Constants
         Unk489 = 489,
         Unk490 = 490,
         Unk491 = 491,
-        Unk492 = 492,
-        Unk493 = 493,
-        SetPowerPointCharge = 494, // NYI
-        TriggerSpellOnExpire = 495, // NYI
-        AllowChangingEquipmentInTorghast = 496, // NYI
-        ModAnimaGain = 497, // NYI
-        CurrencyLossPctOnDeath = 498, // NYI
-        ModRestedXpConsumption = 499,
-        IgnoreSpellChargeCooldown = 500, // NYI
-        ModCriticalDamageTakenFromCaster = 501,
-        ModVersatilityDamageDoneBenefit = 502, // NYI
-        ModVersatilityHealingDoneBenefit = 503, // NYI
         Total
     }
 

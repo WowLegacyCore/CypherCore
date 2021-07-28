@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -551,17 +551,7 @@ namespace Game.Arenas
             if (stats.Rating + mod < 0)
                 stats.Rating = 0;
             else
-            {
                 stats.Rating += (ushort)mod;
-
-                // Check if rating related achivements are met
-                foreach (var member in Members)
-                {
-                    Player player = Global.ObjAccessor.FindPlayer(member.Guid);
-                    if (player)
-                        player.UpdateCriteria(CriteriaTypes.HighestTeamRating, stats.Rating, type);
-                }
-            }
 
             // Update number of games played per season or week
             stats.WeekGames += 1;
@@ -832,10 +822,7 @@ namespace Game.Arenas
                 PersonalRating += (ushort)mod;
 
             if (player)
-            {
                 player.SetArenaTeamInfoField(ArenaTeam.GetSlotByType(type), ArenaTeamInfoType.PersonalRating, PersonalRating);
-                player.UpdateCriteria(CriteriaTypes.HighestPersonalRating, PersonalRating, type);
-            }
         }
 
         public void ModifyMatchmakerRating(int mod, uint slot)

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,6 @@ using Framework.Constants;
 using Framework.Database;
 using Game.Accounts;
 using Game.BattleGrounds;
-using Game.BattlePets;
 using Game.Entities;
 using Game.Guilds;
 using Game.Maps;
@@ -56,7 +55,6 @@ namespace Game
             isRecruiter = isARecruiter;
             expireTime = 60000; // 1 min after socket loss, session is deleted
             m_currentBankerGUID = ObjectGuid.Empty;
-            _battlePetMgr = new BattlePetMgr(this);
             _collectionMgr = new CollectionMgr(this);
 
             m_Address = sock.GetRemoteIpAddress().Address.ToString();
@@ -250,9 +248,8 @@ namespace Game
             uint processedPackets = 0;
             long currentTime = GameTime.GetGameTime();
 
-            WorldPacket packet;
             //Check for any packets they was not recived yet.
-            while (m_Socket[(int)ConnectionType.Realm] != null && !_recvQueue.IsEmpty && (_recvQueue.TryPeek(out packet, updater) && packet != firstDelayedPacket) && _recvQueue.TryDequeue(out packet))
+            while (m_Socket[(int)ConnectionType.Realm] != null && !_recvQueue.IsEmpty && (_recvQueue.TryPeek(out WorldPacket packet, updater) && packet != firstDelayedPacket) && _recvQueue.TryDequeue(out packet))
             {
                 try
                 {
@@ -680,7 +677,7 @@ namespace Game
         {
             return GetAccountExpansion() >= Expansion.BattleForAzeroth;
         }
-        
+
         void InitWarden(BigInteger k)
         {
             if (_os == "Win")
@@ -738,10 +735,8 @@ namespace Game
         {
             LoadAccountData(realmHolder.GetResult(AccountInfoQueryLoad.GlobalAccountDataIndexPerRealm), AccountDataTypes.GlobalCacheMask);
             LoadTutorialsData(realmHolder.GetResult(AccountInfoQueryLoad.TutorialsIndexPerRealm));
-            _collectionMgr.LoadAccountToys(holder.GetResult(AccountInfoQueryLoad.GlobalAccountToys));
             _collectionMgr.LoadAccountHeirlooms(holder.GetResult(AccountInfoQueryLoad.GlobalAccountHeirlooms));
             _collectionMgr.LoadAccountMounts(holder.GetResult(AccountInfoQueryLoad.Mounts));
-            _collectionMgr.LoadAccountItemAppearances(holder.GetResult(AccountInfoQueryLoad.ItemAppearances), holder.GetResult(AccountInfoQueryLoad.ItemFavoriteAppearances));
 
             if (!m_inQueue)
                 SendAuthResponse(BattlenetRpcErrorCode.Ok, false);
@@ -770,8 +765,6 @@ namespace Game
             ConnectionStatus bnetConnected = new();
             bnetConnected.State = 1;
             SendPacket(bnetConnected);
-
-            _battlePetMgr.LoadFromDB(holder.GetResult(AccountInfoQueryLoad.BattlePets), holder.GetResult(AccountInfoQueryLoad.BattlePetSlot));
         }
 
         public RBACData GetRBACData()
@@ -829,15 +822,14 @@ namespace Game
             return m_timeOutTime < GameTime.GetGameTime() && !m_inQueue;
         }
 
-        public uint GetRecruiterId() { return recruiterId; }
-        public bool IsARecruiter() { return isRecruiter; }
+        public uint GetRecruiterId() => recruiterId;
+        public bool IsARecruiter() => isRecruiter;
 
         // Battle Pets
-        public BattlePetMgr GetBattlePetMgr() { return _battlePetMgr; }
-        public CollectionMgr GetCollectionMgr() { return _collectionMgr; }
+        public CollectionMgr GetCollectionMgr() => _collectionMgr;
 
         // Battlenet
-        public Array<byte> GetRealmListSecret() { return _realmListSecret; }
+        public Array<byte> GetRealmListSecret() => _realmListSecret;
         void SetRealmListSecret(Array<byte> secret) { _realmListSecret = secret; }
         public Dictionary<uint, byte> GetRealmCharacterCounts() { return _realmCharacterCounts; }
 
@@ -904,8 +896,6 @@ namespace Game
 
         ConnectToKey _instanceConnectKey;
 
-        BattlePetMgr _battlePetMgr;
-
         Task<SQLQueryHolder<AccountInfoQueryLoad>> _realmAccountLoginCallback;
         Task<SQLQueryHolder<AccountInfoQueryLoad>> _accountLoginCallback;
         Task<SQLQueryHolder<PlayerLoginQueryLoad>> _charLoginCallback;
@@ -920,7 +910,7 @@ namespace Game
     {
         public ulong Raw
         {
-            get { return ((ulong)AccountId | ((ulong)connectionType << 32) | (Key << 33)); }
+            get { return (AccountId | ((ulong)connectionType << 32) | (Key << 33)); }
             set
             {
                 AccountId = (uint)(value & 0xFFFFFFFF);

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -80,10 +80,6 @@ namespace Game.Conditions
                         if (faction != null)
                             condMeets = Convert.ToBoolean(ConditionValue2 & (1 << (int)player.GetReputationMgr().GetRank(faction)));
                     }
-                    break;
-                case ConditionTypes.Achievement:
-                    if (player != null)
-                        condMeets = player.HasAchieved(ConditionValue1);
                     break;
                 case ConditionTypes.Team:
                     if (player != null)
@@ -287,13 +283,6 @@ namespace Game.Conditions
                             condMeets = (uint)creature.GetCreatureTemplate().CreatureType == ConditionValue1;
                         break;
                     }
-                case ConditionTypes.RealmAchievement:
-                    {
-                        AchievementRecord achievement = CliDB.AchievementStorage.LookupByKey(ConditionValue1);
-                        if (achievement != null && Global.AchievementMgr.IsRealmCompleted(achievement))
-                            condMeets = true;
-                        break;
-                    }
                 case ConditionTypes.InWater:
                     if (unit)
                         condMeets = unit.IsInWater();
@@ -417,7 +406,6 @@ namespace Game.Conditions
                 case ConditionTypes.NearGameobject:
                 case ConditionTypes.None:
                 case ConditionTypes.PhaseId:
-                case ConditionTypes.RealmAchievement:
                 case ConditionTypes.TerrainSwap:
                 case ConditionTypes.WorldState:
                 case ConditionTypes.Zoneid:
@@ -433,7 +421,6 @@ namespace Game.Conditions
                 case ConditionTypes.Skill:
                 case ConditionTypes.QuestRewarded:
                 case ConditionTypes.ReputationRank:
-                case ConditionTypes.Achievement:
                 case ConditionTypes.Team:
                 case ConditionTypes.Item:
                 case ConditionTypes.ItemEquipped:
@@ -580,7 +567,7 @@ namespace Game.Conditions
             mConditionTargets[2] = target2;
             mLastFailedCondition = null;
         }
-        
+
         public WorldObject[] mConditionTargets = new WorldObject[SharedConst.MaxConditionTargets]; // an array of targets available for conditions
         public Condition mLastFailedCondition;
     }

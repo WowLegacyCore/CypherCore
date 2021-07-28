@@ -204,8 +204,7 @@ namespace Game.Collision
                     for (uint i = 0; i < numSpawns && result; ++i)
                     {
                         // read model spawns
-                        ModelSpawn spawn;
-                        result = ModelSpawn.ReadFromFile(reader, out spawn);
+                        result = ModelSpawn.ReadFromFile(reader, out ModelSpawn spawn);
                         if (result)
                         {
                             // release model instance

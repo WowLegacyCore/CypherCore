@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,6 @@ using Framework.Database;
 using Game.DataStorage;
 using Game.Entities;
 using Game.Groups;
-using Game.Scenarios;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,10 +86,7 @@ namespace Game.Maps
             return save;
         }
 
-        public InstanceSave GetInstanceSave(uint InstanceId)
-        {
-            return m_instanceSaveById.LookupByKey(InstanceId);
-        }
+        public InstanceSave GetInstanceSave(uint InstanceId) => m_instanceSaveById.LookupByKey(InstanceId);
 
         public void DeleteInstanceFromDB(uint instanceid)
         {
@@ -105,10 +101,6 @@ namespace Game.Maps
             trans.Append(stmt);
 
             stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_GROUP_INSTANCE_BY_INSTANCE);
-            stmt.AddValue(0, instanceid);
-            trans.Append(stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_SCENARIO_INSTANCE_CRITERIA_FOR_INSTANCE);
             stmt.AddValue(0, instanceid);
             trans.Append(stmt);
 
@@ -588,16 +580,11 @@ namespace Game.Maps
         }
 
 
-        public long GetResetTimeFor(uint mapid, Difficulty d)
-        {
-            return m_resetTimeByMapDifficulty.LookupByKey(MathFunctions.MakePair64(mapid, (uint)d));
-        }
+        public long GetResetTimeFor(uint mapid, Difficulty d) => m_resetTimeByMapDifficulty.LookupByKey(MathFunctions.MakePair64(mapid, (uint)d));
 
         // Use this on startup when initializing reset times
-        void InitializeResetTimeFor(uint mapid, Difficulty d, long t)
-        {
-            m_resetTimeByMapDifficulty[MathFunctions.MakePair64(mapid, (uint)d)] = t;
-        }
+        void InitializeResetTimeFor(uint mapid, Difficulty d, long t) => m_resetTimeByMapDifficulty[MathFunctions.MakePair64(mapid, (uint)d)] = t;
+
         // Use this only when updating existing reset times
         void SetResetTimeFor(uint mapid, Difficulty d, long t)
         {
@@ -606,12 +593,9 @@ namespace Game.Maps
             m_resetTimeByMapDifficulty[key] = t;
         }
 
-        public Dictionary<ulong, long> GetResetTimeMap()
-        {
-            return m_resetTimeByMapDifficulty;
-        }
+        public Dictionary<ulong, long> GetResetTimeMap() => m_resetTimeByMapDifficulty;
 
-        public int GetNumInstanceSaves() { return m_instanceSaveById.Count; }
+        public int GetNumInstanceSaves() => m_instanceSaveById.Count;
 
         public class InstResetEvent
         {
@@ -670,10 +654,6 @@ namespace Game.Maps
                     completedEncounters = instanceScript.GetCompletedEncounterMask();
                     m_entranceId = instanceScript.GetEntranceLocation();
                 }
-
-                InstanceScenario scenario = map.ToInstanceMap().GetInstanceScenario();
-                if (scenario != null)
-                    scenario.SaveToDB();
             }
 
             PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.INS_INSTANCE_SAVE);
@@ -697,20 +677,11 @@ namespace Game.Maps
                 return GetResetTime();
         }
 
-        InstanceTemplate GetTemplate()
-        {
-            return Global.ObjectMgr.GetInstanceTemplate(m_mapid);
-        }
+        InstanceTemplate GetTemplate() => Global.ObjectMgr.GetInstanceTemplate(m_mapid);
 
-        MapRecord GetMapEntry()
-        {
-            return CliDB.MapStorage.LookupByKey(m_mapid);
-        }
+        MapRecord GetMapEntry() => CliDB.MapStorage.LookupByKey(m_mapid);
 
-        public void DeleteFromDB()
-        {
-          Global.InstanceSaveMgr.DeleteInstanceFromDB(GetInstanceId());
-        }
+        public void DeleteFromDB() => Global.InstanceSaveMgr.DeleteInstanceFromDB(GetInstanceId());
 
         public bool UnloadIfEmpty()
         {
@@ -725,22 +696,19 @@ namespace Game.Maps
                 return true;
         }
 
-        public uint GetPlayerCount() { return (uint)m_playerList.Count; }
-        public uint GetGroupCount() { return (uint)m_groupList.Count; }
+        public uint GetPlayerCount() => (uint)m_playerList.Count;
+        public uint GetGroupCount() => (uint)m_groupList.Count;
 
-        public uint GetInstanceId() { return m_instanceid; }
-        public uint GetMapId() { return m_mapid; }
+        public uint GetInstanceId() => m_instanceid;
+        public uint GetMapId() => m_mapid;
 
-        public long GetResetTime() { return m_resetTime; }
-        public void SetResetTime(long resetTime) { m_resetTime = resetTime; }
+        public long GetResetTime() => m_resetTime;
+        public void SetResetTime(long resetTime) => m_resetTime = resetTime;
 
-        public uint GetEntranceLocation() { return m_entranceId; }
-        void SetEntranceLocation(uint entranceId) { m_entranceId = entranceId; }
+        public uint GetEntranceLocation() => m_entranceId;
+        void SetEntranceLocation(uint entranceId) => m_entranceId = entranceId;
 
-        public void AddPlayer(Player player)
-        {
-            m_playerList.Add(player);
-        }
+        public void AddPlayer(Player player) => m_playerList.Add(player);
         public bool RemovePlayer(Player player)
         {
             m_playerList.Remove(player);
@@ -748,7 +716,7 @@ namespace Game.Maps
             return UnloadIfEmpty();
         }
 
-        public void AddGroup(Group group) { m_groupList.Add(group); }
+        public void AddGroup(Group group) => m_groupList.Add(group);
         public bool RemoveGroup(Group group)
         {
             m_groupList.Remove(group);
@@ -756,15 +724,12 @@ namespace Game.Maps
             return UnloadIfEmpty();
         }
 
-        public bool CanReset() { return m_canReset; }
-        public void SetCanReset(bool canReset) { m_canReset = canReset; }
+        public bool CanReset() => m_canReset;
+        public void SetCanReset(bool canReset) => m_canReset = canReset;
 
-        public Difficulty GetDifficultyID() { return m_difficulty; }
+        public Difficulty GetDifficultyID() => m_difficulty;
 
-        public void SetToDelete(bool toDelete)
-        {
-            m_toDelete = toDelete;
-        }
+        public void SetToDelete(bool toDelete) => m_toDelete = toDelete;
 
         public List<Player> m_playerList = new();
         public List<Group> m_groupList = new();

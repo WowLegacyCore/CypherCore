@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -43,10 +43,6 @@ namespace Game
                 return;
 
             CleaningFlags flags = (CleaningFlags)result.Read<uint>(0);
-
-            // clean up
-            if (flags.HasAnyFlag(CleaningFlags.AchievementProgress))
-                CleanCharacterAchievementProgress();
 
             if (flags.HasAnyFlag(CleaningFlags.Skills))
                 CleanCharacterSkills();
@@ -108,16 +104,6 @@ namespace Game
             }
         }
 
-        static bool AchievementProgressCheck(uint criteria)
-        {
-            return Global.CriteriaMgr.GetCriteria(criteria) != null;
-        }
-
-        static void CleanCharacterAchievementProgress()
-        {
-            CheckUnique("criteria", "character_achievement_progress", AchievementProgressCheck);
-        }
-
         static bool SkillCheck(uint skill)
         {
             return CliDB.SkillLineStorage.ContainsKey(skill);
@@ -163,7 +149,6 @@ namespace Game
     [Flags]
     public enum CleaningFlags
     {
-        AchievementProgress = 0x1,
         Skills = 0x2,
         Spells = 0x4,
         Talents = 0x8,

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -291,38 +291,6 @@ namespace Scripts.Spells.Paladin
             OnCast.Add(new CastHandler(HandleOnCast));
         }
     }
-
-    [Script] // 234299 - Fist of Justice
-    class spell_pal_fist_of_justice : AuraScript
-    {
-        public override bool Validate(SpellInfo spellInfo)
-        {
-            return ValidateSpellInfo(SpellIds.HammerOfJustice);
-        }
-
-        bool CheckEffectProc(AuraEffect aurEff, ProcEventInfo eventInfo)
-        {
-            Spell procSpell = eventInfo.GetProcSpell();
-            if (procSpell != null)
-                return procSpell.HasPowerTypeCost(PowerType.HolyPower);
-
-            return false;
-        }
-
-        void HandleEffectProc(AuraEffect aurEff, ProcEventInfo procInfo)
-        {
-            int value = aurEff.GetAmount() / 10;
-
-            GetTarget().GetSpellHistory().ModifyCooldown(SpellIds.HammerOfJustice, TimeSpan.FromSeconds(-value));
-        }
-
-        public override void Register()
-        {
-            DoCheckEffectProc .Add(new CheckEffectProcHandler(CheckEffectProc, 0, AuraType.Dummy));
-            OnEffectProc .Add(new EffectProcHandler(HandleEffectProc, 0, AuraType.Dummy));
-        }
-    }
-
 
     [Script] // -85043 - Grand Crusader
     class spell_pal_grand_crusader : AuraScript
@@ -657,42 +625,6 @@ namespace Scripts.Spells.Paladin
         }
     }
 
-    [Script] // 204074 - Righteous Protector
-    class spell_pal_righteous_protector : AuraScript
-    {
-        SpellPowerCost _baseHolyPowerCost;
-
-        public override bool Validate(SpellInfo spellInfo)
-        {
-            return ValidateSpellInfo(SpellIds.AvengingWrath, SpellIds.GuardianOfAcientKings);
-        }
-
-        bool CheckEffectProc(AuraEffect aurEff, ProcEventInfo eventInfo)
-        {
-            SpellInfo procSpell = eventInfo.GetSpellInfo();
-            if (procSpell != null)
-                _baseHolyPowerCost = procSpell.CalcPowerCost(PowerType.HolyPower, false, eventInfo.GetActor(), eventInfo.GetSchoolMask());
-            else
-                _baseHolyPowerCost = null;
-
-            return _baseHolyPowerCost != null;
-        }
-
-        void HandleEffectProc(AuraEffect aurEff, ProcEventInfo eventInfo)
-        {
-            int value = aurEff.GetAmount() * 100 * _baseHolyPowerCost.Amount;
-
-            GetTarget().GetSpellHistory().ModifyCooldown(SpellIds.AvengingWrath, TimeSpan.FromSeconds(-value));
-            GetTarget().GetSpellHistory().ModifyCooldown(SpellIds.GuardianOfAcientKings, TimeSpan.FromSeconds(-value));
-        }
-
-        public override void Register()
-        {
-            DoCheckEffectProc .Add(new CheckEffectProcHandler(CheckEffectProc, 0, AuraType.Dummy));
-            OnEffectProc .Add(new EffectProcHandler(HandleEffectProc, 0, AuraType.Dummy));
-        }
-    }
-
     [Script] // 267610 - Righteous Verdict
     class spell_pal_righteous_verdict : AuraScript
     {
@@ -709,24 +641,6 @@ namespace Scripts.Spells.Paladin
         public override void Register()
         {
             OnEffectProc .Add(new EffectProcHandler(HandleEffectProc, 0, AuraType.Dummy));
-        }
-    }
-
-    [Script] // 85804 - Selfless Healer
-    class spell_pal_selfless_healer : AuraScript
-    {
-        bool CheckEffectProc(AuraEffect aurEff, ProcEventInfo eventInfo)
-        {
-            Spell procSpell = eventInfo.GetProcSpell();
-            if (procSpell != null)
-                return procSpell.HasPowerTypeCost(PowerType.HolyPower);
-
-            return false;
-        }
-
-        public override void Register()
-        {
-            DoCheckEffectProc .Add(new CheckEffectProcHandler(CheckEffectProc, 0, AuraType.ProcTriggerSpell));
         }
     }
 

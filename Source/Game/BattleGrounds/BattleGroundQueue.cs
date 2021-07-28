@@ -334,10 +334,9 @@ namespace Game.BattleGrounds
                     uint queueSlot = plr2.GetBattlegroundQueueIndex(m_queueId);
 
                     plr2.RemoveBattlegroundQueueId(m_queueId); // must be called this way, because if you move this call to
-                                                                   // queue.removeplayer, it causes bugs
+                                                               // queue.removeplayer, it causes bugs
 
-                    BattlefieldStatusNone battlefieldStatus;
-                    Global.BattlegroundMgr.BuildBattlegroundStatusNone(out battlefieldStatus, plr2, queueSlot, plr2.GetBattlegroundQueueJoinTime(m_queueId));
+                    Global.BattlegroundMgr.BuildBattlegroundStatusNone(out BattlefieldStatusNone battlefieldStatus, plr2, queueSlot, plr2.GetBattlegroundQueueJoinTime(m_queueId));
                     plr2.SendPacket(battlefieldStatus);
                 }
                 // then actually delete, this may delete the group as well!
@@ -420,8 +419,7 @@ namespace Game.BattleGrounds
                     Log.outDebug(LogFilter.Battleground, "Battleground: invited player {0} ({1}) to BG instance {2} queueindex {3} bgtype {4}",
                          player.GetName(), player.GetGUID().ToString(), bg.GetInstanceID(), queueSlot, bg.GetTypeID());
 
-                    BattlefieldStatusNeedConfirmation battlefieldStatus;
-                    Global.BattlegroundMgr.BuildBattlegroundStatusNeedConfirmation(out battlefieldStatus, bg, player, queueSlot, player.GetBattlegroundQueueJoinTime(bgQueueTypeId), BattlegroundConst.InviteAcceptWaitTime, ginfo.ArenaType);
+                    Global.BattlegroundMgr.BuildBattlegroundStatusNeedConfirmation(out BattlefieldStatusNeedConfirmation battlefieldStatus, bg, player, queueSlot, player.GetBattlegroundQueueJoinTime(bgQueueTypeId), BattlegroundConst.InviteAcceptWaitTime, ginfo.ArenaType);
                     player.SendPacket(battlefieldStatus);
                 }
                 return true;
@@ -1071,7 +1069,7 @@ namespace Game.BattleGrounds
 
         public ulong GetPacked()
         {
-            return (ulong)BattlemasterListId
+            return BattlemasterListId
                 | ((ulong)(BgType & 0xF) << 16)
                 | ((ulong)(Rated ? 1 : 0) << 20)
                 | ((ulong)(TeamSize & 0x3F) << 24)
@@ -1192,8 +1190,7 @@ namespace Game.BattleGrounds
                 BattlegroundQueue bgQueue = Global.BattlegroundMgr.GetBattlegroundQueue(bgQueueTypeId);
                 if (bgQueue.IsPlayerInvited(m_PlayerGuid, m_BgInstanceGUID, m_RemoveTime))
                 {
-                    BattlefieldStatusNeedConfirmation battlefieldStatus;
-                    Global.BattlegroundMgr.BuildBattlegroundStatusNeedConfirmation(out battlefieldStatus, bg, player, queueSlot, player.GetBattlegroundQueueJoinTime(bgQueueTypeId), BattlegroundConst.InviteAcceptWaitTime - BattlegroundConst.InvitationRemindTime, m_ArenaType);
+                    Global.BattlegroundMgr.BuildBattlegroundStatusNeedConfirmation(out BattlefieldStatusNeedConfirmation battlefieldStatus, bg, player, queueSlot, player.GetBattlegroundQueueJoinTime(bgQueueTypeId), BattlegroundConst.InviteAcceptWaitTime - BattlegroundConst.InvitationRemindTime, m_ArenaType);
                     player.SendPacket(battlefieldStatus);
                 }
             }
@@ -1250,8 +1247,7 @@ namespace Game.BattleGrounds
                     if (bg && bg.IsBattleground() && bg.GetStatus() != BattlegroundStatus.WaitLeave)
                         Global.BattlegroundMgr.ScheduleQueueUpdate(0, m_BgQueueTypeId, bg.GetBracketId());
 
-                    BattlefieldStatusNone battlefieldStatus;
-                    Global.BattlegroundMgr.BuildBattlegroundStatusNone(out battlefieldStatus, player, queueSlot, player.GetBattlegroundQueueJoinTime(m_BgQueueTypeId));
+                    Global.BattlegroundMgr.BuildBattlegroundStatusNone(out BattlefieldStatusNone battlefieldStatus, player, queueSlot, player.GetBattlegroundQueueJoinTime(m_BgQueueTypeId));
                     player.SendPacket(battlefieldStatus);
                 }
             }

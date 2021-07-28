@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,9 +21,7 @@ using Framework.Dynamic;
 using Game.AI;
 using Game.Combat;
 using Game.DataStorage;
-using Game.Maps;
 using Game.Movement;
-using Game.Networking;
 using Game.Networking.Packets;
 using Game.Spells;
 using System;
@@ -82,7 +80,7 @@ namespace Game.Entities
         uint _oldFactionId;         // faction before charm
         bool _isWalkingBeforeCharm; // Are we walking before we were charmed?
 
-        //Spells 
+        //Spells
         protected Dictionary<CurrentSpellTypes, Spell> m_currentSpells = new((int)CurrentSpellTypes.Max);
         MultiMap<uint, uint>[] m_spellImmune = new MultiMap<uint, uint>[(int)SpellImmunity.Max];
         SpellAuraInterruptFlags m_interruptMask;
@@ -105,9 +103,7 @@ namespace Game.Entities
         protected float[][] m_auraPctModifiersGroup = new float[(int)UnitMods.End][];
         uint m_removedAurasCount;
 
-        //General  
-        public UnitData m_unitData;
-
+        //General
         DiminishingReturn[] m_Diminishing = new DiminishingReturn[(int)DiminishingGroup.Max];
         protected List<GameObject> m_gameObj = new();
         List<AreaTrigger> m_areaTrigger = new();
@@ -337,7 +333,7 @@ namespace Game.Entities
             m_resist += amount;
             m_damage -= amount;
             if (m_damage == 0)
-            { 
+            {
                 m_hitMask |= ProcFlagsHit.FullResist;
                 m_hitMask &= ~(ProcFlagsHit.Normal | ProcFlagsHit.Critical);
             }
@@ -349,7 +345,7 @@ namespace Game.Entities
             m_damage -= amount;
             m_hitMask |= ProcFlagsHit.Block;
             if (m_damage == 0)
-            { 
+            {
                 m_hitMask |= ProcFlagsHit.FullBlock;
                 m_hitMask &= ~(ProcFlagsHit.Normal | ProcFlagsHit.Critical);
             }
@@ -449,12 +445,12 @@ namespace Game.Entities
 
     public class SpellNonMeleeDamage
     {
-        public SpellNonMeleeDamage(Unit _attacker, Unit _target, SpellInfo _spellInfo, SpellCastVisual spellVisual, SpellSchoolMask _schoolMask, ObjectGuid _castId = default)
+        public SpellNonMeleeDamage(Unit _attacker, Unit _target, SpellInfo _spellInfo, uint spellXSpellVisualID, SpellSchoolMask _schoolMask, ObjectGuid _castId = default)
         {
             target = _target;
             attacker = _attacker;
             Spell = _spellInfo;
-            SpellVisual = spellVisual;
+            SpellXSpellVisualID = spellXSpellVisualID;
             schoolMask = _schoolMask;
             castId = _castId;
             preHitHealth = (uint)_target.GetHealth();
@@ -464,7 +460,7 @@ namespace Game.Entities
         public Unit attacker;
         public ObjectGuid castId;
         public SpellInfo Spell;
-        public SpellCastVisual SpellVisual;
+        public uint SpellXSpellVisualID;
         public uint damage;
         public uint originalDamage;
         public SpellSchoolMask schoolMask;

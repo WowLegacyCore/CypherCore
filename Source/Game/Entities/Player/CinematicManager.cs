@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -55,7 +55,7 @@ namespace Game.Entities
             m_activeCinematic = cinematic;
             m_activeCinematicCameraIndex = -1;
         }
-        
+
         public void NextCinematicCamera()
         {
             // Sanity check for active camera set
@@ -192,6 +192,6 @@ namespace Game.Entities
                 EndCinematic();
         }
 
-        public bool IsOnCinematic() { return m_cinematicCamera != null; }
+        public bool IsOnCinematic() => m_cinematicCamera != null;
     }
 }

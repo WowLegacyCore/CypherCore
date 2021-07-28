@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -100,15 +100,8 @@ namespace Game
             }
 
             if (aeResult != null)
-            {
                 foreach (var resultValue in aeResult.GetByOrder())
-                {
                     player.SendNewItem(resultValue.item, resultValue.count, false, false, true);
-                    player.UpdateCriteria(CriteriaTypes.LootItem, resultValue.item.GetEntry(), resultValue.count);
-                    player.UpdateCriteria(CriteriaTypes.LootType, resultValue.item.GetEntry(), resultValue.count, (ulong)resultValue.lootType);
-                    player.UpdateCriteria(CriteriaTypes.LootEpicItem, resultValue.item.GetEntry(), resultValue.count);
-                }
-            }
         }
 
         [WorldPacketHandler(ClientOpcodes.LootMoney)]
@@ -202,7 +195,6 @@ namespace Game
                         ulong goldMod = MathFunctions.CalculatePct(goldPerPlayer, pl.GetTotalAuraModifierByMiscValue(AuraType.ModMoneyGain, 1));
 
                         pl.ModifyMoney((long)(goldPerPlayer + goldMod));
-                        pl.UpdateCriteria(CriteriaTypes.LootMoney, goldPerPlayer);
 
                         LootMoneyNotify packet = new();
                         packet.Money = goldPerPlayer;
@@ -216,7 +208,6 @@ namespace Game
                     ulong goldMod = MathFunctions.CalculatePct(loot.gold, player.GetTotalAuraModifierByMiscValue(AuraType.ModMoneyGain, 1));
 
                     player.ModifyMoney((long)(loot.gold + goldMod));
-                    player.UpdateCriteria(CriteriaTypes.LootMoney, loot.gold);
 
                     LootMoneyNotify packet = new();
                     packet.Money = loot.gold;
@@ -442,7 +433,7 @@ namespace Game
                                 group.SendLooter(creature, null);
                         }
                         // force dynflag update to update looter and lootable info
-                        creature.m_values.ModifyValue(creature.m_objectData).ModifyValue(creature.m_objectData.DynamicFlags);
+                        creature.ForceValuesUpdateAtIndex(ObjectFields.DynamicFlags);
                         creature.ForceUpdateFieldChange();
                     }
                 }
@@ -549,12 +540,7 @@ namespace Game
             }
 
             foreach (var resultValue in aeResult.GetByOrder())
-            {
                 target.SendNewItem(resultValue.item, resultValue.count, false, false, true);
-                target.UpdateCriteria(CriteriaTypes.LootItem, resultValue.item.GetEntry(), resultValue.count);
-                target.UpdateCriteria(CriteriaTypes.LootType, resultValue.item.GetEntry(), resultValue.count, (ulong)resultValue.lootType);
-                target.UpdateCriteria(CriteriaTypes.LootEpicItem, resultValue.item.GetEntry(), resultValue.count);
-            }
         }
 
         [WorldPacketHandler(ClientOpcodes.SetLootSpecialization)]

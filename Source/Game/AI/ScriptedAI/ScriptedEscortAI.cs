@@ -211,8 +211,7 @@ namespace Game.AI
                                 if (_returnToStart)
                                 {
                                     Position respawnPosition = new();
-                                    float orientation;
-                                    me.GetRespawnPosition(out respawnPosition.posX, out respawnPosition.posY, out respawnPosition.posZ, out orientation);
+                                    me.GetRespawnPosition(out respawnPosition.posX, out respawnPosition.posY, out respawnPosition.posZ, out float orientation);
                                     respawnPosition.SetOrientation(orientation);
                                     me.GetMotionMaster().MovePoint(EscortPointIds.Home, respawnPosition);
                                     Log.outDebug(LogFilter.Scripts, $"EscortAI.UpdateAI: returning to spawn location: {respawnPosition}");

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -44,10 +44,7 @@ namespace Game.Entities
             }
         }
 
-        public void RewardPlayerAndGroupAtKill(Unit victim, bool isBattleground)
-        {
-            new KillRewarder(this, victim, isBattleground).Reward();
-        }
+        public void RewardPlayerAndGroupAtKill(Unit victim, bool isBattleground) => new KillRewarder(this, victim, isBattleground).Reward();
 
         public void RewardPlayerAndGroupAtEvent(uint creature_id, WorldObject pRewardSource)
         {
@@ -77,10 +74,10 @@ namespace Game.Entities
                 KilledMonsterCredit(creature_id, creature_guid);
         }
 
-        public void AddWeaponProficiency(uint newflag) { m_WeaponProficiency |= newflag; }
-        public void AddArmorProficiency(uint newflag) { m_ArmorProficiency |= newflag; }
-        public uint GetWeaponProficiency() { return m_WeaponProficiency; }
-        public uint GetArmorProficiency() { return m_ArmorProficiency; }
+        public void AddWeaponProficiency(uint newflag) => m_WeaponProficiency |= newflag;
+        public void AddArmorProficiency(uint newflag) => m_ArmorProficiency |= newflag;
+        public uint GetWeaponProficiency() => m_WeaponProficiency;
+        public uint GetArmorProficiency() => m_ArmorProficiency;
         public void SendProficiency(ItemClass itemClass, uint itemSubclassMask)
         {
             SetProficiency packet = new();
@@ -89,7 +86,7 @@ namespace Game.Entities
             SendPacket(packet);
         }
 
-        bool CanTitanGrip() { return m_canTitanGrip; }
+        bool CanTitanGrip() => m_canTitanGrip;
 
         float GetRatingMultiplier(CombatRating cr)
         {
@@ -105,7 +102,8 @@ namespace Game.Entities
         }
         public float GetRatingBonusValue(CombatRating cr)
         {
-            float baseResult = ApplyRatingDiminishing(cr, m_activePlayerData.CombatRatings[(int)cr] * GetRatingMultiplier(cr));
+            uint combatRating = GetUpdateField<uint>(ActivePlayerFields.CombatRatings + (int)cr);
+            float baseResult = ApplyRatingDiminishing(cr, combatRating * GetRatingMultiplier(cr));
             if (cr != CombatRating.ResiliencePlayerDamage)
                 return baseResult;
             return (float)(1.0f - Math.Pow(0.99f, baseResult)) * 100.0f;
@@ -217,16 +215,16 @@ namespace Game.Entities
 
             return bonusValue;
         }
-        
+
         public float GetExpertiseDodgeOrParryReduction(WeaponAttackType attType)
         {
             float baseExpertise = 7.5f;
             switch (attType)
             {
                 case WeaponAttackType.BaseAttack:
-                    return baseExpertise + m_activePlayerData.MainhandExpertise / 4.0f;
+                    return baseExpertise + GetUpdateField<float>(ActivePlayerFields.MainhandExpertise) / 4.0f;
                 case WeaponAttackType.OffAttack:
-                    return baseExpertise + m_activePlayerData.OffhandExpertise / 4.0f;
+                    return baseExpertise + GetUpdateField<float>(ActivePlayerFields.OffhandExpertise) / 4.0f;
                 default:
                     break;
             }
@@ -257,7 +255,7 @@ namespace Game.Entities
             if (apply)
             {
                 if (!HasAura(m_titanGripPenaltySpellId))
-                    CastSpell((Unit)null, m_titanGripPenaltySpellId, true);
+                    CastSpell(null, m_titanGripPenaltySpellId, true);
             }
             else
                 RemoveAurasDueToSpell(m_titanGripPenaltySpellId);
@@ -300,8 +298,7 @@ namespace Game.Entities
 
             float damage = 0.0f;
             uint itemLevel = item.GetItemLevel(this);
-            float minDamage, maxDamage;
-            proto.GetDamage(itemLevel, out minDamage, out maxDamage);
+            proto.GetDamage(itemLevel, out float minDamage, out float maxDamage);
 
             if (minDamage > 0)
             {
@@ -318,22 +315,6 @@ namespace Game.Entities
             SpellShapeshiftFormRecord shapeshift = CliDB.SpellShapeshiftFormStorage.LookupByKey(GetShapeshiftForm());
             if (proto.GetDelay() != 0 && !(shapeshift != null && shapeshift.CombatRoundTime != 0))
                 SetBaseAttackTime(attType, apply ? proto.GetDelay() : SharedConst.BaseAttackTime);
-
-            int weaponBasedAttackPower = apply ? (int)(proto.GetDPS(itemLevel) * 6.0f) : 0;
-            switch (attType)
-            {
-                case WeaponAttackType.BaseAttack:
-                    SetMainHandWeaponAttackPower(weaponBasedAttackPower);
-                    break;
-                case WeaponAttackType.OffAttack:
-                    SetOffHandWeaponAttackPower(weaponBasedAttackPower);
-                    break;
-                case WeaponAttackType.RangedAttack:
-                    SetRangedWeaponAttackPower(weaponBasedAttackPower);
-                    break;
-                default:
-                    break;
-            }
 
             if (CanModifyStats() && (damage != 0 || proto.GetDelay() != 0))
                 UpdateDamagePhysical(attType);
@@ -355,7 +336,7 @@ namespace Game.Entities
 
         public override float GetBlockPercent(uint attackerLevel)
         {
-            float blockArmor = (float)m_activePlayerData.ShieldBlock;
+            float blockArmor = GetUpdateField<float>(ActivePlayerFields.ShieldBlock);
             float armorConstant = Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.ArmorConstant, attackerLevel, -2, 0, Class.None);
 
             if ((blockArmor + armorConstant) == 0)
@@ -363,7 +344,7 @@ namespace Game.Entities
 
             return Math.Min(blockArmor / (blockArmor + armorConstant), 0.85f);
         }
-        
+
         public void SetCanParry(bool value)
         {
             if (m_canParry == value)
@@ -383,10 +364,10 @@ namespace Game.Entities
         }
 
         // duel health and mana reset methods
-        public void SaveHealthBeforeDuel() { healthBeforeDuel = (uint)GetHealth(); }
-        public void SaveManaBeforeDuel() { manaBeforeDuel = (uint)GetPower(PowerType.Mana); }
-        public void RestoreHealthAfterDuel() { SetHealth(healthBeforeDuel); }
-        public void RestoreManaAfterDuel() { SetPower(PowerType.Mana, (int)manaBeforeDuel); }
+        public void SaveHealthBeforeDuel() => healthBeforeDuel = (uint)GetHealth();
+        public void SaveManaBeforeDuel() => manaBeforeDuel = (uint)GetPower(PowerType.Mana);
+        public void RestoreHealthAfterDuel() => SetHealth(healthBeforeDuel);
+        public void RestoreManaAfterDuel() => SetPower(PowerType.Mana, (int)manaBeforeDuel);
 
         void UpdateDuelFlag(long currTime)
         {
@@ -409,7 +390,7 @@ namespace Game.Entities
             if (duel == null)
                 return;
 
-            ObjectGuid duelFlagGUID = m_playerData.DuelArbiter;
+            ObjectGuid duelFlagGUID = GetUpdateField<ObjectGuid>(PlayerFields.DuelArbiter);
             GameObject obj = GetMap().GetGameObject(duelFlagGUID);
             if (!obj)
                 return;
@@ -491,13 +472,6 @@ namespace Game.Entities
                     }
                     break;
                 case DuelCompleteType.Won:
-                    UpdateCriteria(CriteriaTypes.LoseDuel, 1);
-                    duel.opponent.UpdateCriteria(CriteriaTypes.WinDuel, 1);
-
-                    // Credit for quest Death's Challenge
-                    if (GetClass() == Class.Deathknight && duel.opponent.GetQuestStatus(12733) == QuestStatus.Incomplete)
-                        duel.opponent.CastSpell(duel.opponent, 52994, true);
-
                     // Honor points after duel (the winner) - ImpConfig
                     int amount = WorldConfig.GetIntValue(WorldCfg.HonorAfterDuel);
                     if (amount != 0)
@@ -513,7 +487,7 @@ namespace Game.Entities
                 duel.opponent.CastSpell(duel.opponent, 52852, true);
 
             //Remove Duel Flag object
-            GameObject obj = GetMap().GetGameObject(m_playerData.DuelArbiter);
+            GameObject obj = GetMap().GetGameObject(GetUpdateField<ObjectGuid>(PlayerFields.DuelArbiter));
             if (obj)
                 duel.initiator.RemoveGameObject(obj, true);
 
@@ -547,8 +521,8 @@ namespace Game.Entities
             duel.opponent.duel = null;
             duel = null;
         }
-        public void SetDuelArbiter(ObjectGuid guid) { SetUpdateFieldValue(m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.DuelArbiter), guid); }
-        void SetDuelTeam(uint duelTeam) { SetUpdateFieldValue(m_values.ModifyValue(m_playerData).ModifyValue(m_playerData.DuelTeam), duelTeam); }
+        public void SetDuelArbiter(ObjectGuid guid) => SetUpdateField<ObjectGuid>(PlayerFields.DuelArbiter, guid);
+        void SetDuelTeam(uint duelTeam) => SetUpdateField<uint>(PlayerFields.DuelTeam, duelTeam);
 
         //PVP
         public void SetPvPDeath(bool on)
@@ -559,7 +533,7 @@ namespace Game.Entities
                 m_ExtraFlags &= ~PlayerExtraFlags.PVPDeath;
         }
 
-        public void SetContestedPvPTimer(uint newTime) { m_contestedPvPTimer = newTime; }
+        public void SetContestedPvPTimer(uint newTime) => m_contestedPvPTimer = newTime;
 
         public void ResetContestedPvP()
         {
@@ -600,7 +574,7 @@ namespace Game.Entities
                 }
             }
         }
-        
+
         public void UpdateContestedPvP(uint diff)
         {
             if (m_contestedPvPTimer == 0 || IsInCombat())

@@ -131,8 +131,7 @@ namespace Game.Maps
                     else
                     {
                         KeyFrame k = new(node_i);
-                        Vector3 h;
-                        orientationSpline.Evaluate_Derivative((int)(i + 1), 0.0f, out h);
+                        orientationSpline.Evaluate_Derivative((int)(i + 1), 0.0f, out Vector3 h);
                         k.InitialOrientation = Position.NormalizeOrientation((float)Math.Atan2(h.Y, h.X) + MathFunctions.PI);
 
                         keyFrames.Add(k);

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -24,7 +24,7 @@ namespace Game.Networking.Packets
 {
     public class EquipmentSetID : ServerPacket
     {
-        public EquipmentSetID() : base(ServerOpcodes.EquipmentSetId, ConnectionType.Instance) { }
+        public EquipmentSetID() : base(ServerOpcodes.EquipmentSetID, ConnectionType.Instance) { }
 
         public override void Write()
         {
@@ -48,7 +48,7 @@ namespace Game.Networking.Packets
 
             foreach (var equipSet in SetData)
             {
-                _worldPacket.WriteInt32((int)equipSet.Type);
+                _worldPacket.WriteInt32(equipSet.Type);
                 _worldPacket.WriteUInt64(equipSet.Guid);
                 _worldPacket.WriteUInt32(equipSet.SetID);
                 _worldPacket.WriteUInt32(equipSet.IgnoreMask);
@@ -89,7 +89,7 @@ namespace Game.Networking.Packets
 
         public override void Read()
         {
-            Set.Type = (EquipmentSetInfo.EquipmentSetType)_worldPacket.ReadInt32();
+            Set.Type = _worldPacket.ReadInt32();
             Set.Guid = _worldPacket.ReadUInt64();
             Set.SetID = _worldPacket.ReadUInt32();
             Set.IgnoreMask = _worldPacket.ReadUInt32();

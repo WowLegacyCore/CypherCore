@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -70,11 +70,11 @@ namespace Game.Networking.Packets
         public ulong QueueID;
         public BattlefieldState BattleState;
         public uint Timeout = uint.MaxValue;    // unused in client
-        public int MinLevel;                                     // unused in client
-        public int MaxLevel;                                     // unused in client
-        public int MapID;                                        // unused in client
-        public uint InstanceID;                                  // unused in client
-        public sbyte Index;                                         // unused in client
+        public int MinLevel = 0;                // unused in client
+        public int MaxLevel = 0;                // unused in client
+        public int MapID = 0;                   // unused in client
+        public uint InstanceID = 0;             // unused in client
+        public sbyte Index = 0;                 // unused in client
     }
 
     class BFMgrQueueInviteResponse : ClientPacket
@@ -109,7 +109,7 @@ namespace Game.Networking.Packets
         public ulong QueueID;
         public int AreaID;
         public sbyte Result;
-        public ObjectGuid FailedPlayerGUID;
+        public ObjectGuid FailedPlayerGUID = ObjectGuid.Empty;
         public BattlefieldState BattleState;
         public bool LoggingIn;
     }

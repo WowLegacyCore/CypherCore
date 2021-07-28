@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,6 @@
 
 using Framework.Constants;
 using Framework.GameMath;
-using Game.DataStorage;
 using Game.Entities;
 using Game.Groups;
 using Game.Maps;
@@ -781,8 +780,6 @@ namespace Game.BattleFields
         public virtual void OnPlayerEnterZone(Player player) { }
 
         public uint GetBattleId() { return m_BattleId; }
-
-        public virtual void DoCompleteOrIncrementAchievement(uint achievement, Player player, byte incrementNumber = 1) { }
 
         // Send all worldstate data to all player in zone.
         public virtual void SendInitWorldStatesToAll() { }

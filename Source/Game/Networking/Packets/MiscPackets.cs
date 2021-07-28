@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -232,12 +232,12 @@ namespace Game.Networking.Packets
         {
             public uint Type;
             public uint Quantity;
-            public Optional<uint> WeeklyQuantity;       // Currency count obtained this Week.  
+            public Optional<uint> WeeklyQuantity;       // Currency count obtained this Week.
             public Optional<uint> MaxWeeklyQuantity;    // Weekly Currency cap.
             public Optional<uint> TrackedQuantity;
             public Optional<int> MaxQuantity;
             public Optional<int> Unused901;
-            public byte Flags;                      // 0 = none, 
+            public byte Flags;                      // 0 = none,
         }
     }
 
@@ -876,11 +876,11 @@ namespace Game.Networking.Packets
             _worldPacket.WriteInt32(BroadcastTextID);
         }
 
-        public ObjectGuid TargetObjectGUID;
-        public ObjectGuid SourceObjectGUID;
-        public uint SoundKitID;
-        public Vector3 Position;
-        public int BroadcastTextID;
+        public ObjectGuid TargetObjectGUID = ObjectGuid.Empty;
+        public ObjectGuid SourceObjectGUID = ObjectGuid.Empty;
+        public uint SoundKitID = 0;
+        public Vector3 Position = new();
+        public int BroadcastTextID = 0;
     }
 
     class PlaySound : ServerPacket
@@ -1005,7 +1005,7 @@ namespace Game.Networking.Packets
 
     class LoadCUFProfiles : ServerPacket
     {
-        public LoadCUFProfiles() : base(ServerOpcodes.LoadCufProfiles, ConnectionType.Instance) { }
+        public LoadCUFProfiles() : base(ServerOpcodes.LoadCUFProfiles, ConnectionType.Instance) { }
 
         public override void Write()
         {
@@ -1057,7 +1057,7 @@ namespace Game.Networking.Packets
 
     class SetAIAnimKit : ServerPacket
     {
-        public SetAIAnimKit() : base(ServerOpcodes.SetAiAnimKit, ConnectionType.Instance) { }
+        public SetAIAnimKit() : base(ServerOpcodes.SetAIAnimKit, ConnectionType.Instance) { }
 
         public override void Write()
         {
@@ -1155,7 +1155,7 @@ namespace Game.Networking.Packets
 
         public bool IsFullUpdate;
         public Dictionary<uint, HeirloomData> Heirlooms = new();
-        public int Unk;
+        public int Unk = 0;
     }
 
     class MountSpecial : ClientPacket
@@ -1284,28 +1284,6 @@ namespace Game.Networking.Packets
         Optional<int> Arg2;
     }
 
-    class AccountMountUpdate : ServerPacket
-    {
-        public AccountMountUpdate() : base(ServerOpcodes.AccountMountUpdate, ConnectionType.Instance) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteBit(IsFullUpdate);
-            _worldPacket.WriteInt32(Mounts.Count);
-
-            foreach (var spell in Mounts)
-            {
-                _worldPacket.WriteUInt32(spell.Key);
-                _worldPacket.WriteBits(spell.Value, 2);
-            }
-
-            _worldPacket.FlushBits();
-        }
-
-        public bool IsFullUpdate = false;
-        public Dictionary<uint, MountStatusFlags> Mounts = new();
-    }
-
     class MountSetFavorite : ClientPacket
     {
         public MountSetFavorite(WorldPacket packet) : base(packet) { }
@@ -1331,7 +1309,7 @@ namespace Game.Networking.Packets
 
         public ObjectGuid SourceGuid;
     }
-    
+
     //Structs
     struct PhaseShiftDataPhase
     {

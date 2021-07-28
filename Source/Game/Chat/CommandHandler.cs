@@ -423,7 +423,6 @@ namespace Game.Chat
         }
         public ulong ExtractLowGuidFromLink(StringArguments args, ref HighGuid guidHigh)
         {
-            int type;
 
             string[] guidKeys =
             {
@@ -434,7 +433,7 @@ namespace Game.Chat
             // |color|Hcreature:creature_guid|h[name]|h|r
             // |color|Hgameobject:go_guid|h[name]|h|r
             // |color|Hplayer:name|h[name]|h|r
-            string idS = ExtractKeyFromLink(args, guidKeys, out type);
+            string idS = ExtractKeyFromLink(args, guidKeys, out int type);
             if (string.IsNullOrEmpty(idS))
                 return 0;
 

@@ -31,8 +31,7 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player target;
-            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out target))
+            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out Player target))
                 return false;
 
             string name = handler.ExtractQuotedArg(args.NextString());
@@ -174,18 +173,14 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            string idStr;
-            string nameStr;
-            handler.ExtractOptFirstArg(args, out idStr, out nameStr);
+            handler.ExtractOptFirstArg(args, out string idStr, out string nameStr);
             if (string.IsNullOrEmpty(idStr))
                 return false;
 
             if (!uint.TryParse(idStr, out uint teamId) || teamId == 0)
                 return false;
 
-            Player target;
-            ObjectGuid targetGuid;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out Player target, out ObjectGuid targetGuid))
                 return false;
 
             ArenaTeam arena = Global.ArenaTeamMgr.GetArenaTeamById(teamId);
@@ -222,8 +217,7 @@ namespace Game.Chat
 
             arena.SetCaptain(targetGuid);
 
-            string oldCaptainName;
-            if (!Global.CharacterCacheStorage.GetCharacterNameByGuid(arena.GetCaptain(), out oldCaptainName))
+            if (!Global.CharacterCacheStorage.GetCharacterNameByGuid(arena.GetCaptain(), out string oldCaptainName))
                 return false;
 
             handler.SendSysMessage(CypherStrings.ArenaCaptain, arena.GetName(), arena.GetId(), oldCaptainName, target.GetName());

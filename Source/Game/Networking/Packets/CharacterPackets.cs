@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -126,7 +126,7 @@ namespace Game.Networking.Packets
                 FirstLogin = atLoginFlags.HasAnyFlag(AtLoginFlags.FirstLogin);
 
                 // show pet at selection character in character list only for non-ghost character
-                if (!playerFlags.HasAnyFlag(PlayerFlags.Ghost) && (ClassId == Class.Warlock || ClassId == Class.Hunter || ClassId == Class.Deathknight))
+                if (!playerFlags.HasAnyFlag(PlayerFlags.Ghost) && (ClassId == Class.Warlock || ClassId == Class.Hunter))
                 {
                     CreatureTemplate creatureInfo = Global.ObjectMgr.GetCreatureTemplate(fields.Read<uint>(14));
                     if (creatureInfo != null)
@@ -230,7 +230,7 @@ namespace Game.Networking.Packets
             public byte RaceId;
             public Class ClassId;
             public byte SexId;
-            public Array<ChrCustomizationChoice> Customizations = new(50);
+            public Array<ChrCustomizationChoice> Customizations = new(PlayerConst.MaxChrCustomizationChoices);
             public byte ExperienceLevel;
             public uint ZoneId;
             public uint MapId;
@@ -313,7 +313,7 @@ namespace Game.Networking.Packets
     }
 
     class CheckCharacterNameAvailability : ClientPacket
-    {     
+    {
         public uint SequenceIndex;
         public string Name;
 
@@ -326,24 +326,6 @@ namespace Game.Networking.Packets
         }
     }
 
-    class CheckCharacterNameAvailabilityResult : ServerPacket
-    {
-        public uint SequenceIndex;
-        public ResponseCodes Result;
-
-        public CheckCharacterNameAvailabilityResult(uint sequenceIndex, ResponseCodes result) : base(ServerOpcodes.CheckCharacterNameAvailabilityResult)
-        {
-            SequenceIndex = sequenceIndex;
-            Result = result;
-        }
-
-        public override void Write()
-        {
-            _worldPacket.WriteUInt32(SequenceIndex);
-            _worldPacket.WriteUInt32((uint)Result);
-        }
-    }
-    
     public class CreateCharacter : ClientPacket
     {
         public CreateCharacter(WorldPacket packet) : base(packet) { }
@@ -898,7 +880,7 @@ namespace Game.Networking.Packets
 
     class LogXPGain : ServerPacket
     {
-        public LogXPGain() : base(ServerOpcodes.LogXpGain) { }
+        public LogXPGain() : base(ServerOpcodes.LogXPGain) { }
 
         public override void Write()
         {

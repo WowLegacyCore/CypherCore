@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
-using Framework.Dynamic;
 
 namespace Game.DataStorage
 {
@@ -482,14 +481,14 @@ namespace Game.DataStorage
             foreach (SkillRaceClassInfoRecord entry in SkillRaceClassInfoStorage.Values)
             {
                 if (SkillLineStorage.ContainsKey(entry.SkillID))
-                    _skillRaceClassInfoBySkill.Add((uint)entry.SkillID, entry);
+                    _skillRaceClassInfoBySkill.Add(entry.SkillID, entry);
             }
 
             foreach (var specSpells in SpecializationSpellsStorage.Values)
                 _specializationSpellsBySpec.Add(specSpells.SpecID, specSpells);
 
             foreach (SpecSetMemberRecord specSetMember in SpecSetMemberStorage.Values)
-                _specsBySpecSet.Add(Tuple.Create((int)specSetMember.SpecSetID, (uint)specSetMember.ChrSpecializationID));
+                _specsBySpecSet.Add(Tuple.Create((int)specSetMember.SpecSetID, specSetMember.ChrSpecializationID));
 
             foreach (SpellClassOptionsRecord classOption in SpellClassOptionsStorage.Values)
                 _spellFamilyNames.Add(classOption.SpellClassSet);
@@ -672,7 +671,7 @@ namespace Game.DataStorage
                         continue;
                     }
                 }
-                
+
                 HotfixRecord hotfixRecord = new();
                 hotfixRecord.TableHash = tableHash;
                 hotfixRecord.RecordID = recordId;
@@ -814,9 +813,9 @@ namespace Game.DataStorage
         {
             return data.Length == 8 + 16;
         }
-        
+
         public uint GetHotfixCount() { return (uint)_hotfixData.Count; }
-        
+
         public MultiMap<int, HotfixRecord> GetHotfixData() { return _hotfixData; }
 
         public byte[] GetHotfixBlobData(uint tableHash, int recordId, Locale locale)
@@ -832,7 +831,7 @@ namespace Game.DataStorage
 
             return _hotfixOptionalData[(int)locale].LookupByKey((tableHash, (int)recordId));
         }
-        
+
         public uint GetEmptyAnimStateID()
         {
             return (uint)AnimationDataStorage.Count;
@@ -949,7 +948,7 @@ namespace Game.DataStorage
             Cypher.Assert(unitClass < Class.Max);
             return _uiDisplayByClass[(int)unitClass];
         }
-        
+
         public string GetClassName(Class class_, Locale locale = Locale.enUS)
         {
             ChrClassesRecord classEntry = ChrClassesStorage.LookupByKey(class_);
@@ -1009,7 +1008,8 @@ namespace Game.DataStorage
             return GetChrSpecializationByIndex(class_, PlayerConst.InitialSpecializationIndex);
         }
 
-        public ContentTuningLevels? GetContentTuningData(uint contentTuningId, uint replacementConditionMask, bool forItem = false)
+        // FIX REPLACEMENTCONDITIONMASK
+        public ContentTuningLevels? GetContentTuningData(uint contentTuningId, bool forItem = false)
         {
             ContentTuningRecord contentTuning = ContentTuningStorage.LookupByKey(contentTuningId);
             if (contentTuning == null)
@@ -1325,7 +1325,7 @@ namespace Game.DataStorage
         {
             return _friendshipRepReactions.LookupByKey(friendshipRepID);
         }
-        
+
         public uint GetGlobalCurveId(GlobalCurve globalCurveType)
         {
             foreach (var globalCurveEntry in GlobalCurveStorage.Values)
@@ -1334,7 +1334,7 @@ namespace Game.DataStorage
 
             return 0;
         }
-        
+
         public List<uint> GetGlyphBindableSpells(uint glyphPropertiesId)
         {
             return _glyphBindableSpells.LookupByKey(glyphPropertiesId);
@@ -1475,7 +1475,7 @@ namespace Game.DataStorage
             });
             return bonusListIDs;
         }
-        
+
         void LoadAzeriteEmpoweredItemUnlockMappings(MultiMap<uint, AzeriteUnlockMappingRecord> azeriteUnlockMappingsBySet, uint itemId)
         {
             var itemIdRange = _itemToBonusTree.LookupByKey(itemId);
@@ -1674,7 +1674,7 @@ namespace Game.DataStorage
         {
             return _mapDifficultyConditions.LookupByKey(mapDifficultyId);
         }
-        
+
         public MountRecord GetMount(uint spellId)
         {
             return _mountsBySpellId.LookupByKey(spellId);
@@ -1727,15 +1727,6 @@ namespace Game.DataStorage
             NumTalentsAtLevelRecord numTalentsAtLevel = NumTalentsAtLevelStorage.LookupByKey(level);
             if (numTalentsAtLevel == null)
                 numTalentsAtLevel = NumTalentsAtLevelStorage.LastOrDefault().Value;
-            if (numTalentsAtLevel != null)
-            {
-                return playerClass switch
-                {
-                    Class.Deathknight => numTalentsAtLevel.NumTalentsDeathKnight,
-                    Class.DemonHunter => numTalentsAtLevel.NumTalentsDemonHunter,
-                    _ => numTalentsAtLevel.NumTalents,
-                };
-            }
             return 0;
         }
 
@@ -1743,7 +1734,7 @@ namespace Game.DataStorage
         {
             return _paragonReputations.LookupByKey(factionId);
         }
-        
+
         public PvpDifficultyRecord GetBattlegroundBracketByLevel(uint mapid, uint level)
         {
             PvpDifficultyRecord maxEntry = null;              // used for level > max listed level case
@@ -1778,18 +1769,7 @@ namespace Game.DataStorage
         {
             Cypher.Assert(slot < PlayerConst.MaxPvpTalentSlots);
             if (_pvpTalentSlotUnlock[slot] != null)
-            {
-                switch (class_)
-                {
-                    case Class.Deathknight:
-                        return _pvpTalentSlotUnlock[slot].DeathKnightLevelRequired;
-                    case Class.DemonHunter:
-                        return _pvpTalentSlotUnlock[slot].DemonHunterLevelRequired;
-                    default:
-                        break;
-                }
                 return _pvpTalentSlotUnlock[slot].LevelRequired;
-            }
 
             return 0;
         }
@@ -1807,7 +1787,7 @@ namespace Game.DataStorage
         {
             return _questsByQuestLine.LookupByKey(questLineId);
         }
-        
+
         public List<QuestPackageItemRecord> GetQuestPackageItems(uint questPackageID)
         {
             if( _questPackages.ContainsKey(questPackageID))
@@ -1878,7 +1858,7 @@ namespace Game.DataStorage
         {
             return _chrCustomizationChoicesForShapeshifts.LookupByKey(Tuple.Create((byte)race, (byte)gender, (byte)form));
         }
-        
+
         public List<SkillLineRecord> GetSkillLinesForParentSkill(uint parentSkillId)
         {
             return _skillLinesByParentSkillLine.LookupByKey(parentSkillId);
@@ -1888,7 +1868,7 @@ namespace Game.DataStorage
         {
             return _skillLineAbilitiesBySkillupSkill.LookupByKey(skillId);
         }
-        
+
         public SkillRaceClassInfoRecord GetSkillRaceClassInfo(uint skill, Race race, Class class_)
         {
             var bounds = _skillRaceClassInfoBySkill.LookupByKey(skill);
@@ -2101,8 +2081,7 @@ namespace Game.DataStorage
             {
                 foreach (var assignment in assignments.LookupByKey(id))
                 {
-                    UiMapAssignmentStatus status;
-                    if (CheckUiMapAssignmentStatus(x, y, z, mapId, areaId, wmoDoodadPlacementId, wmoGroupId, assignment, out status))
+                    if (CheckUiMapAssignmentStatus(x, y, z, mapId, areaId, wmoDoodadPlacementId, wmoGroupId, assignment, out UiMapAssignmentStatus status))
                         if (status < nearestMapAssignment)
                             nearestMapAssignment = status;
                 }
@@ -2214,8 +2193,7 @@ namespace Game.DataStorage
 
         public void Map2ZoneCoordinates(int areaId, ref float x, ref float y)
         {
-            Vector2 zoneCoords;
-            if (!GetUiMapPosition(x, y, 0.0f, -1, areaId, 0, 0, UiMapSystem.World, true, out zoneCoords))
+            if (!GetUiMapPosition(x, y, 0.0f, -1, areaId, 0, 0, UiMapSystem.World, true, out Vector2 zoneCoords))
                 return;
 
             x = zoneCoords.Y * 100.0f;

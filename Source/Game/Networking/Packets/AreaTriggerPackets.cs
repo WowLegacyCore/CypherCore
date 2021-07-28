@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -51,8 +51,8 @@ namespace Game.Networking.Packets
             _worldPacket.FlushBits();
         }
 
-        public int AreaTriggerID;
-        public bool Entered;
+        public int AreaTriggerID = 0;
+        public bool Entered = false;
     }
 
     class AreaTriggerNoCorpse : ServerPacket

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -396,7 +396,7 @@ namespace Game.Entities
             int curmana = GetPower(PowerType.Mana);
 
             SQLTransaction trans = new();
-            // save auras before possibly removing them    
+            // save auras before possibly removing them
             _SaveAuras(trans);
 
             // stable and not in slot saves
@@ -445,7 +445,7 @@ namespace Game.Entities
                 stmt.AddValue(2, ownerLowGUID);
                 stmt.AddValue(3, GetNativeDisplayId());
                 stmt.AddValue(4, GetLevel());
-                stmt.AddValue(5, m_unitData.PetExperience);
+                stmt.AddValue(5, GetUpdateField<uint>(UnitFields.PetExperience));
                 stmt.AddValue(6, (byte)GetReactState());
                 stmt.AddValue(7, (byte)mode);
                 stmt.AddValue(8, GetName());
@@ -454,7 +454,7 @@ namespace Game.Entities
                 stmt.AddValue(11, curmana);
                 stmt.AddValue(12, GenerateActionBarData());
                 stmt.AddValue(13, GameTime.GetGameTime());
-                stmt.AddValue(14, m_unitData.CreatedBySpell);
+                stmt.AddValue(14, GetUpdateField<uint>(UnitFields.CreatedBySpell));
                 stmt.AddValue(15, (byte)GetPetType());
                 stmt.AddValue(16, m_petSpecialization);
                 trans.Append(stmt);
@@ -533,82 +533,79 @@ namespace Game.Entities
             switch (m_deathState)
             {
                 case DeathState.Corpse:
+                {
+                    if (GetPetType() != PetType.Hunter || m_corpseRemoveTime <= GameTime.GetGameTime())
                     {
-                        if (GetPetType() != PetType.Hunter || m_corpseRemoveTime <= GameTime.GetGameTime())
-                        {
-                            Remove(PetSaveMode.NotInSlot);               //hunters' pets never get removed because of death, NEVER!
-                            return;
-                        }
-                        break;
+                        Remove(PetSaveMode.NotInSlot);               //hunters' pets never get removed because of death, NEVER!
+                        return;
                     }
+                    break;
+                }
                 case DeathState.Alive:
+                {
+                    // unsummon pet that lost owner
+                    Player owner = GetOwner();
+                    if (owner == null || (!IsWithinDistInMap(owner, GetMap().GetVisibilityRange()) && !IsPossessed()) || (IsControlled() && owner.GetPetGUID().IsEmpty()))
                     {
-                        // unsummon pet that lost owner
-                        Player owner = GetOwner();
-                        if (owner == null || (!IsWithinDistInMap(owner, GetMap().GetVisibilityRange()) && !IsPossessed()) || (IsControlled() && owner.GetPetGUID().IsEmpty()))
+                        Remove(PetSaveMode.NotInSlot, true);
+                        return;
+                    }
+
+                    if (IsControlled())
+                    {
+                        if (owner.GetPetGUID() != GetGUID())
                         {
-                            Remove(PetSaveMode.NotInSlot, true);
+                            Log.outError(LogFilter.Pet, "Pet {0} is not pet of owner {1}, removed", GetEntry(), GetOwner().GetName());
+                            Remove(GetPetType() == PetType.Hunter ? PetSaveMode.AsDeleted : PetSaveMode.NotInSlot);
                             return;
                         }
-
-                        if (IsControlled())
-                        {
-                            if (owner.GetPetGUID() != GetGUID())
-                            {
-                                Log.outError(LogFilter.Pet, "Pet {0} is not pet of owner {1}, removed", GetEntry(), GetOwner().GetName());
-                                Remove(GetPetType() == PetType.Hunter ? PetSaveMode.AsDeleted : PetSaveMode.NotInSlot);
-                                return;
-                            }
-                        }
-
-                        if (m_duration > 0)
-                        {
-                            if (m_duration > diff)
-                                m_duration -= (int)diff;
-                            else
-                            {
-                                Remove(GetPetType() != PetType.Summon ? PetSaveMode.AsDeleted : PetSaveMode.NotInSlot);
-                                return;
-                            }
-                        }
-
-                        //regenerate focus for hunter pets or energy for deathknight's ghoul
-                        if (m_focusRegenTimer != 0)
-                        {
-                            if (m_focusRegenTimer > diff)
-                                m_focusRegenTimer -= diff;
-                            else
-                            {
-                                switch (GetPowerType())
-                                {
-                                    case PowerType.Focus:
-                                        Regenerate(PowerType.Focus);
-                                        m_focusRegenTimer += PetFocusRegenInterval - diff;
-                                        if (m_focusRegenTimer == 0)
-                                            ++m_focusRegenTimer;
-
-                                        // Reset if large diff (lag) causes focus to get 'stuck'
-                                        if (m_focusRegenTimer > PetFocusRegenInterval)
-                                            m_focusRegenTimer = PetFocusRegenInterval;
-                                        break;
-                                    default:
-                                        m_focusRegenTimer = 0;
-                                        break;
-                                }
-                            }
-                        }
-                        break;
                     }
+
+                    if (m_duration > 0)
+                    {
+                        if (m_duration > diff)
+                            m_duration -= (int)diff;
+                        else
+                        {
+                            Remove(GetPetType() != PetType.Summon ? PetSaveMode.AsDeleted : PetSaveMode.NotInSlot);
+                            return;
+                        }
+                    }
+
+                    //regenerate focus for hunter pets or energy for deathknight's ghoul
+                    if (m_focusRegenTimer != 0)
+                    {
+                        if (m_focusRegenTimer > diff)
+                            m_focusRegenTimer -= diff;
+                        else
+                        {
+                            switch (GetPowerType())
+                            {
+                                case PowerType.Focus:
+                                    Regenerate(PowerType.Focus);
+                                    m_focusRegenTimer += PetFocusRegenInterval - diff;
+                                    if (m_focusRegenTimer == 0)
+                                        ++m_focusRegenTimer;
+
+                                    // Reset if large diff (lag) causes focus to get 'stuck'
+                                    if (m_focusRegenTimer > PetFocusRegenInterval)
+                                        m_focusRegenTimer = PetFocusRegenInterval;
+                                    break;
+                                default:
+                                    m_focusRegenTimer = 0;
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                }
                 default:
                     break;
             }
             base.Update(diff);
         }
 
-        public void Remove(PetSaveMode mode, bool returnreagent = false)
-        {
-            GetOwner().RemovePet(this, mode, returnreagent);
-        }
+        public void Remove(PetSaveMode mode, bool returnreagent = false) => GetOwner().RemovePet(this, mode, returnreagent);
 
         public void GivePetXP(uint xp)
         {
@@ -628,8 +625,8 @@ namespace Game.Entities
             if (petlevel >= maxlevel)
                 return;
 
-            uint nextLvlXP = m_unitData.PetNextLevelExperience;
-            uint curXP = m_unitData.PetExperience;
+            uint nextLvlXP = GetUpdateField<uint>(UnitFields.PetNextLevelExperience);
+            uint curXP = GetUpdateField<uint>(UnitFields.PetExperience);
             uint newXP = curXP + xp;
 
             // Check how much XP the pet should receive, and hand off have any left from previous levelups
@@ -641,7 +638,7 @@ namespace Game.Entities
 
                 GivePetLevel((int)petlevel);
 
-                nextLvlXP = m_unitData.PetNextLevelExperience;
+                nextLvlXP = GetUpdateField<uint>(UnitFields.PetNextLevelExperience);
             }
             // Not affected by special conditions - give it new XP
             SetPetExperience(petlevel < maxlevel ? newXP : 0);
@@ -946,8 +943,7 @@ namespace Game.Entities
                 if (!aura.CanBeSaved() || IsPetAura(aura))
                     continue;
 
-                uint recalculateMask;
-                AuraKey key = aura.GenerateKey(out recalculateMask);
+                AuraKey key = aura.GenerateKey(out uint recalculateMask);
 
                 // don't save guid of caster in case we are caster of the spell - guid for pet is generated every pet load, so it won't match saved guid anyways
                 if (key.Caster == GetGUID())
@@ -1308,17 +1304,12 @@ namespace Game.Entities
             switch (GetPetType())
             {
                 case PetType.Summon:
-                    switch (owner.GetClass())
+                    return owner.GetClass() switch
                     {
-                        case Class.Warlock:
-                            return GetCreatureTemplate().CreatureType == CreatureType.Demon;
-                        case Class.Deathknight:
-                            return GetCreatureTemplate().CreatureType == CreatureType.Undead;
-                        case Class.Mage:
-                            return GetCreatureTemplate().CreatureType == CreatureType.Elemental;
-                        default:
-                            return false;
-                    }
+                        Class.Warlock => GetCreatureTemplate().CreatureType == CreatureType.Demon,
+                        Class.Mage => GetCreatureTemplate().CreatureType == CreatureType.Elemental,
+                        _ => false,
+                    };
                 case PetType.Hunter:
                     return true;
                 default:
@@ -1445,10 +1436,7 @@ namespace Game.Entities
             }
         }
 
-        public new Player GetOwner()
-        {
-            return base.GetOwner().ToPlayer();
-        }
+        public new Player GetOwner() => base.GetOwner().ToPlayer();
 
         public override void SetDisplayId(uint modelId, float displayScale = 1f)
         {
@@ -1460,14 +1448,14 @@ namespace Game.Entities
             SetGroupUpdateFlag(GroupUpdatePetFlags.ModelId);
         }
 
-        public PetType GetPetType() { return m_petType; }
-        public void SetPetType(PetType type) { m_petType = type; }
-        public bool IsControlled() { return GetPetType() == PetType.Summon || GetPetType() == PetType.Hunter; }
-        public bool IsTemporarySummoned() { return m_duration > 0; }
+        public PetType GetPetType() => m_petType;
+        public void SetPetType(PetType type) => m_petType = type;
+        public bool IsControlled() => GetPetType() is PetType.Summon or PetType.Hunter;
+        public bool IsTemporarySummoned() => m_duration > 0;
 
-        public override bool IsLoading() { return m_loading; }
+        public override bool IsLoading() => m_loading;
 
-        public override byte GetPetAutoSpellSize() { return (byte)m_autospells.Count; }
+        public override byte GetPetAutoSpellSize() => (byte)m_autospells.Count;
         public override uint GetPetAutoSpellOnPos(byte pos)
         {
             if (pos >= m_autospells.Count)
@@ -1476,15 +1464,15 @@ namespace Game.Entities
                 return m_autospells[pos];
         }
 
-        public void SetDuration(uint dur) { m_duration = (int)dur; }
-        public int GetDuration() { return m_duration; }
+        public void SetDuration(uint dur) => m_duration = (int)dur;
+        public int GetDuration() => m_duration;
 
-        public void SetPetExperience(uint xp) { SetUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.PetExperience), xp); }
-        public void SetPetNextLevelExperience(uint xp) { SetUpdateFieldValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.PetNextLevelExperience), xp); }
+        public void SetPetExperience(uint xp) => SetUpdateField<uint>(UnitFields.PetExperience, xp);
+        public void SetPetNextLevelExperience(uint xp) => SetUpdateField<uint>(UnitFields.PetNextLevelExperience, xp);
 
-        public ushort GetSpecialization() { return m_petSpecialization; }
+        public ushort GetSpecialization() => m_petSpecialization;
 
-        public GroupUpdatePetFlags GetGroupUpdateFlag() { return m_groupUpdateMask; }
+        public GroupUpdatePetFlags GetGroupUpdateFlag() => m_groupUpdateMask;
         public void SetGroupUpdateFlag(GroupUpdatePetFlags flag)
         {
             if (GetOwner().GetGroup())
@@ -1584,13 +1572,13 @@ namespace Game.Entities
 
             for (byte i = SharedConst.ActionBarIndexStart; i < SharedConst.ActionBarIndexEnd; ++i)
             {
-                ss.AppendFormat("{0} {1} ", (uint)GetCharmInfo().GetActionBarEntry(i).GetActiveState(), (uint)GetCharmInfo().GetActionBarEntry(i).GetAction());
+                ss.AppendFormat("{0} {1} ", (uint)GetCharmInfo().GetActionBarEntry(i).GetActiveState(), GetCharmInfo().GetActionBarEntry(i).GetAction());
             }
 
             return ss.ToString();
         }
 
-        public DeclinedName GetDeclinedNames() { return _declinedname; }
+        public DeclinedName GetDeclinedNames() => _declinedname;
 
         public new Dictionary<uint, PetSpell> m_spells = new();
         List<uint> m_autospells = new();

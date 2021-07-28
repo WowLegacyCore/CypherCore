@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,11 +16,8 @@
  */
 
 using Framework.Constants;
-using Framework.Dynamic;
 using Framework.IO;
-using Game.Entities;
 using System.Collections.Generic;
-using System;
 using Game.DataStorage;
 
 namespace Game.Networking.Packets
@@ -56,7 +53,7 @@ namespace Game.Networking.Packets
 
     public class DBReply : ServerPacket
     {
-        public DBReply() : base(ServerOpcodes.DbReply) { }
+        public DBReply() : base(ServerOpcodes.DBReply) { }
 
         public override void Write()
         {

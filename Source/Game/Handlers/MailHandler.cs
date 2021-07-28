@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -242,7 +242,7 @@ namespace Game
                     }
                 }
 
-                if (item.GetTemplate().GetFlags().HasAnyFlag(ItemFlags.Conjured) || item.m_itemData.Expiration != 0)
+                if (item.GetTemplate().GetFlags().HasAnyFlag(ItemFlags.Conjured) || item.GetUpdateField<uint>(ItemFields.Expiration) != 0)
                 {
                     player.SendMailResult(0, MailResponseType.Send, MailResponseResult.EquipError, InventoryResult.MailBoundItem);
                     return;
@@ -266,7 +266,6 @@ namespace Game
             player.SendMailResult(0, MailResponseType.Send, MailResponseResult.Ok);
 
             player.ModifyMoney(-reqmoney);
-            player.UpdateCriteria(CriteriaTypes.GoldSpentForMail, cost);
 
             bool needItemDelay = false;
 
@@ -283,7 +282,7 @@ namespace Game
                     {
                         if (log)
                         {
-                            Log.outCommand(GetAccountId(), "GM {0} ({1}) (Account: {2}) mail item: {3} (Entry: {4} Count: {5}) to player: {6} ({7}) (Account: {8})", 
+                            Log.outCommand(GetAccountId(), "GM {0} ({1}) (Account: {2}) mail item: {3} (Entry: {4} Count: {5}) to player: {6} ({7}) (Account: {8})",
                                 GetPlayerName(), GetPlayer().GetGUID().ToString(), GetAccountId(), item.GetTemplate().GetName(), item.GetEntry(), item.GetCount(),
                                 packet.Info.Target, receiverGuid.ToString(), receiverAccountId);
                         }

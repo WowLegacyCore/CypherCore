@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -54,7 +54,7 @@ namespace Game.Groups
             leader.AddPlayerFlag(PlayerFlags.GroupLeader);
 
             if (IsBGGroup() || IsBFGroup())
-            { 
+            {
                 m_groupFlags = GroupFlags.MaskBgRaid;
                 m_groupCategory = GroupCategory.Instance;
             }
@@ -430,7 +430,6 @@ namespace Game.Groups
             {
                 // Broadcast new player group member fields to rest of the group
                 UpdateData groupData = new(player.GetMapId());
-                UpdateObject groupDataPacket;
 
                 // Broadcast group members' fields to player
                 for (GroupReference refe = GetFirstMember(); refe != null; refe = refe.Next())
@@ -442,16 +441,19 @@ namespace Game.Groups
                     if (existingMember != null)
                     {
                         if (player.HaveAtClient(existingMember))
-                            existingMember.BuildValuesUpdateBlockForPlayerWithFlag(groupData, UpdateFieldFlag.PartyMember, player);
+                        {
+                            existingMember.AddFieldNotifyFlag(MirrorFlags.Party);
+                            existingMember.BuildValuesUpdateBlockForPlayer(groupData, player);
+                            existingMember.RemoveFieldNotifyFlag(MirrorFlags.Party);
+                        }
 
                         if (existingMember.HaveAtClient(player))
                         {
                             UpdateData newData = new(player.GetMapId());
-                            UpdateObject newDataPacket;
-                            player.BuildValuesUpdateBlockForPlayerWithFlag(newData, UpdateFieldFlag.PartyMember, existingMember);
+                            player.BuildValuesUpdateBlockForPlayer(newData, existingMember);
                             if (newData.HasData())
                             {
-                                newData.BuildPacket(out newDataPacket);
+                                newData.BuildPacket(out UpdateObject newDataPacket);
                                 existingMember.SendPacket(newDataPacket);
                             }
                         }
@@ -460,7 +462,7 @@ namespace Game.Groups
 
                 if (groupData.HasData())
                 {
-                    groupData.BuildPacket(out groupDataPacket);
+                    groupData.BuildPacket(out UpdateObject groupDataPacket);
                     player.SendPacket(groupDataPacket);
                 }
             }
@@ -1174,8 +1176,6 @@ namespace Game.Groups
 
                         if (player && player.GetSession())
                         {
-                            player.UpdateCriteria(CriteriaTypes.RollNeedOnLoot, roll.itemid, maxresul);
-
                             List<ItemPosCount> dest = new();
                             LootItem item = (roll.itemSlot >= roll.GetLoot().items.Count ? roll.GetLoot().quest_items[roll.itemSlot - roll.GetLoot().items.Count] : roll.GetLoot().items[roll.itemSlot]);
                             InventoryResult msg = player.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, roll.itemid, item.count);
@@ -1237,8 +1237,6 @@ namespace Game.Groups
 
                         if (player && player.GetSession() != null)
                         {
-                            player.UpdateCriteria(CriteriaTypes.RollGreedOnLoot, roll.itemid, maxresul);
-
                             LootItem item = roll.itemSlot >= roll.GetLoot().items.Count ? roll.GetLoot().quest_items[roll.itemSlot - roll.GetLoot().items.Count] : roll.GetLoot().items[roll.itemSlot];
 
                             if (rollVote == RollType.Greed)
@@ -1264,7 +1262,6 @@ namespace Game.Groups
                                 item.is_looted = true;
                                 roll.GetLoot().NotifyItemRemoved(roll.itemSlot);
                                 roll.GetLoot().unlootedCount--;
-                                player.UpdateCriteria(CriteriaTypes.CastSpell, 13262); // Disenchant
 
                                 ItemDisenchantLootRecord disenchant = roll.GetItemDisenchantLoot(player);
 
@@ -2091,8 +2088,8 @@ namespace Game.Groups
                 Player pp = Global.ObjAccessor.FindPlayer(member.guid);
                 if (pp && pp.IsInWorld)
                 {
-                    pp.m_values.ModifyValue(pp.m_unitData).ModifyValue(pp.m_unitData.PvpFlags);
-                    pp.m_values.ModifyValue(pp.m_unitData).ModifyValue(pp.m_unitData.FactionTemplate);
+                    pp.ForceValuesUpdateAtIndex(UnitFields.Bytes2);
+                    pp.ForceValuesUpdateAtIndex(UnitFields.FactionTemplate);
                     pp.ForceUpdateFieldChange();
                     Log.outDebug(LogFilter.Server, "-- Forced group value update for '{0}'", pp.GetName());
                 }
@@ -2391,7 +2388,7 @@ namespace Game.Groups
         {
             return GetMemberFlags(guid).HasAnyFlag(GroupMemberFlags.Assistant);
         }
-        
+
         public ObjectGuid GetMemberGUID(string name)
         {
             foreach (var member in m_memberSlots)
@@ -2584,7 +2581,7 @@ namespace Game.Groups
 
         public uint GetDbStoreId() { return m_dbStoreId; }
         public List<MemberSlot> GetMemberSlots() { return m_memberSlots; }
-        public GroupReference GetFirstMember() { return (GroupReference)m_memberMgr.GetFirst(); }
+        public GroupReference GetFirstMember() { return m_memberMgr.GetFirst(); }
         public uint GetMembersCount() { return (uint)m_memberSlots.Count; }
         public uint GetInviteeCount() { return (uint)m_invitees.Count; }
         public GroupFlags GetGroupFlags() { return m_groupFlags; }

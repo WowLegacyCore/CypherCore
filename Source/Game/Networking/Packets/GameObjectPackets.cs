@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -85,26 +85,6 @@ namespace Game.Networking.Packets
         public bool Maintain;
     }
 
-    class DestructibleBuildingDamage : ServerPacket
-    {
-        public DestructibleBuildingDamage() : base(ServerOpcodes.DestructibleBuildingDamage, ConnectionType.Instance) { }
-
-        public override void Write()
-        {
-            _worldPacket.WritePackedGuid(Target);
-            _worldPacket.WritePackedGuid(Owner);
-            _worldPacket.WritePackedGuid(Caster);
-            _worldPacket.WriteInt32(Damage);
-            _worldPacket.WriteUInt32(SpellID);
-        }
-
-        public ObjectGuid Target;
-        public ObjectGuid Caster;
-        public ObjectGuid Owner;
-        public int Damage;
-        public uint SpellID;
-    }
-
     class FishNotHooked : ServerPacket
     {
         public FishNotHooked() : base(ServerOpcodes.FishNotHooked) { }
@@ -138,7 +118,7 @@ namespace Game.Networking.Packets
 
     class GameObjectUILink : ServerPacket
     {
-        public GameObjectUILink() : base(ServerOpcodes.GameObjectUiLink, ConnectionType.Instance) { }
+        public GameObjectUILink() : base(ServerOpcodes.GameObjectUILink, ConnectionType.Instance) { }
 
         public override void Write()
         {

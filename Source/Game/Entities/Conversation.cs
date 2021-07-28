@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,6 @@ using Game.DataStorage;
 using Game.Maps;
 using Game.Spells;
 using System.Collections.Generic;
-using Game.Networking;
 
 namespace Game.Entities
 {
@@ -36,7 +35,8 @@ namespace Game.Entities
             m_updateFlag.Stationary = true;
             m_updateFlag.Conversation = true;
 
-            m_conversationData = new ConversationData();
+            ValuesCount = (int)ConversationFields.End;
+            m_dynamicValuesCount = (int)ConversationDynamicFields.End;
         }
 
         public override void AddToWorld()
@@ -72,12 +72,6 @@ namespace Game.Entities
             if (GetDuration() > diff)
             {
                 _duration -= diff;
-                DoWithSuppressingObjectUpdates(() =>
-                {
-                    // Only sent in CreateObject
-                    ApplyModUpdateFieldValue(m_values.ModifyValue(m_conversationData).ModifyValue(m_conversationData.Progress), diff, true);
-                    m_conversationData.ClearChanged(m_conversationData.Progress);
-                });
             }
             else
             {
@@ -129,23 +123,22 @@ namespace Game.Entities
             SetEntry(conversationEntry);
             SetObjectScale(1.0f);
 
-            SetUpdateFieldValue(m_values.ModifyValue(m_conversationData).ModifyValue(m_conversationData.LastLineEndTime), conversationTemplate.LastLineEndTime);
+            SetUpdateField<uint>(ConversationFields.LastLineEndTime, conversationTemplate.LastLineEndTime);
             _duration = conversationTemplate.LastLineEndTime;
             _textureKitId = conversationTemplate.TextureKitId;
 
             if (conversationTemplate.Actors != null)
             {
+                var idx = 0;
                 foreach (var actor in conversationTemplate.Actors)
                 {
                     if (actor != null)
                     {
-                        ConversationActorField actorField = new();
-                        actorField.CreatureID = actor.CreatureId;
-                        actorField.CreatureDisplayInfoID = actor.CreatureDisplayInfoId;
-                        actorField.Id = (int)actor.ActorId;
+                        ConversationDynamicFieldActor actorField = new();
+                        actorField.ActorTemplate.CreatureId = actor.CreatureId;
+                        actorField.ActorTemplate.CreatureModelId = actor.CreatureDisplayInfoId;
                         actorField.Type = ConversationActorType.CreatureActor;
-
-                        AddDynamicUpdateFieldValue(m_values.ModifyValue(m_conversationData).ModifyValue(m_conversationData.Actors), actorField);
+                        SetDynamicStructuredValue<ConversationDynamicFieldActor>(ConversationDynamicFields.Actors, (ushort)idx++, actorField);
                     }
                 }
             }
@@ -169,30 +162,19 @@ namespace Game.Entities
             Global.ScriptMgr.OnConversationCreate(this, creator);
 
             List<ushort> actorIndices = new();
-            List<ConversationLine> lines = new();
             foreach (ConversationLineTemplate line in conversationTemplate.Lines)
             {
                 actorIndices.Add(line.ActorIdx);
-
-                ConversationLine lineField = new();
-                lineField.ConversationLineID = line.Id;
-                lineField.StartTime = line.StartTime;
-                lineField.UiCameraID = line.UiCameraID;
-                lineField.ActorIndex = line.ActorIdx;
-                lineField.Flags = line.Flags;
-
-                lines.Add(lineField);
+                AddDynamicStructuredValue<ConversationLineTemplate>(ConversationDynamicFields.Lines, line);
             }
-
-            SetUpdateFieldValue(m_values.ModifyValue(m_conversationData).ModifyValue(m_conversationData.Lines), lines);
 
             Global.ScriptMgr.OnConversationCreate(this, creator);
 
             // All actors need to be set
             foreach (ushort actorIndex in actorIndices)
             {
-                ConversationActorField actor = actorIndex < m_conversationData.Actors.Size() ? m_conversationData.Actors[actorIndex] : null;
-                if (actor == null || (actor.CreatureID == 0 && actor.ActorGUID.IsEmpty() && actor.NoActorObject == 0))
+                ConversationDynamicFieldActor actor = GetDynamicStructuredValue<ConversationDynamicFieldActor>(ConversationDynamicFields.Actors, actorIndex);
+                if (actor == null || (actor.ActorTemplate.CreatureId == 0 && actor.ActorGuid.IsEmpty()))
                 {
                     Log.outError(LogFilter.Conversation, $"Failed to create conversation (Id: {conversationEntry}) due to missing actor (Idx: {actorIndex}).");
                     return false;
@@ -207,100 +189,47 @@ namespace Game.Entities
 
         void AddActor(ObjectGuid actorGuid, ushort actorIdx)
         {
-            ConversationActorField actorField = m_values.ModifyValue(m_conversationData).ModifyValue(m_conversationData.Actors, actorIdx);
-            SetUpdateFieldValue(ref actorField.ActorGUID, actorGuid);
-            SetUpdateFieldValue(ref actorField.Type, ConversationActorType.WorldObjectActor);
+            ConversationDynamicFieldActor actorField = new();
+            actorField.ActorGuid = actorGuid;
+            actorField.Type = ConversationActorType.WorldObjectActor;
+            SetDynamicStructuredValue<ConversationDynamicFieldActor>(ConversationDynamicFields.Actors, actorIdx, actorField);
         }
 
-        void AddParticipant(ObjectGuid participantGuid)
-        {
-            _participants.Add(participantGuid);
-        }
+        void AddParticipant(ObjectGuid participantGuid) => _participants.Add(participantGuid);
 
-        public uint GetScriptId()
-        {
-            return Global.ConversationDataStorage.GetConversationTemplate(GetEntry()).ScriptId;
-        }
+        public uint GetScriptId() => Global.ConversationDataStorage.GetConversationTemplate(GetEntry()).ScriptId;
 
-        public override void BuildValuesCreate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
+        uint GetDuration() => _duration;
+        public uint GetTextureKitId() => _textureKitId;
 
-            m_objectData.WriteCreate(buffer, flags, this, target);
-            m_conversationData.WriteCreate(buffer, flags, this, target);
+        public ObjectGuid GetCreatorGuid() => _creatorGuid;
 
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteUInt8((byte)flags);
-            data.WriteBytes(buffer);
-        }
-
-        public override void BuildValuesUpdate(WorldPacket data, Player target)
-        {
-            UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-            WorldPacket buffer = new();
-
-            buffer.WriteUInt32(m_values.GetChangedObjectTypeMask());
-            if (m_values.HasChanged(TypeId.Object))
-                m_objectData.WriteUpdate(buffer, flags, this, target);
-
-            if (m_values.HasChanged(TypeId.Conversation))
-                m_conversationData.WriteUpdate(buffer, flags, this, target);
-
-            data.WriteUInt32(buffer.GetSize());
-            data.WriteBytes(buffer);
-        }
-
-        void BuildValuesUpdateForPlayerWithMask(UpdateData data, UpdateMask requestedObjectMask, UpdateMask requestedConversationMask, Player target)
-        {
-            UpdateMask valuesMask = new((int)TypeId.Max);
-            if (requestedObjectMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Object);
-
-            if (requestedConversationMask.IsAnySet())
-                valuesMask.Set((int)TypeId.Conversation);
-
-            WorldPacket buffer = new();
-            buffer.WriteUInt32(valuesMask.GetBlock(0));
-
-            if (valuesMask[(int)TypeId.Object])
-                m_objectData.WriteUpdate(buffer, requestedObjectMask, true, this, target);
-
-            if (valuesMask[(int)TypeId.Conversation])
-                m_conversationData.WriteUpdate(buffer, requestedConversationMask, true, this, target);
-
-            WorldPacket buffer1 = new();
-            buffer1.WriteUInt8((byte)UpdateType.Values);
-            buffer1.WritePackedGuid(GetGUID());
-            buffer1.WriteUInt32(buffer.GetSize());
-            buffer1.WriteBytes(buffer.GetData());
-
-            data.AddUpdateBlock(buffer1);
-        }
-
-        public override void ClearUpdateMask(bool remove)
-        {
-            m_values.ClearChangesMask(m_conversationData);
-            base.ClearUpdateMask(remove);
-        }
-
-        uint GetDuration() { return _duration; }
-        public uint GetTextureKitId() { return _textureKitId; }
-
-        public ObjectGuid GetCreatorGuid() { return _creatorGuid; }
-
-        public override float GetStationaryX() { return _stationaryPosition.GetPositionX(); }
-        public override float GetStationaryY() { return _stationaryPosition.GetPositionY(); }
-        public override float GetStationaryZ() { return _stationaryPosition.GetPositionZ(); }
-        public override float GetStationaryO() { return _stationaryPosition.GetOrientation(); }
-        void RelocateStationaryPosition(Position pos) { _stationaryPosition.Relocate(pos); }
-
-        ConversationData m_conversationData;
+        public override float GetStationaryX() => _stationaryPosition.GetPositionX();
+        public override float GetStationaryY() => _stationaryPosition.GetPositionY();
+        public override float GetStationaryZ() => _stationaryPosition.GetPositionZ();
+        public override float GetStationaryO() => _stationaryPosition.GetOrientation();
+        void RelocateStationaryPosition(Position pos) => _stationaryPosition.Relocate(pos);
 
         Position _stationaryPosition = new();
         ObjectGuid _creatorGuid;
         uint _duration;
         uint _textureKitId;
         List<ObjectGuid> _participants = new();
+    }
+
+    class ConversationDynamicFieldActor
+    {
+        public bool IsEmpty() => ActorGuid.IsEmpty(); // this one is good enough
+
+        public ObjectGuid ActorGuid;
+        public ActorTemplateStruct ActorTemplate;
+
+        public struct ActorTemplateStruct
+        {
+            public uint CreatureId;
+            public uint CreatureModelId;
+        }
+
+        public ConversationActorType Type;
     }
 }

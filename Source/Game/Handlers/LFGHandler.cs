@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -144,8 +144,7 @@ namespace Game
         {
             // Get Random dungeons that can be done at a certain level and expansion
             uint level = GetPlayer().GetLevel();
-            uint contentTuningReplacementConditionMask = GetPlayer().m_playerData.CtrOptions.GetValue().ContentTuningConditionMask;
-            var randomDungeons = Global.LFGMgr.GetRandomAndSeasonalDungeons(level, (uint)GetExpansion(), contentTuningReplacementConditionMask);
+            var randomDungeons = Global.LFGMgr.GetRandomAndSeasonalDungeons(level, (uint)GetExpansion());
 
             LfgPlayerInfo lfgPlayerInfo = new();
 

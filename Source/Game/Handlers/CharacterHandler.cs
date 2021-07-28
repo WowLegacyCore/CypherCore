@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -147,7 +147,7 @@ namespace Game
                 HandleCharEnum(holder);
                 return;
             }
-            
+
             _charEnumCallback = DB.Characters.DelayQueryHolder(holder);
         }
 
@@ -186,9 +186,6 @@ namespace Game
                 return false;
 
             if (req.AchievementID != 0 /*&& !HasAchieved(req->AchievementID)*/)
-                return false;
-
-            if (req.ItemModifiedAppearanceID != 0 && !GetCollectionMgr().HasItemAppearance(req.ItemModifiedAppearanceID).PermAppearance)
                 return false;
 
             if (checkRequiredDependentChoices)
@@ -444,7 +441,7 @@ namespace Game
                 bool hasDemonHunterReqLevel = demonHunterReqLevel == 0;
                 bool allowTwoSideAccounts = !Global.WorldMgr.IsPvPRealm() || HasPermission(RBACPermissions.TwoSideCharacterCreation);
                 int skipCinematics = WorldConfig.GetIntValue(WorldCfg.SkipCinematics);
-                bool checkDemonHunterReqs = createInfo.ClassId == Class.DemonHunter && !HasPermission(RBACPermissions.SkipCheckCharacterCreationDemonHunter);
+                bool checkDemonHunterReqs = !HasPermission(RBACPermissions.SkipCheckCharacterCreationDemonHunter);
 
                 void finalizeCharacterCreation(SQLResult result1)
                 {
@@ -481,7 +478,7 @@ namespace Game
 
                         // search same race for cinematic or same class if need
                         // @todo check if cinematic already shown? (already logged in?; cinematic field)
-                        while ((skipCinematics == 1 && !haveSameRace) || createInfo.ClassId == Class.DemonHunter)
+                        while ((skipCinematics == 1 && !haveSameRace))
                         {
                             if (!result1.NextRow())
                                 break;
@@ -560,7 +557,7 @@ namespace Game
                     });
                 }
 
-                if (!allowTwoSideAccounts || skipCinematics == 1 || createInfo.ClassId == Class.DemonHunter)
+                if (!allowTwoSideAccounts || skipCinematics == 1)
                 {
                     finalizeCharacterCreation(new SQLResult());
                     return;
@@ -568,7 +565,7 @@ namespace Game
 
                 stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHAR_CREATE_INFO);
                 stmt.AddValue(0, GetAccountId());
-                stmt.AddValue(1, (skipCinematics == 1 || createInfo.ClassId == Class.DemonHunter) ? 1200 : 1); // 200 (max chars per realm) + 1000 (max deleted chars per realm)
+                stmt.AddValue(1, skipCinematics == 1 ? 1200 : 1); // 200 (max chars per realm) + 1000 (max deleted chars per realm)
                 queryCallback.WithCallback(finalizeCharacterCreation).SetNextQuery(DB.Characters.AsyncQuery(stmt));
             }));
         }
@@ -627,7 +624,6 @@ namespace Game
             Global.ScriptMgr.OnPlayerDelete(charDelete.Guid, initAccountId); // To prevent race conditioning, but as it also makes sense, we hand the accountId over for successful delete.
             // Shouldn't interfere with character deletion though
 
-            Global.GuildFinderMgr.RemoveAllMembershipRequestsFromPlayer(charDelete.Guid);
             Global.CalendarMgr.RemoveAllPlayerEventsAndInvites(charDelete.Guid);
             Player.DeleteFromDB(charDelete.Guid, accountId);
 
@@ -754,17 +750,6 @@ namespace Game
 
             SendSetTimeZoneInformation();
 
-            // Send PVPSeason
-            {
-                SeasonInfo seasonInfo = new();
-                seasonInfo.PreviousSeason = (WorldConfig.GetIntValue(WorldCfg.ArenaSeasonId) - (WorldConfig.GetBoolValue(WorldCfg.ArenaSeasonInProgress) ? 1 : 0));
-
-                if (WorldConfig.GetBoolValue(WorldCfg.ArenaSeasonInProgress))
-                    seasonInfo.CurrentSeason = WorldConfig.GetIntValue(WorldCfg.ArenaSeasonId);
-
-                SendPacket(seasonInfo);
-            }
-
             SQLResult resultGuild = holder.GetResult(PlayerLoginQueryLoad.Guild);
             if (!resultGuild.IsEmpty())
             {
@@ -781,9 +766,6 @@ namespace Game
                 pCurrChar.SetGuildLevel(0);
             }
 
-            // TODO: Move this to BattlePetMgr::SendJournalLock() just to have all packets in one file
-            SendPacket(new BattlePetJournalLockAcquired());
-
             pCurrChar.SendInitialPacketsBeforeAddToMap();
 
             //Show cinematic at the first time that player login
@@ -794,9 +776,7 @@ namespace Game
                 if (cEntry != null)
                 {
                     ChrRacesRecord rEntry = CliDB.ChrRacesStorage.LookupByKey(pCurrChar.GetRace());
-                    if (pCurrChar.GetClass() == Class.DemonHunter) // @todo: find a more generic solution
-                        pCurrChar.SendMovieStart(469);
-                    else if (cEntry.CinematicSequenceID != 0)
+                    if (cEntry.CinematicSequenceID != 0)
                         pCurrChar.SendCinematicStart(cEntry.CinematicSequenceID);
                     else if (rEntry != null)
                         pCurrChar.SendCinematicStart(rEntry.CinematicSequenceID);
@@ -855,28 +835,29 @@ namespace Game
             // Place character in world (and load zone) before some object loading
             pCurrChar.LoadCorpse(holder.GetResult(PlayerLoginQueryLoad.CorpseLocation));
 
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_FAVORITE_AUCTIONS);
-            stmt.AddValue(0, pCurrChar.GetGUID().GetCounter());
-            GetQueryProcessor().AddCallback(DB.Characters.AsyncQuery(stmt)).WithCallback(favoriteAuctionResult =>
-            {
-                AuctionFavoriteList favoriteItems = new();
-                if (!favoriteAuctionResult.IsEmpty())
-                {
-                    do
-                    {
-                        AuctionFavoriteInfo item = new();
-                        item.Order = favoriteAuctionResult.Read<uint>(0);
-                        item.ItemID = favoriteAuctionResult.Read<uint>(1);
-                        item.ItemLevel = favoriteAuctionResult.Read<uint>(2);
-                        item.BattlePetSpeciesID = favoriteAuctionResult.Read<uint>(3);
-                        item.SuffixItemNameDescriptionID = favoriteAuctionResult.Read<uint>(4);
-                        favoriteItems.Items.Add(item);
-
-                    } while (favoriteAuctionResult.NextRow());
-
-                }
-                SendPacket(favoriteItems);
-            });
+            // @TODO: FIX AUCTIONHOUSE
+            // stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_FAVORITE_AUCTIONS);
+            // stmt.AddValue(0, pCurrChar.GetGUID().GetCounter());
+            // GetQueryProcessor().AddCallback(DB.Characters.AsyncQuery(stmt)).WithCallback(favoriteAuctionResult =>
+            // {
+            //     AuctionFavoriteList favoriteItems = new();
+            //     if (!favoriteAuctionResult.IsEmpty())
+            //     {
+            //         do
+            //         {
+            //             AuctionFavoriteInfo item = new();
+            //             item.Order = favoriteAuctionResult.Read<uint>(0);
+            //             item.ItemID = favoriteAuctionResult.Read<uint>(1);
+            //             item.ItemLevel = favoriteAuctionResult.Read<uint>(2);
+            //             item.BattlePetSpeciesID = favoriteAuctionResult.Read<uint>(3);
+            //             item.SuffixItemNameDescriptionID = favoriteAuctionResult.Read<uint>(4);
+            //             favoriteItems.Items.Add(item);
+            //
+            //         } while (favoriteAuctionResult.NextRow());
+            //
+            //     }
+            //     SendPacket(favoriteItems);
+            // });
 
             // setting Ghost+speed if dead
             if (pCurrChar.GetDeathState() != DeathState.Alive)
@@ -944,7 +925,7 @@ namespace Game
                 if (WorldConfig.GetBoolValue(WorldCfg.StartAllExplored))
                 {
                     for (ushort i = 0; i < PlayerConst.ExploredZonesSize; i++)
-                        pCurrChar.SetUpdateFieldValue(ref pCurrChar.m_values.ModifyValue(pCurrChar.m_activePlayerData).ModifyValue(pCurrChar.m_activePlayerData.ExploredZones, i), 0xFFFFFFFFFFFFFFFF);
+                        pCurrChar.SetUpdateField<ulong>(ActivePlayerFields.ExploredZones + i, 0xFFFFFFFFFFFFFFFF);
                 }
 
                 //Reputations if "StartAllReputation" is enabled
@@ -1105,24 +1086,24 @@ namespace Game
             GetPlayer().GetReputationMgr().SetAtWar(packet.FactionIndex, false);
         }
 
-        [WorldPacketHandler(ClientOpcodes.Tutorial)]
+        [WorldPacketHandler(ClientOpcodes.TutorialFlag)]
         void HandleTutorialFlag(TutorialSetFlag packet)
         {
             switch (packet.Action)
             {
                 case TutorialAction.Update:
+                {
+                    byte index = (byte)(packet.TutorialBit >> 5);
+                    if (index >= SharedConst.MaxAccountTutorialValues)
                     {
-                        byte index = (byte)(packet.TutorialBit >> 5);
-                        if (index >= SharedConst.MaxAccountTutorialValues)
-                        {
-                            Log.outError(LogFilter.Network, "CMSG_TUTORIAL_FLAG received bad TutorialBit {0}.", packet.TutorialBit);
-                            return;
-                        }
-                        uint flag = GetTutorialInt(index);
-                        flag |= (uint)(1 << (int)(packet.TutorialBit & 0x1F));
-                        SetTutorialInt(index, flag);
-                        break;
+                        Log.outError(LogFilter.Network, "CMSG_TUTORIAL_FLAG received bad TutorialBit {0}.", packet.TutorialBit);
+                        return;
                     }
+                    uint flag = GetTutorialInt(index);
+                    flag |= (uint)(1 << (int)(packet.TutorialBit & 0x1F));
+                    SetTutorialInt(index, flag);
+                    break;
+                }
                 case TutorialAction.Clear:
                     for (byte i = 0; i < SharedConst.MaxAccountTutorialValues; ++i)
                         SetTutorialInt(i, 0xFFFFFFFF);
@@ -1147,40 +1128,6 @@ namespace Game
         void HandleSetFactionInactive(SetFactionInactive packet)
         {
             GetPlayer().GetReputationMgr().SetInactive(packet.Index, packet.State);
-        }
-
-        [WorldPacketHandler(ClientOpcodes.CheckCharacterNameAvailability)]
-        void HandleCheckCharacterNameAvailability(CheckCharacterNameAvailability checkCharacterNameAvailability)
-        {
-            // prevent character rename to invalid name
-            if (!ObjectManager.NormalizePlayerName(ref checkCharacterNameAvailability.Name))
-            {
-                SendPacket(new CheckCharacterNameAvailabilityResult(checkCharacterNameAvailability.SequenceIndex, ResponseCodes.CharNameNoName));
-                return;
-            }
-
-            ResponseCodes res = ObjectManager.CheckPlayerName(checkCharacterNameAvailability.Name, GetSessionDbcLocale(), true);
-            if (res != ResponseCodes.CharNameSuccess)
-            {
-                SendPacket(new CheckCharacterNameAvailabilityResult(checkCharacterNameAvailability.SequenceIndex, res));
-                return;
-            }
-
-            // check name limitations
-            if (!HasPermission(RBACPermissions.SkipCheckCharacterCreationReservedname) && Global.ObjectMgr.IsReservedName(checkCharacterNameAvailability.Name))
-            {
-                SendPacket(new CheckCharacterNameAvailabilityResult(checkCharacterNameAvailability.SequenceIndex, ResponseCodes.CharNameReserved));
-                return;
-            }
-
-            // Ensure that there is no character with the desired new name
-            PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHECK_NAME);
-            stmt.AddValue(0, checkCharacterNameAvailability.Name);
-
-            _queryProcessor.AddCallback(DB.Characters.AsyncQuery(stmt).WithCallback(result =>
-            {
-                SendPacket(new CheckCharacterNameAvailabilityResult(checkCharacterNameAvailability.SequenceIndex, !result.IsEmpty() ? ResponseCodes.CharCreateNameInUse : ResponseCodes.Success));
-            }));
         }
 
         [WorldPacketHandler(ClientOpcodes.RequestForcedReactions)]
@@ -1274,8 +1221,7 @@ namespace Game
         void HandleSetPlayerDeclinedNames(SetPlayerDeclinedNames packet)
         {
             // not accept declined names for unsupported languages
-            string name;
-            if (!Global.CharacterCacheStorage.GetCharacterNameByGuid(packet.Player, out name))
+            if (!Global.CharacterCacheStorage.GetCharacterNameByGuid(packet.Player, out string name))
             {
                 SendSetPlayerDeclinedNamesResult(DeclinedNameResult.Error, packet.Player);
                 return;
@@ -1353,7 +1299,6 @@ namespace Game
             SendPacket(new BarberShopResult(BarberShopResult.ResultEnum.Success));
 
             _player.ModifyMoney(-cost);
-            _player.UpdateCriteria(CriteriaTypes.GoldSpentAtBarber, (ulong)cost);
 
             if (_player.GetNativeSex() != (Gender)packet.NewSex)
             {
@@ -1363,9 +1308,6 @@ namespace Game
             }
 
             _player.SetCustomizations(packet.Customizations);
-
-            _player.UpdateCriteria(CriteriaTypes.VisitBarberShop, 1);
-
             _player.SetStandState(UnitStandStateType.Stand);
 
             Global.CharacterCacheStorage.UpdateCharacterGender(_player.GetGUID(), packet.NewSex);
@@ -1493,48 +1435,27 @@ namespace Game
             if (saveEquipmentSet.Set.SetID >= ItemConst.MaxEquipmentSetIndex) // client set slots amount
                 return;
 
-            if (saveEquipmentSet.Set.Type > EquipmentSetInfo.EquipmentSetType.Transmog)
-                return;
-
             for (byte i = 0; i < EquipmentSlot.End; ++i)
             {
                 if (!Convert.ToBoolean(saveEquipmentSet.Set.IgnoreMask & (1 << i)))
                 {
-                    if (saveEquipmentSet.Set.Type == EquipmentSetInfo.EquipmentSetType.Equipment)
+                    saveEquipmentSet.Set.Appearances[i] = 0;
+
+                    ObjectGuid itemGuid = saveEquipmentSet.Set.Pieces[i];
+                    if (!itemGuid.IsEmpty())
                     {
-                        saveEquipmentSet.Set.Appearances[i] = 0;
+                        Item item = _player.GetItemByPos(InventorySlots.Bag0, i);
 
-                        ObjectGuid itemGuid = saveEquipmentSet.Set.Pieces[i];
-                        if (!itemGuid.IsEmpty())
-                        {
-                            Item item = _player.GetItemByPos(InventorySlots.Bag0, i);
+                        // cheating check 1 (item equipped but sent empty guid)
+                        if (!item)
+                            return;
 
-                            // cheating check 1 (item equipped but sent empty guid)
-                            if (!item)
-                                return;
-
-                            // cheating check 2 (sent guid does not match equipped item)
-                            if (item.GetGUID() != itemGuid)
-                                return;
-                        }
-                        else
-                            saveEquipmentSet.Set.IgnoreMask |= 1u << i;
+                        // cheating check 2 (sent guid does not match equipped item)
+                        if (item.GetGUID() != itemGuid)
+                            return;
                     }
                     else
-                    {
-                        saveEquipmentSet.Set.Pieces[i].Clear();
-                        if (saveEquipmentSet.Set.Appearances[i] != 0)
-                        {
-                            if (!CliDB.ItemModifiedAppearanceStorage.ContainsKey(saveEquipmentSet.Set.Appearances[i]))
-                                return;
-
-                            (bool hasAppearance, _) = GetCollectionMgr().HasItemAppearance((uint)saveEquipmentSet.Set.Appearances[i]);
-                            if (!hasAppearance)
-                                return;
-                        }
-                        else
-                            saveEquipmentSet.Set.IgnoreMask |= 1u << i;
-                    }
+                        saveEquipmentSet.Set.IgnoreMask |= 1u << i;
                 }
                 else
                 {
@@ -1543,39 +1464,8 @@ namespace Game
                 }
             }
             saveEquipmentSet.Set.IgnoreMask &= 0x7FFFF; // clear invalid bits (i > EQUIPMENT_SLOT_END)
-            if (saveEquipmentSet.Set.Type == EquipmentSetInfo.EquipmentSetType.Equipment)
-            {
-                saveEquipmentSet.Set.Enchants[0] = 0;
-                saveEquipmentSet.Set.Enchants[1] = 0;
-            }
-            else
-            {
-                var validateIllusion = new Func<uint, bool>(enchantId =>
-                {
-                    SpellItemEnchantmentRecord illusion = CliDB.SpellItemEnchantmentStorage.LookupByKey(enchantId);
-                    if (illusion == null)
-                        return false;
-
-                    if (illusion.ItemVisual == 0 || !illusion.Flags.HasAnyFlag(EnchantmentSlotMask.Collectable))
-                        return false;
-
-                    PlayerConditionRecord condition = CliDB.PlayerConditionStorage.LookupByKey(illusion.TransmogUseConditionID);
-                    if (condition != null)
-                        if (!ConditionManager.IsPlayerMeetingCondition(_player, condition))
-                            return false;
-
-                    if (illusion.ScalingClassRestricted > 0 && illusion.ScalingClassRestricted != (byte)_player.GetClass())
-                        return false;
-
-                    return true;
-                });
-
-                if (saveEquipmentSet.Set.Enchants[0] != 0 && !validateIllusion((uint)saveEquipmentSet.Set.Enchants[0]))
-                    return;
-
-                if (saveEquipmentSet.Set.Enchants[1] != 0 && !validateIllusion((uint)saveEquipmentSet.Set.Enchants[1]))
-                    return;
-            }
+            saveEquipmentSet.Set.Enchants[0] = 0;
+            saveEquipmentSet.Set.Enchants[1] = 0;
 
             GetPlayer().SetEquipmentSet(saveEquipmentSet.Set);
         }
@@ -1835,7 +1725,6 @@ namespace Game
                             stmt.AddValue(1, 111);
                             break;
                         case Race.Draenei:
-                        case Race.LightforgedDraenei:
                             stmt.AddValue(1, 759);
                             break;
                         case Race.Gnome:
@@ -1844,28 +1733,20 @@ namespace Game
                         case Race.NightElf:
                             stmt.AddValue(1, 113);
                             break;
-                        case Race.Worgen:
-                            stmt.AddValue(1, 791);
-                            break;
                         case Race.Undead:
                             stmt.AddValue(1, 673);
                             break;
                         case Race.Tauren:
-                        case Race.HighmountainTauren:
                             stmt.AddValue(1, 115);
                             break;
                         case Race.Troll:
                             stmt.AddValue(1, 315);
                             break;
                         case Race.BloodElf:
-                        case Race.VoidElf:
                             stmt.AddValue(1, 137);
                             break;
                         case Race.Goblin:
                             stmt.AddValue(1, 792);
-                            break;
-                        case Race.Nightborne:
-                            stmt.AddValue(1, 2464);
                             break;
                         default:
                             Log.outError(LogFilter.Player, $"Could not find language data for race ({factionChangeInfo.RaceID}).");
@@ -1896,7 +1777,7 @@ namespace Game
                         {
                             // i = (315 - 1) / 8 = 39
                             // m = 1 << ((315 - 1) % 8) = 4
-                            int deathKnightExtraNode = playerClass != Class.Deathknight || i != 39 ? 0 : 4;
+                            int deathKnightExtraNode = i != 39 ? 0 : 4;
                             taximaskstream += (uint)(factionMask[i] | deathKnightExtraNode) + ' ';
                         }
 
@@ -1957,24 +1838,6 @@ namespace Game
                     trans.Append(stmt);
 
                     Player.SavePositionInDB(loc, zoneId, factionChangeInfo.Guid, trans);
-
-                    // Achievement conversion
-                    foreach (var it in Global.ObjectMgr.FactionChangeAchievements)
-                    {
-                        uint achiev_alliance = it.Key;
-                        uint achiev_horde = it.Value;
-
-                        stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_CHAR_ACHIEVEMENT_BY_ACHIEVEMENT);
-                        stmt.AddValue(0, (ushort)(newTeamId == TeamId.Alliance ? achiev_alliance : achiev_horde));
-                        stmt.AddValue(1, lowGuid);
-                        trans.Append(stmt);
-
-                        stmt = DB.Characters.GetPreparedStatement(CharStatements.UPD_CHAR_ACHIEVEMENT);
-                        stmt.AddValue(0, (ushort)(newTeamId == TeamId.Alliance ? achiev_alliance : achiev_horde));
-                        stmt.AddValue(1, (ushort)(newTeamId == TeamId.Alliance ? achiev_horde : achiev_alliance));
-                        stmt.AddValue(2, lowGuid);
-                        trans.Append(stmt);
-                    }
 
                     // Item conversion
                     foreach (var it in Global.ObjectMgr.FactionChangeItems)
@@ -2176,7 +2039,7 @@ namespace Game
         void HandleOpeningCinematic(OpeningCinematic packet)
         {
             // Only players that has not yet gained any experience can use this
-            if (GetPlayer().m_activePlayerData.XP != 0)
+            if (GetPlayer().GetXP() != 0)
                 return;
 
             ChrClassesRecord classEntry = CliDB.ChrClassesStorage.LookupByKey(GetPlayer().GetClass());
@@ -2620,30 +2483,6 @@ namespace Game
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.Inventory, stmt);
 
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_ITEM_INSTANCE_ARTIFACT);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.Artifacts, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_ITEM_INSTANCE_AZERITE);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.Azerite, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_ITEM_INSTANCE_AZERITE_MILESTONE_POWER);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.AzeriteMilestonePowers, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_ITEM_INSTANCE_AZERITE_UNLOCKED_ESSENCE);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.AzeriteUnlockedEssences, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_ITEM_INSTANCE_AZERITE_EMPOWERED);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.AzeriteEmpowered, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHAR_VOID_STORAGE);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.VoidStorage, stmt);
-
             stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_ACTIONS);
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.Actions, stmt);
@@ -2700,10 +2539,6 @@ namespace Game
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.EquipmentSets, stmt);
 
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_TRANSMOG_OUTFITS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.TransmogOutfits, stmt);
-
             stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHAR_CUF_PROFILES);
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.CufProfiles, stmt);
@@ -2755,26 +2590,6 @@ namespace Game
             stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CORPSE_LOCATION);
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.CorpseLocation, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_GARRISON);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.Garrison, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_GARRISON_BLUEPRINTS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.GarrisonBlueprints, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_GARRISON_BUILDINGS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.GarrisonBuildings, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_GARRISON_FOLLOWERS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.GarrisonFollowers, stmt);
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_GARRISON_FOLLOWER_ABILITIES);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.GarrisonFollowerAbilities, stmt);
         }
 
         public ObjectGuid GetGuid() { return m_guid; }
@@ -2833,11 +2648,6 @@ namespace Game
         DailyQuestStatus,
         Reputation,
         Inventory,
-        Artifacts,
-        Azerite,
-        AzeriteMilestonePowers,
-        AzeriteUnlockedEssences,
-        AzeriteEmpowered,
         Actions,
         MailCount,
         MailDate,
@@ -2851,7 +2661,6 @@ namespace Game
         Achievements,
         CriteriaProgress,
         EquipmentSets,
-        TransmogOutfits,
         BgData,
         Glyphs,
         Talents,
@@ -2865,15 +2674,9 @@ namespace Game
         InstanceLockTimes,
         SeasonalQuestStatus,
         MonthlyQuestStatus,
-        VoidStorage,
         Currency,
         CufProfiles,
         CorpseLocation,
-        Garrison,
-        GarrisonBlueprints,
-        GarrisonBuildings,
-        GarrisonFollowers,
-        GarrisonFollowerAbilities,
         Max
     }
 

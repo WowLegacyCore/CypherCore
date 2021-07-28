@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,15 +33,6 @@ namespace Game.Chat
             Log.outInfo(LogFilter.Server, "Re-Loading Access Requirement definitions...");
             Global.ObjectMgr.LoadAccessRequirements();
             handler.SendGlobalGMSysMessage("DB table `access_requirement` reloaded.");
-            return true;
-        }
-
-        [Command("achievement_reward", RBACPermissions.CommandReloadAchievementReward, true)]
-        static bool HandleReloadAchievementRewardCommand(StringArguments args, CommandHandler handler)
-        {
-            Log.outInfo(LogFilter.Server, "Re-Loading Achievement Reward Data...");
-            Global.AchievementMgr.LoadRewards();
-            handler.SendGlobalGMSysMessage("DB table `achievement_reward` reloaded.");
             return true;
         }
 
@@ -261,15 +252,6 @@ namespace Game.Chat
             return true;
         }
 
-        [Command("criteria_data", RBACPermissions.CommandReloadCriteriaData, true)]
-        static bool HandleReloadCriteriaDataCommand(StringArguments args, CommandHandler handler)
-        {
-            Log.outInfo(LogFilter.Server, "Re-Loading Additional Criteria Data...");
-            Global.CriteriaMgr.LoadCriteriaData();
-            handler.SendGlobalGMSysMessage("DB table `criteria_data` reloaded.");
-            return true;
-        }
-
         [Command("disables", RBACPermissions.CommandReloadDisables, true)]
         static bool HandleReloadDisablesCommand(StringArguments args, CommandHandler handler)
         {
@@ -422,15 +404,6 @@ namespace Game.Chat
             Log.outInfo(LogFilter.Server, "Re-Loading lfg dungeon rewards...");
             Global.LFGMgr.LoadRewards();
             handler.SendGlobalGMSysMessage("DB table `lfg_dungeon_rewards` reloaded.");
-            return true;
-        }
-
-        [Command("achievement_reward_locale", RBACPermissions.CommandReloadAchievementRewardLocale, true)]
-        static bool HandleReloadAchievementRewardLocaleCommand(StringArguments args, CommandHandler handler)
-        {
-            Log.outInfo(LogFilter.Server, "Re-Loading Achievement Reward Data Locale...");
-            Global.AchievementMgr.LoadRewardLocales();
-            handler.SendGlobalGMSysMessage("DB table `achievement_reward_locale` reloaded.");
             return true;
         }
 
@@ -902,7 +875,7 @@ namespace Game.Chat
             handler.SendGlobalGMSysMessage("Vehicle templates reloaded.");
             return true;
         }
-        
+
         [Command("vehicle_template_accessory", RBACPermissions.CommandReloadVehicleTemplateAccessory, true)]
         static bool HandleReloadVehicleTemplateAccessoryCommand(StringArguments args, CommandHandler handler)
         {
@@ -969,7 +942,6 @@ namespace Game.Chat
             {
                 HandleReloadSkillFishingBaseLevelCommand(args, handler);
 
-                HandleReloadAllAchievementCommand(args, handler);
                 HandleReloadAllAreaCommand(args, handler);
                 HandleReloadAllLootCommand(args, handler);
                 HandleReloadAllNpcCommand(args, handler);
@@ -993,14 +965,6 @@ namespace Game.Chat
                 HandleReloadAutobroadcastCommand(args, handler);
                 HandleReloadBattlegroundTemplate(args, handler);
                 HandleReloadCharacterTemplate(args, handler);
-                return true;
-            }
-
-            [Command("achievement", RBACPermissions.CommandReloadAllAchievement, true)]
-            static bool HandleReloadAllAchievementCommand(StringArguments args, CommandHandler handler)
-            {
-                HandleReloadCriteriaDataCommand(args, handler);
-                HandleReloadAchievementRewardCommand(args, handler);
                 return true;
             }
 
@@ -1034,7 +998,6 @@ namespace Game.Chat
             [Command("locales", RBACPermissions.CommandReloadAllLocales, true)]
             static bool HandleReloadAllLocalesCommand(StringArguments args, CommandHandler handler)
             {
-                HandleReloadAchievementRewardLocaleCommand(null, handler);
                 HandleReloadCreatureTemplateLocaleCommand(null, handler);
                 HandleReloadCreatureTextLocaleCommand(null, handler);
                 HandleReloadGameobjectTemplateLocaleCommand(null, handler);

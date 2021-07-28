@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -44,10 +44,7 @@ namespace Game.Entities
 
     public class HealthPctOrderPred : IComparer<WorldObject>
     {
-        public HealthPctOrderPred(bool ascending = true)
-        {
-            m_ascending = ascending;
-        }
+        public HealthPctOrderPred(bool ascending = true) => m_ascending = ascending;
 
         public int Compare(WorldObject objA, WorldObject objB)
         {
@@ -69,10 +66,7 @@ namespace Game.Entities
             m_ascending = ascending;
         }
 
-        public int Compare(WorldObject pLeft, WorldObject pRight)
-        {
-            return (m_ascending ? m_refObj.GetDistanceOrder(pLeft, pRight) : !m_refObj.GetDistanceOrder(pLeft, pRight)) ? 1 : 0;
-        }
+        public int Compare(WorldObject pLeft, WorldObject pRight) => (m_ascending ? m_refObj.GetDistanceOrder(pLeft, pRight) : !m_refObj.GetDistanceOrder(pLeft, pRight)) ? 1 : 0;
 
         WorldObject m_refObj;
         bool m_ascending;

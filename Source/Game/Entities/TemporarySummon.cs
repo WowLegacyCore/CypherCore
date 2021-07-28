@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,16 +33,10 @@ namespace Game.Entities
             UnitTypeMask |= UnitTypeMask.Summon;
         }
 
-        public Unit GetSummoner()
-        {
-            return !m_summonerGUID.IsEmpty() ? Global.ObjAccessor.GetUnit(this, m_summonerGUID) : null;
-        }
+        public Unit GetSummoner() => !m_summonerGUID.IsEmpty() ? Global.ObjAccessor.GetUnit(this, m_summonerGUID) : null;
 
-        public Creature GetSummonerCreatureBase()
-        {
-            return !m_summonerGUID.IsEmpty() ? ObjectAccessor.GetCreature(this, m_summonerGUID) : null;
-        }
-        
+        public Creature GetSummonerCreatureBase() => !m_summonerGUID.IsEmpty() ? ObjectAccessor.GetCreature(this, m_summonerGUID) : null;
+
         public override void Update(uint diff)
         {
             base.Update(diff);
@@ -59,6 +53,19 @@ namespace Game.Entities
                 case TempSummonType.DeadDespawn:
                     break;
                 case TempSummonType.TimedDespawn:
+                {
+                    if (m_timer <= diff)
+                    {
+                        UnSummon();
+                        return;
+                    }
+
+                    m_timer -= diff;
+                    break;
+                }
+                case TempSummonType.TimedDespawnOutOfCombat:
+                {
+                    if (!IsInCombat())
                     {
                         if (m_timer <= diff)
                         {
@@ -67,89 +74,75 @@ namespace Game.Entities
                         }
 
                         m_timer -= diff;
-                        break;
                     }
-                case TempSummonType.TimedDespawnOutOfCombat:
-                    {
-                        if (!IsInCombat())
-                        {
-                            if (m_timer <= diff)
-                            {
-                                UnSummon();
-                                return;
-                            }
+                    else if (m_timer != m_lifetime)
+                        m_timer = m_lifetime;
 
-                            m_timer -= diff;
-                        }
-                        else if (m_timer != m_lifetime)
-                            m_timer = m_lifetime;
-
-                        break;
-                    }
-
+                    break;
+                }
                 case TempSummonType.CorpseTimedDespawn:
+                {
+                    if (m_deathState == DeathState.Corpse)
                     {
-                        if (m_deathState == DeathState.Corpse)
+                        if (m_timer <= diff)
                         {
-                            if (m_timer <= diff)
-                            {
-                                UnSummon();
-                                return;
-                            }
-
-                            m_timer -= diff;
+                            UnSummon();
+                            return;
                         }
-                        break;
+
+                        m_timer -= diff;
                     }
+                    break;
+                }
                 case TempSummonType.CorpseDespawn:
+                {
+                    // if m_deathState is DEAD, CORPSE was skipped
+                    if (m_deathState == DeathState.Corpse)
                     {
-                        // if m_deathState is DEAD, CORPSE was skipped
-                        if (m_deathState == DeathState.Corpse)
-                        {
-                            UnSummon();
-                            return;
-                        }
-
-                        break;
+                        UnSummon();
+                        return;
                     }
+
+                    break;
+                }
                 case TempSummonType.TimedOrCorpseDespawn:
+                {
+                    if (m_deathState == DeathState.Corpse)
                     {
-                        if (m_deathState == DeathState.Corpse)
+                        UnSummon();
+                        return;
+                    }
+
+                    if (!IsInCombat())
+                    {
+                        if (m_timer <= diff)
                         {
                             UnSummon();
                             return;
                         }
-
-                        if (!IsInCombat())
-                        {
-                            if (m_timer <= diff)
-                            {
-                                UnSummon();
-                                return;
-                            }
-                            else
-                                m_timer -= diff;
-                        }
-                        else if (m_timer != m_lifetime)
-                            m_timer = m_lifetime;
-                        break;
+                        else
+                            m_timer -= diff;
                     }
+                    else if (m_timer != m_lifetime)
+                        m_timer = m_lifetime;
+                    break;
+                }
                 case TempSummonType.TimedOrDeadDespawn:
+                {
+                    if (!IsInCombat() && IsAlive())
                     {
-                        if (!IsInCombat() && IsAlive())
+                        if (m_timer <= diff)
                         {
-                            if (m_timer <= diff)
-                            {
-                                UnSummon();
-                                return;
-                            }
-                            else
-                                m_timer -= diff;
+                            UnSummon();
+                            return;
                         }
-                        else if (m_timer != m_lifetime)
-                            m_timer = m_lifetime;
-                        break;
+                        else
+                            m_timer -= diff;
                     }
+                    else if (m_timer != m_lifetime)
+                        m_timer = m_lifetime;
+                    break;
+                }
                 default:
                     UnSummon();
                     Log.outError(LogFilter.Unit, "Temporary summoned creature (entry: {0}) have unknown type {1} of ", GetEntry(), m_type);
@@ -174,7 +167,7 @@ namespace Game.Entities
                 SetFaction(owner.GetFaction());
                 SetLevel(owner.GetLevel());
                 if (owner.IsTypeId(TypeId.Player))
-                  m_ControlledByPlayer = true;
+                    m_ControlledByPlayer = true;
             }
 
 
@@ -214,15 +207,9 @@ namespace Game.Entities
             }
         }
 
-        public override void UpdateObjectVisibilityOnCreate()
-        {
-            UpdateObjectVisibility(true);
-        }
+        public override void UpdateObjectVisibilityOnCreate() => UpdateObjectVisibility(true);
 
-        public void SetTempSummonType(TempSummonType type)
-        {
-            m_type = type;
-        }
+        public void SetTempSummonType(TempSummonType type) => m_type = type;
 
         public virtual void UnSummon(uint msTime = 0)
         {
@@ -274,11 +261,11 @@ namespace Game.Entities
 
         public override void SaveToDB(uint mapid, List<Difficulty> spawnDifficulties) { }
 
-        public ObjectGuid GetSummonerGUID() { return m_summonerGUID; }
+        public ObjectGuid GetSummonerGUID() => m_summonerGUID;
 
-        TempSummonType GetSummonType() { return m_type; }
+        TempSummonType GetSummonType() => m_type;
 
-        public uint GetTimer() { return m_timer; }
+        public uint GetTimer() => m_timer;
 
         public SummonPropertiesRecord m_Properties;
         TempSummonType m_type;
@@ -296,6 +283,7 @@ namespace Game.Entities
             Cypher.Assert(m_owner);
             UnitTypeMask |= UnitTypeMask.Minion;
             m_followAngle = SharedConst.PetFollowAngle;
+
             /// @todo: Find correct way
             InitCharmInfo();
         }
@@ -321,31 +309,27 @@ namespace Game.Entities
             base.RemoveFromWorld();
         }
 
-        public bool IsGuardianPet()
-        {
-            return IsPet() || (m_Properties != null && m_Properties.Control == SummonCategory.Pet);
-        }
+        public bool IsGuardianPet() => IsPet() || (m_Properties != null && m_Properties.Control == SummonCategory.Pet);
 
-        public override Unit GetOwner() { return m_owner; }
+        public override Unit GetOwner() => m_owner;
 
-        public override float GetFollowAngle() { return m_followAngle; }
-
-        public void SetFollowAngle(float angle) { m_followAngle = angle; }
+        public override float GetFollowAngle() => m_followAngle;
+        public void SetFollowAngle(float angle) => m_followAngle = angle;
 
         // Warlock pets
-        public bool IsPetImp() { return GetEntry() == (uint)PetEntry.Imp; }
-        public bool IsPetFelhunter() { return GetEntry() == (uint)PetEntry.FelHunter; }
-        public bool IsPetVoidwalker() { return GetEntry() == (uint)PetEntry.VoidWalker; }
-        public bool IsPetSuccubus() { return GetEntry() == (uint)PetEntry.Succubus; }
-        public bool IsPetDoomguard() { return GetEntry() == (uint)PetEntry.Doomguard; }
-        public bool IsPetFelguard() { return GetEntry() == (uint)PetEntry.Felguard; }
+        public bool IsPetImp() => GetEntry() == (uint)PetEntry.Imp;
+        public bool IsPetFelhunter() => GetEntry() == (uint)PetEntry.FelHunter;
+        public bool IsPetVoidwalker() => GetEntry() == (uint)PetEntry.VoidWalker;
+        public bool IsPetSuccubus() => GetEntry() == (uint)PetEntry.Succubus;
+        public bool IsPetDoomguard() => GetEntry() == (uint)PetEntry.Doomguard;
+        public bool IsPetFelguard() => GetEntry() == (uint)PetEntry.Felguard;
 
         // Death Knight pets
-        public bool IsPetGhoul() { return GetEntry() == (uint)PetEntry.Ghoul; } // Ghoul may be guardian or pet
-        public bool IsPetAbomination() { return GetEntry() == (uint)PetEntry.Abomination; } // Sludge Belcher dk talent
+        public bool IsPetGhoul() => GetEntry() == (uint)PetEntry.Ghoul; // Ghoul may be guardian or pet
+        public bool IsPetAbomination() => GetEntry() == (uint)PetEntry.Abomination; // Sludge Belcher dk talent
 
         // Shaman pet
-        public bool IsSpiritWolf() { return GetEntry() == (uint)PetEntry.SpiritWolf; } // Spirit wolf from feral spirits
+        public bool IsSpiritWolf() => GetEntry() == (uint)PetEntry.SpiritWolf; // Spirit wolf from feral spirits
 
         protected Unit m_owner;
         float m_followAngle;
@@ -402,8 +386,7 @@ namespace Game.Entities
             if (IsPet() && GetOwner().IsTypeId(TypeId.Player))
             {
                 if (GetOwner().GetClass() == Class.Warlock
-                        || GetOwner().GetClass() == Class.Shaman        // Fire Elemental
-                        || GetOwner().GetClass() == Class.Deathknight) // Risen Ghoul
+                        || GetOwner().GetClass() == Class.Shaman)        // Fire Elemental
                 {
                     petType = PetType.Summon;
                 }
@@ -495,144 +478,144 @@ namespace Game.Entities
             switch (petType)
             {
                 case PetType.Summon:
-                    {
-                        // the damage bonus used for pets is either fire or shadow damage, whatever is higher
-                        int fire = GetOwner().ToPlayer().m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Fire];
-                        int shadow = GetOwner().ToPlayer().m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Shadow];
-                        int val = (fire > shadow) ? fire : shadow;
-                        if (val < 0)
-                            val = 0;
+                {
+                    // the damage bonus used for pets is either fire or shadow damage, whatever is higher
+                    int fire = GetOwner().ToPlayer().GetUpdateField<int>(ActivePlayerFields.ModDamageDonePos + (int)SpellSchools.Fire);
+                    int shadow = GetOwner().ToPlayer().GetUpdateField<int>(ActivePlayerFields.ModDamageDonePos + (int)SpellSchools.Shadow);
+                    int val = (fire > shadow) ? fire : shadow;
+                    if (val < 0)
+                        val = 0;
 
-                        SetBonusDamage((int)(val * 0.15f));
+                    SetBonusDamage((int)(val * 0.15f));
 
-                        SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
-                        SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
-                        break;
-                    }
+                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
+                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
+                    break;
+                }
                 case PetType.Hunter:
-                    {
-                        ToPet().SetPetNextLevelExperience((uint)(Global.ObjectMgr.GetXPForLevel(petlevel) * 0.05f));
-                        //these formula may not be correct; however, it is designed to be close to what it should be
-                        //this makes dps 0.5 of pets level
-                        SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
-                        //damage range is then petlevel / 2
-                        SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
-                        //damage is increased afterwards as strength and pet scaling modify attack power
-                        break;
-                    }
+                {
+                    ToPet().SetPetNextLevelExperience((uint)(Global.ObjectMgr.GetXPForLevel(petlevel) * 0.05f));
+                    //these formula may not be correct; however, it is designed to be close to what it should be
+                    //this makes dps 0.5 of pets level
+                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
+                    //damage range is then petlevel / 2
+                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
+                    //damage is increased afterwards as strength and pet scaling modify attack power
+                    break;
+                }
                 default:
+                {
+                    switch (GetEntry())
                     {
-                        switch (GetEntry())
+                        case 510: // mage Water Elemental
                         {
-                            case 510: // mage Water Elemental
-                                {
-                                    SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Frost) * 0.33f));
-                                    break;
-                                }
-                            case 1964: //force of nature
-                                {
-                                    if (pInfo == null)
-                                        SetCreateHealth(30 + 30 * petlevel);
-                                    float bonusDmg = GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Nature) * 0.15f;
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel * 2.5f - ((float)petlevel / 2) + bonusDmg);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel * 2.5f + ((float)petlevel / 2) + bonusDmg);
-                                    break;
-                                }
-                            case 15352: //earth elemental 36213
-                                {
-                                    if (pInfo == null)
-                                        SetCreateHealth(100 + 120 * petlevel);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
-                                    break;
-                                }
-                            case 15438: //fire elemental
-                                {
-                                    if (pInfo == null)
-                                    {
-                                        SetCreateHealth(40 * petlevel);
-                                        SetCreateMana(28 + 10 * petlevel);
-                                    }
-                                    SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Fire) * 0.5f));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel * 4 - petlevel);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel * 4 + petlevel);
-                                    break;
-                                }
-                            case 19668: // Shadowfiend
-                                {
-                                    if (pInfo == null)
-                                    {
-                                        SetCreateMana(28 + 10 * petlevel);
-                                        SetCreateHealth(28 + 30 * petlevel);
-                                    }
-                                    int bonus_dmg = (int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Shadow) * 0.3f);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel * 4 - petlevel) + bonus_dmg);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel * 4 + petlevel) + bonus_dmg);
-                                    break;
-                                }
-                            case 19833: //Snake Trap - Venomous Snake
-                                {
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel / 2) - 25);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel / 2) - 18);
-                                    break;
-                                }
-                            case 19921: //Snake Trap - Viper
-                                {
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel / 2 - 10);
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel / 2);
-                                    break;
-                                }
-                            case 29264: // Feral Spirit
-                                {
-                                    if (pInfo == null)
-                                        SetCreateHealth(30 * petlevel);
+                            SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Frost) * 0.33f));
+                            break;
+                        }
+                        case 1964: //force of nature
+                        {
+                            if (pInfo == null)
+                                SetCreateHealth(30 + 30 * petlevel);
+                            float bonusDmg = GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Nature) * 0.15f;
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel * 2.5f - ((float)petlevel / 2) + bonusDmg);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel * 2.5f + ((float)petlevel / 2) + bonusDmg);
+                            break;
+                        }
+                        case 15352: //earth elemental 36213
+                        {
+                            if (pInfo == null)
+                                SetCreateHealth(100 + 120 * petlevel);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
+                            break;
+                        }
+                        case 15438: //fire elemental
+                        {
+                            if (pInfo == null)
+                            {
+                                SetCreateHealth(40 * petlevel);
+                                SetCreateMana(28 + 10 * petlevel);
+                            }
+                            SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Fire) * 0.5f));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel * 4 - petlevel);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel * 4 + petlevel);
+                            break;
+                        }
+                        case 19668: // Shadowfiend
+                        {
+                            if (pInfo == null)
+                            {
+                                SetCreateMana(28 + 10 * petlevel);
+                                SetCreateHealth(28 + 30 * petlevel);
+                            }
+                            int bonus_dmg = (int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Shadow) * 0.3f);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel * 4 - petlevel) + bonus_dmg);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel * 4 + petlevel) + bonus_dmg);
+                            break;
+                        }
+                        case 19833: //Snake Trap - Venomous Snake
+                        {
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel / 2) - 25);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel / 2) - 18);
+                            break;
+                        }
+                        case 19921: //Snake Trap - Viper
+                        {
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel / 2 - 10);
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel / 2);
+                            break;
+                        }
+                        case 29264: // Feral Spirit
+                        {
+                            if (pInfo == null)
+                                SetCreateHealth(30 * petlevel);
 
-                                    // wolf attack speed is 1.5s
-                                    SetBaseAttackTime(WeaponAttackType.BaseAttack, cinfo.BaseAttackTime);
+                            // wolf attack speed is 1.5s
+                            SetBaseAttackTime(WeaponAttackType.BaseAttack, cinfo.BaseAttackTime);
 
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel * 4 - petlevel));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel * 4 + petlevel));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, (petlevel * 4 - petlevel));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, (petlevel * 4 + petlevel));
 
-                                    SetStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Base, GetOwner().GetArmor() * 0.35f);  // Bonus Armor (35% of player armor)
-                                    SetStatFlatModifier(UnitMods.StatStamina, UnitModifierFlatType.Base, GetOwner().GetStat(Stats.Stamina) * 0.3f);  // Bonus Stamina (30% of player stamina)
-                                    if (!HasAura(58877))//prevent apply twice for the 2 wolves
-                                        AddAura(58877, this);//Spirit Hunt, passive, Spirit Wolves' attacks heal them and their master for 150% of damage done.
-                                    break;
-                                }
-                            case 31216: // Mirror Image
-                                {
-                                    SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Frost) * 0.33f));
-                                    SetDisplayId(GetOwner().GetDisplayId());
-                                    if (pInfo == null)
-                                    {
-                                        SetCreateMana(28 + 30 * petlevel);
-                                        SetCreateHealth(28 + 10 * petlevel);
-                                    }
-                                    break;
-                                }
-                            case 27829: // Ebon Gargoyle
-                                {
-                                    if (pInfo == null)
-                                    {
-                                        SetCreateMana(28 + 10 * petlevel);
-                                        SetCreateHealth(28 + 30 * petlevel);
-                                    }
-                                    SetBonusDamage((int)(GetOwner().GetTotalAttackPowerValue(WeaponAttackType.BaseAttack) * 0.5f));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
-                                    break;
-                                }
-                            case 28017: // Bloodworms
-                                {
-                                    SetCreateHealth(4 * petlevel);
-                                    SetBonusDamage((int)(GetOwner().GetTotalAttackPowerValue(WeaponAttackType.BaseAttack) * 0.006f));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - 30 - (petlevel / 4));
-                                    SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel - 30 + (petlevel / 4));
-                                }
-                                break;
+                            SetStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Base, GetOwner().GetArmor() * 0.35f);  // Bonus Armor (35% of player armor)
+                            SetStatFlatModifier(UnitMods.StatStamina, UnitModifierFlatType.Base, GetOwner().GetStat(Stats.Stamina) * 0.3f);  // Bonus Stamina (30% of player stamina)
+                            if (!HasAura(58877))//prevent apply twice for the 2 wolves
+                                AddAura(58877, this);//Spirit Hunt, passive, Spirit Wolves' attacks heal them and their master for 150% of damage done.
+                            break;
+                        }
+                        case 31216: // Mirror Image
+                        {
+                            SetBonusDamage((int)(GetOwner().SpellBaseDamageBonusDone(SpellSchoolMask.Frost) * 0.33f));
+                            SetDisplayId(GetOwner().GetDisplayId());
+                            if (pInfo == null)
+                            {
+                                SetCreateMana(28 + 30 * petlevel);
+                                SetCreateHealth(28 + 10 * petlevel);
+                            }
+                            break;
+                        }
+                        case 27829: // Ebon Gargoyle
+                        {
+                            if (pInfo == null)
+                            {
+                                SetCreateMana(28 + 10 * petlevel);
+                                SetCreateHealth(28 + 30 * petlevel);
+                            }
+                            SetBonusDamage((int)(GetOwner().GetTotalAttackPowerValue(WeaponAttackType.BaseAttack) * 0.5f));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - (petlevel / 4));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel + (petlevel / 4));
+                            break;
+                        }
+                        case 28017: // Bloodworms
+                        {
+                            SetCreateHealth(4 * petlevel);
+                            SetBonusDamage((int)(GetOwner().GetTotalAttackPowerValue(WeaponAttackType.BaseAttack) * 0.006f));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MinDamage, petlevel - 30 - (petlevel / 4));
+                            SetBaseWeaponDamage(WeaponAttackType.BaseAttack, WeaponDamageRange.MaxDamage, petlevel - 30 + (petlevel / 4));
                         }
                         break;
                     }
+                    break;
+                }
             }
 
             UpdateAllStats();
@@ -738,17 +721,12 @@ namespace Game.Entities
             if (school > SpellSchools.Normal)
             {
                 float baseValue = GetFlatModifierValue(UnitMods.ResistanceStart + (int)school, UnitModifierFlatType.Base);
-                float bonusValue = GetTotalAuraModValue(UnitMods.ResistanceStart + (int)school) - baseValue;
 
                 // hunter and warlock pets gain 40% of owner's resistance
                 if (IsPet())
-                {
-                    baseValue += (float)MathFunctions.CalculatePct(m_owner.GetResistance(school), 40);
-                    bonusValue += (float)MathFunctions.CalculatePct(m_owner.GetBonusResistanceMod(school), 40);
-                }
+                    baseValue += MathFunctions.CalculatePct(m_owner.GetResistance(school), 40);
 
                 SetResistance(school, (int)baseValue);
-                SetBonusResistanceMod(school, (int)bonusValue);
             }
             else
                 UpdateArmor();
@@ -771,7 +749,7 @@ namespace Game.Entities
             value += GetFlatModifierValue(unitMod, UnitModifierFlatType.Total) + bonus_armor;
             value *= GetPctModifierValue(unitMod, UnitModifierPctType.Total);
 
-            SetArmor((int)baseValue, (int)(value - baseValue));
+            SetArmor((int)baseValue);
         }
 
         public override void UpdateMaxHealth()
@@ -865,8 +843,8 @@ namespace Game.Entities
                 //demons benefit from warlocks shadow or fire damage
                 else if (IsPet())
                 {
-                    int fire = owner.m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Fire] - owner.m_activePlayerData.ModDamageDoneNeg[(int)SpellSchools.Fire];
-                    int shadow = owner.m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Shadow] - owner.m_activePlayerData.ModDamageDoneNeg[(int)SpellSchools.Shadow];
+                    int fire = owner.GetModDamageDonePos(SpellSchools.Fire) - owner.GetModDamageDoneNeg(SpellSchools.Fire);
+                    int shadow = owner.GetModDamageDonePos(SpellSchools.Shadow) - owner.GetModDamageDoneNeg(SpellSchools.Shadow);
                     int maximum = (fire > shadow) ? fire : shadow;
                     if (maximum < 0)
                         maximum = 0;
@@ -876,7 +854,7 @@ namespace Game.Entities
                 //water elementals benefit from mage's frost damage
                 else if (GetEntry() == ENTRY_WATER_ELEMENTAL)
                 {
-                    int frost = owner.m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Frost] - owner.m_activePlayerData.ModDamageDoneNeg[(int)SpellSchools.Frost];
+                    int frost = owner.GetModDamageDonePos(SpellSchools.Frost) - owner.GetModDamageDoneNeg(SpellSchools.Frost);
                     if (frost < 0)
                         frost = 0;
                     SetBonusDamage((int)(frost * 0.4f));
@@ -908,14 +886,14 @@ namespace Game.Entities
                 //force of nature
                 if (GetEntry() == ENTRY_TREANT)
                 {
-                    int spellDmg = playerOwner.m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Nature] - playerOwner.m_activePlayerData.ModDamageDoneNeg[(int)SpellSchools.Nature];
+                    int spellDmg = playerOwner.GetModDamageDonePos(SpellSchools.Nature) - playerOwner.GetModDamageDoneNeg(SpellSchools.Nature);
                     if (spellDmg > 0)
                         bonusDamage = spellDmg * 0.09f;
                 }
                 //greater fire elemental
                 else if (GetEntry() == ENTRY_FIRE_ELEMENTAL)
                 {
-                    int spellDmg = playerOwner.m_activePlayerData.ModDamageDonePos[(int)SpellSchools.Fire] - playerOwner.m_activePlayerData.ModDamageDoneNeg[(int)SpellSchools.Fire];
+                    int spellDmg = playerOwner.GetModDamageDonePos(SpellSchools.Fire) - playerOwner.GetModDamageDoneNeg(SpellSchools.Fire);
                     if (spellDmg > 0)
                         bonusDamage = spellDmg * 0.4f;
                 }
@@ -936,8 +914,8 @@ namespace Game.Entities
             float mindamage = ((base_value + weapon_mindamage) * base_pct + total_value) * total_pct;
             float maxdamage = ((base_value + weapon_maxdamage) * base_pct + total_value) * total_pct;
 
-            SetUpdateFieldStatValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.MinDamage), mindamage);
-            SetUpdateFieldStatValue(m_values.ModifyValue(m_unitData).ModifyValue(m_unitData.MaxDamage), maxdamage);
+            SetStatUpdateField<float>(UnitFields.MinDamage, mindamage);
+            SetStatUpdateField<float>(UnitFields.MaxDamage, maxdamage);
         }
 
         void SetBonusDamage(int damage)
@@ -948,8 +926,8 @@ namespace Game.Entities
                 playerOwner.SetPetSpellPower((uint)damage);
         }
 
-        public int GetBonusDamage() { return m_bonusSpellDamage; }
-        public float GetBonusStatFromOwner(Stats stat) { return m_statFromOwner[(int)stat]; }
+        public int GetBonusDamage() => m_bonusSpellDamage;
+        public float GetBonusStatFromOwner(Stats stat) => m_statFromOwner[(int)stat];
 
         int m_bonusSpellDamage;
         float[] m_statFromOwner = new float[(int)Stats.Max];
@@ -1004,10 +982,7 @@ namespace Game.Entities
 
     public class ForcedUnsummonDelayEvent : BasicEvent
     {
-        public ForcedUnsummonDelayEvent(TempSummon owner)
-        {
-            m_owner = owner;
-        }
+        public ForcedUnsummonDelayEvent(TempSummon owner) => m_owner = owner;
         public override bool Execute(ulong e_time, uint p_time)
         {
             m_owner.UnSummon();

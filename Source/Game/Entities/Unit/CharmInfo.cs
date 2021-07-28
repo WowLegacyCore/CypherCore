@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -39,7 +39,7 @@ namespace Game.Entities
             }
 
             for (var i = 0; i < SharedConst.ActionBarIndexMax; ++i)
-                PetActionBar[i] = new UnitActionBarEntry();
+                _petActionBar[i] = new UnitActionBarEntry();
 
             if (_unit.IsTypeId(TypeId.Unit))
             {
@@ -178,12 +178,12 @@ namespace Game.Entities
             // new spell rank can be already listed
             for (byte i = 0; i < SharedConst.ActionBarIndexMax; ++i)
             {
-                uint action = PetActionBar[i].GetAction();
+                uint action = _petActionBar[i].GetAction();
                 if (action != 0)
                 {
-                    if (PetActionBar[i].IsActionBarForSpell() && Global.SpellMgr.GetFirstSpellInChain(action) == first_id)
+                    if (_petActionBar[i].IsActionBarForSpell() && Global.SpellMgr.GetFirstSpellInChain(action) == first_id)
                     {
-                        PetActionBar[i].SetAction(spell_id);
+                        _petActionBar[i].SetAction(spell_id);
                         return true;
                     }
                 }
@@ -193,7 +193,7 @@ namespace Game.Entities
             for (byte i = 0; i < SharedConst.ActionBarIndexMax; ++i)
             {
                 byte j = (byte)((preferredSlot + i) % SharedConst.ActionBarIndexMax);
-                if (PetActionBar[j].GetAction() == 0 && PetActionBar[j].IsActionBarForSpell())
+                if (_petActionBar[j].GetAction() == 0 && _petActionBar[j].IsActionBarForSpell())
                 {
                     SetActionBar(j, spell_id, newstate == ActiveStates.Decide ? spellInfo.IsAutocastable() ? ActiveStates.Disabled : ActiveStates.Passive : newstate);
                     return true;
@@ -208,10 +208,10 @@ namespace Game.Entities
 
             for (byte i = 0; i < SharedConst.ActionBarIndexMax; ++i)
             {
-                uint action = PetActionBar[i].GetAction();
+                uint action = _petActionBar[i].GetAction();
                 if (action != 0)
                 {
-                    if (PetActionBar[i].IsActionBarForSpell() && Global.SpellMgr.GetFirstSpellInChain(action) == first_id)
+                    if (_petActionBar[i].IsActionBarForSpell() && Global.SpellMgr.GetFirstSpellInChain(action) == first_id)
                     {
                         SetActionBar(i, 0, ActiveStates.Passive);
                         return true;
@@ -255,16 +255,16 @@ namespace Game.Entities
                 ActiveStates type = tokens[i++].ToEnum<ActiveStates>();
                 uint.TryParse(tokens[i], out uint action);
 
-                PetActionBar[index].SetActionAndType(action, type);
+                _petActionBar[index].SetActionAndType(action, type);
 
                 // check correctness
-                if (PetActionBar[index].IsActionBarForSpell())
+                if (_petActionBar[index].IsActionBarForSpell())
                 {
-                    SpellInfo spelInfo = Global.SpellMgr.GetSpellInfo(PetActionBar[index].GetAction(), _unit.GetMap().GetDifficultyID());
+                    SpellInfo spelInfo = Global.SpellMgr.GetSpellInfo(_petActionBar[index].GetAction(), _unit.GetMap().GetDifficultyID());
                     if (spelInfo == null)
                         SetActionBar(index, 0, ActiveStates.Passive);
                     else if (!spelInfo.IsAutocastable())
-                        SetActionBar(index, PetActionBar[index].GetAction(), ActiveStates.Passive);
+                        SetActionBar(index, _petActionBar[index].GetAction(), ActiveStates.Passive);
                 }
             }
         }
@@ -272,40 +272,28 @@ namespace Game.Entities
         public void BuildActionBar(WorldPacket data)
         {
             for (int i = 0; i < SharedConst.ActionBarIndexMax; ++i)
-                data.WriteUInt32(PetActionBar[i].packedData);
+                data.WriteUInt32(_petActionBar[i].packedData);
         }
 
         public void SetSpellAutocast(SpellInfo spellInfo, bool state)
         {
             for (byte i = 0; i < SharedConst.ActionBarIndexMax; ++i)
             {
-                if (spellInfo.Id == PetActionBar[i].GetAction() && PetActionBar[i].IsActionBarForSpell())
+                if (spellInfo.Id == _petActionBar[i].GetAction() && _petActionBar[i].IsActionBarForSpell())
                 {
-                    PetActionBar[i].SetType(state ? ActiveStates.Enabled : ActiveStates.Disabled);
+                    _petActionBar[i].SetType(state ? ActiveStates.Enabled : ActiveStates.Disabled);
                     break;
                 }
             }
         }
 
-        public void SetIsCommandAttack(bool val)
-        {
-            _isCommandAttack = val;
-        }
+        public void SetIsCommandAttack(bool val) => _isCommandAttack = val;
 
-        public bool IsCommandAttack()
-        {
-            return _isCommandAttack;
-        }
+        public bool IsCommandAttack() => _isCommandAttack;
 
-        public void SetIsCommandFollow(bool val)
-        {
-            _isCommandFollow = val;
-        }
+        public void SetIsCommandFollow(bool val) => _isCommandFollow = val;
 
-        public bool IsCommandFollow()
-        {
-            return _isCommandFollow;
-        }
+        public bool IsCommandFollow() => _isCommandFollow;
 
         public void SaveStayPosition()
         {
@@ -332,51 +320,30 @@ namespace Game.Entities
             z = _stayZ;
         }
 
-        public void SetIsAtStay(bool val)
-        {
-            _isAtStay = val;
-        }
+        public void SetIsAtStay(bool val) => _isAtStay = val;
 
-        public bool IsAtStay()
-        {
-            return _isAtStay;
-        }
+        public bool IsAtStay() => _isAtStay;
 
-        public void SetIsFollowing(bool val)
-        {
-            _isFollowing = val;
-        }
+        public void SetIsFollowing(bool val) => _isFollowing = val;
 
-        public bool IsFollowing()
-        {
-            return _isFollowing;
-        }
+        public bool IsFollowing() => _isFollowing;
 
-        public void SetIsReturning(bool val)
-        {
-            _isReturning = val;
-        }
+        public void SetIsReturning(bool val) => _isReturning = val;
 
-        public bool IsReturning()
-        {
-            return _isReturning;
-        }
+        public bool IsReturning() => _isReturning;
 
-        public uint GetPetNumber() { return _petnumber; }
-        public void SetCommandState(CommandStates st) { _CommandState = st; }
-        public CommandStates GetCommandState() { return _CommandState; }
-        public bool HasCommandState(CommandStates state) { return (_CommandState == state); }
+        public uint GetPetNumber() => _petnumber;
+        public void SetCommandState(CommandStates st) => _CommandState = st;
+        public CommandStates GetCommandState() => _CommandState;
+        public bool HasCommandState(CommandStates state) => (_CommandState == state);
 
-        public void SetActionBar(byte index, uint spellOrAction, ActiveStates type)
-        {
-            PetActionBar[index].SetActionAndType(spellOrAction, type);
-        }
-        public UnitActionBarEntry GetActionBarEntry(byte index) { return PetActionBar[index]; }
+        public void SetActionBar(byte index, uint spellOrAction, ActiveStates type) => _petActionBar[index].SetActionAndType(spellOrAction, type);
+        public UnitActionBarEntry GetActionBarEntry(byte index) => _petActionBar[index];
 
-        public UnitActionBarEntry GetCharmSpell(byte index) { return _charmspells[index]; }
+        public UnitActionBarEntry GetCharmSpell(byte index) => _charmspells[index];
 
         Unit _unit;
-        UnitActionBarEntry[] PetActionBar = new UnitActionBarEntry[SharedConst.ActionBarIndexMax];
+        UnitActionBarEntry[] _petActionBar = new UnitActionBarEntry[SharedConst.ActionBarIndexMax];
         UnitActionBarEntry[] _charmspells = new UnitActionBarEntry[4];
         CommandStates _CommandState;
         uint _petnumber;
@@ -395,14 +362,11 @@ namespace Game.Entities
 
     public class UnitActionBarEntry
     {
-        public UnitActionBarEntry()
-        {
-            packedData = (uint)ActiveStates.Disabled << 24;
-        }
+        public UnitActionBarEntry() => packedData = (uint)ActiveStates.Disabled << 24;
 
-        public ActiveStates GetActiveState() { return (ActiveStates)UNIT_ACTION_BUTTON_TYPE(packedData); }
+        public ActiveStates GetActiveState() => (ActiveStates)UnitActionButtonType(packedData);
 
-        public uint GetAction() { return UNIT_ACTION_BUTTON_ACTION(packedData); }
+        public uint GetAction() => UnitActionButtonAction(packedData);
 
         public bool IsActionBarForSpell()
         {
@@ -410,35 +374,17 @@ namespace Game.Entities
             return Type == ActiveStates.Disabled || Type == ActiveStates.Enabled || Type == ActiveStates.Passive;
         }
 
-        public void SetActionAndType(uint action, ActiveStates type)
-        {
-            packedData = MAKE_UNIT_ACTION_BUTTON(action, (uint)type);
-        }
+        public void SetActionAndType(uint action, ActiveStates type) => packedData = MakeUnitActionButton(action, (uint)type);
 
-        public void SetType(ActiveStates type)
-        {
-            packedData = MAKE_UNIT_ACTION_BUTTON(UNIT_ACTION_BUTTON_ACTION(packedData), (uint)type);
-        }
+        public void SetType(ActiveStates type) => packedData = MakeUnitActionButton(UnitActionButtonAction(packedData), (uint)type);
 
-        public void SetAction(uint action)
-        {
-            packedData = (packedData & 0xFF000000) | UNIT_ACTION_BUTTON_ACTION(action);
-        }
+        public void SetAction(uint action) => packedData = (packedData & 0xFF000000) | UnitActionButtonAction(action);
 
         public uint packedData;
 
-        public static uint MAKE_UNIT_ACTION_BUTTON(uint action, uint type)
-        {
-            return (action | (type << 24));
-        }
-        public static uint UNIT_ACTION_BUTTON_ACTION(uint packedData)
-        {
-            return (packedData & 0x00FFFFFF);
-        }
-        public static uint UNIT_ACTION_BUTTON_TYPE(uint packedData)
-        {
-            return ((packedData & 0xFF000000) >> 24);
-        }
+        public static uint MakeUnitActionButton(uint action, uint type) => (action | (type << 24));
+        public static uint UnitActionButtonAction(uint packedData) => (packedData & 0x00FFFFFF);
+        public static uint UnitActionButtonType(uint packedData) => ((packedData & 0xFF000000) >> 24);
     }
 
 }

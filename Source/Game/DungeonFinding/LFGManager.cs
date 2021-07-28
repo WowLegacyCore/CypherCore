@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -1340,10 +1340,6 @@ namespace Game.DungeonFinding
                     continue;
                 }
 
-                // Update achievements
-                if (dungeon.difficulty == Difficulty.Heroic)
-                    player.UpdateCriteria(CriteriaTypes.UseLfdToGroupWithPlayers, 1);
-
                 LfgReward reward = GetRandomDungeonReward(rDungeonId, player.GetLevel());
                 if (reward == null)
                     continue;
@@ -1546,9 +1542,7 @@ namespace Game.DungeonFinding
                     lockStatus = LfgLockStatusType.TooLowGearScore;
                 else if ((ar = Global.ObjectMgr.GetAccessRequirement(dungeon.map, dungeon.difficulty)) != null)
                 {
-                    if (ar.achievement != 0 && !player.HasAchieved(ar.achievement))
-                        lockStatus = LfgLockStatusType.MissingAchievement;
-                    else if (player.GetTeam() == Team.Alliance && ar.quest_A != 0 && !player.GetQuestRewardStatus(ar.quest_A))
+                    if (player.GetTeam() == Team.Alliance && ar.quest_A != 0 && !player.GetQuestRewardStatus(ar.quest_A))
                         lockStatus = LfgLockStatusType.QuestNotCompleted;
                     else if (player.GetTeam() == Team.Horde && ar.quest_H != 0 && !player.GetQuestRewardStatus(ar.quest_H))
                         lockStatus = LfgLockStatusType.QuestNotCompleted;
@@ -1563,7 +1557,7 @@ namespace Game.DungeonFinding
                 }
                 else
                 {
-                    var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId, player.m_playerData.CtrOptions.GetValue().ContentTuningConditionMask);
+                    var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId);
                     if (levels.HasValue)
                     {
                         if (levels.Value.MinLevel > level)
@@ -1993,7 +1987,7 @@ namespace Game.DungeonFinding
             return 0;
         }
 
-        public List<uint> GetRandomAndSeasonalDungeons(uint level, uint expansion, uint contentTuningReplacementConditionMask)
+        public List<uint> GetRandomAndSeasonalDungeons(uint level, uint expansion)
         {
             List<uint> randomDungeons = new();
             foreach (var dungeon in LfgDungeonStore.Values)
@@ -2004,7 +1998,7 @@ namespace Game.DungeonFinding
                 if (dungeon.expansion > expansion)
                     continue;
 
-                var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId, contentTuningReplacementConditionMask);
+                var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId);
                 if (levels.HasValue)
                     if (levels.Value.MinLevel > level || level > levels.Value.MaxLevel)
                         continue;

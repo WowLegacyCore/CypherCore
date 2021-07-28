@@ -19,12 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Game.DataStorage;
 using Framework.Constants;
-using Game.Spells;
-using Framework.Dynamic;
 using Framework.Collections;
 
 namespace Game.Chat
@@ -59,7 +55,7 @@ namespace Game.Chat
                     List<LanguageDesc> langsWithSkill = new();
                     foreach (var spellItr in spellsRange)
                         foreach (var skillPair in Global.SpellMgr.GetSkillLineAbilityMapBounds(spellItr.SpellId))
-                            langsWithSkill.Add(new LanguageDesc(spellItr.SpellId, (uint)skillPair.SkillLine));
+                            langsWithSkill.Add(new LanguageDesc(spellItr.SpellId, skillPair.SkillLine));
 
                     foreach (var langDesc in langsWithSkill)
                     {

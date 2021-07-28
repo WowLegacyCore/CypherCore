@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -149,8 +149,7 @@ namespace Game.Maps
             if (!i_data.HasData())
                 return;
 
-            UpdateObject packet;
-            i_data.BuildPacket(out packet);
+            i_data.BuildPacket(out UpdateObject packet);
             i_player.SendPacket(packet);
 
             foreach (var obj in i_visibleNow)
@@ -854,7 +853,7 @@ namespace Game.Maps
                     //Caster may be NULL if DynObj is in removelist
                     Player caster = Global.ObjAccessor.FindPlayer(guid);
                     if (caster != null)
-                        if (caster.m_activePlayerData.FarsightObject == dynamicObject.GetGUID())
+                        if (caster.GetUpdateField<ObjectGuid>(ActivePlayerFields.FarsightObject) == dynamicObject.GetGUID())
                             BuildPacket(caster);
                 }
             }
@@ -2347,7 +2346,7 @@ namespace Game.Maps
         float _range;
         bool _reqAlive;
     }
-    
+
     class NearestPlayerInObjectRangeCheck : ICheck<Player>
     {
         public NearestPlayerInObjectRangeCheck(WorldObject obj, float range)

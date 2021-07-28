@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -879,11 +879,6 @@ namespace Framework.Constants
         Unk26 = 0x80000000 // ?
     }
 
-    public enum ItemFieldFlags2
-    {
-        Equipped = 0x1
-    }
-
     public enum ItemFlags : long
     {
         NoPickup = 0x01,
@@ -1171,6 +1166,14 @@ namespace Framework.Constants
         Prop3 = 11,                   // used with RandomProperty
         Prop4 = 12,                   // used with RandomProperty
         Max = 13
+    }
+
+    public enum EnchantmentOffset
+    {
+        Id = 0,
+        Duration = 1,
+        Charges = 2,                         // now here not only charges, but something new in wotlk
+        Max = 3
     }
 
     public enum ItemUpdateState

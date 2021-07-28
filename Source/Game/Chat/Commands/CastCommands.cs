@@ -115,8 +115,7 @@ namespace Game.Chat
 
             bool triggered = (triggeredStr != null);
 
-            float x, y, z;
-            handler.GetSession().GetPlayer().GetClosePoint(out x, out y, out z, dist);
+            handler.GetSession().GetPlayer().GetClosePoint(out float x, out float y, out float z, dist);
 
             handler.GetSession().GetPlayer().CastSpell(new Position(x, y, z), spellId, new CastSpellExtraArgs(triggered));
 

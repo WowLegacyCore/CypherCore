@@ -105,11 +105,9 @@ namespace Game.Entities
                     if (nodes[i - 1].Flags.HasAnyFlag(TaxiPathNodeFlags.Teleport))
                         continue;
 
-                    int uiMap1, uiMap2;
-                    Vector2 pos1, pos2;
 
-                    GetTaxiMapPosition(nodes[i - 1].Loc, nodes[i - 1].ContinentID, out pos1, out uiMap1);
-                    GetTaxiMapPosition(nodes[i].Loc, nodes[i].ContinentID, out pos2, out uiMap2);
+                    GetTaxiMapPosition(nodes[i - 1].Loc, nodes[i - 1].ContinentID, out Vector2 pos1, out int uiMap1);
+                    GetTaxiMapPosition(nodes[i].Loc, nodes[i].ContinentID, out Vector2 pos2, out int uiMap2);
 
                     if (uiMap1 != uiMap2)
                         continue;

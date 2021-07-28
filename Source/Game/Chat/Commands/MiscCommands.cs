@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -129,11 +129,10 @@ namespace Game.Chat
             }
 
             // Adding items
-            uint noSpaceForCount = 0;
 
             // check space and find places
             List<ItemPosCount> dest = new();
-            InventoryResult msg = playerTarget.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, itemId, (uint)count, out noSpaceForCount);
+            InventoryResult msg = playerTarget.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, itemId, (uint)count, out uint noSpaceForCount);
             if (msg != InventoryResult.Ok)                               // convert to possible store amount
                 count -= (int)noSpaceForCount;
 
@@ -260,10 +259,7 @@ namespace Game.Chat
         [CommandNonGroup("appear", RBACPermissions.CommandAppear)]
         static bool HandleAppearCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             Player _player = handler.GetSession().GetPlayer();
@@ -363,8 +359,7 @@ namespace Game.Chat
                     _player.SaveRecallPosition();
 
                 // to point to see at target with same orientation
-                float x, y, z;
-                target.GetContactPoint(_player, out x, out y, out z);
+                target.GetContactPoint(_player, out float x, out float y, out float z);
 
                 _player.TeleportTo(target.GetMapId(), x, y, z, _player.GetAngle(target), TeleportToOptions.GMMode);
                 PhasingHandler.InheritPhaseShift(_player, target);
@@ -381,8 +376,7 @@ namespace Game.Chat
                 handler.SendSysMessage(CypherStrings.AppearingAt, nameLink);
 
                 // to point where player stay (if loaded)
-                WorldLocation loc;
-                if (!Player.LoadPositionFromDB(out loc, out _, targetGuid))
+                if (!Player.LoadPositionFromDB(out WorldLocation loc, out _, targetGuid))
                     return false;
 
                 // stop flight if need
@@ -613,7 +607,7 @@ namespace Game.Chat
             if (spellInfo == null)
                 return false;
 
-            SpellNonMeleeDamage damageInfo = new(attacker, target, spellInfo, new SpellCastVisual(spellInfo.GetSpellXSpellVisualId(attacker), 0), spellInfo.SchoolMask);
+            SpellNonMeleeDamage damageInfo = new(attacker, target, spellInfo,spellInfo.GetSpellXSpellVisualId(attacker), spellInfo.SchoolMask);
             damageInfo.damage = damage_;
             Unit.DealDamageMods(damageInfo.attacker, damageInfo.target, ref damageInfo.damage, ref damageInfo.absorb);
             target.DealSpellDamage(damageInfo, true);
@@ -910,8 +904,7 @@ namespace Game.Chat
             CellCoord cellCoord = GridDefines.ComputeCellCoord(obj.GetPositionX(), obj.GetPositionY());
             Cell cell = new(cellCoord);
 
-            uint zoneId, areaId;
-            obj.GetZoneAndAreaId(out zoneId, out areaId);
+            obj.GetZoneAndAreaId(out uint zoneId, out uint areaId);
             uint mapId = obj.GetMapId();
 
             MapRecord mapEntry = CliDB.MapStorage.LookupByKey(mapId);
@@ -965,8 +958,7 @@ namespace Game.Chat
             handler.SendSysMessage(CypherStrings.GridPosition, cell.GetGridX(), cell.GetGridY(), cell.GetCellX(), cell.GetCellY(), obj.GetInstanceId(),
                 zoneX, zoneY, groundZ, floorZ, haveMap, haveVMap, haveMMap);
 
-            LiquidData liquidStatus;
-            ZLiquidStatus status = map.GetLiquidStatus(obj.GetPhaseShift(), obj.GetPositionX(), obj.GetPositionY(), obj.GetPositionZ(), LiquidHeaderTypeFlags.AllLiquids, out liquidStatus);
+            ZLiquidStatus status = map.GetLiquidStatus(obj.GetPhaseShift(), obj.GetPositionX(), obj.GetPositionY(), obj.GetPositionZ(), LiquidHeaderTypeFlags.AllLiquids, out LiquidData liquidStatus);
 
             if (liquidStatus != null)
                 handler.SendSysMessage(CypherStrings.LiquidStatus, liquidStatus.level, liquidStatus.depth_level, liquidStatus.entry, liquidStatus.type_flags, status);
@@ -1035,7 +1027,7 @@ namespace Game.Chat
                 return false;
             }
 
-            uint offset = (uint)area.AreaBit / 64;
+            int offset = area.AreaBit / 64;
             if (offset >= PlayerConst.ExploredZonesSize)
             {
                 handler.SendSysMessage(CypherStrings.BadValue);
@@ -1080,9 +1072,7 @@ namespace Game.Chat
         [CommandNonGroup("kick", RBACPermissions.CommandKick, true)]
         static bool HandleKickPlayerCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            string playerName;
-            if (!handler.ExtractPlayerTarget(args, out target, out _, out playerName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out _, out string playerName))
                 return false;
 
             if (handler.GetSession() != null && target == handler.GetSession().GetPlayer())
@@ -1217,8 +1207,7 @@ namespace Game.Chat
             handler.SendSysMessage(CypherStrings.MovegensList, (unit.IsTypeId(TypeId.Player) ? "Player" : "Creature"), unit.GetGUID().ToString());
 
             MotionMaster motionMaster = unit.GetMotionMaster();
-            float x, y, z;
-            motionMaster.GetDestination(out x, out y, out z);
+            motionMaster.GetDestination(out float x, out float y, out float z);
 
             for (byte i = 0; i < (int)MovementSlot.Max; ++i)
             {
@@ -1312,9 +1301,7 @@ namespace Game.Chat
         [CommandNonGroup("mute", RBACPermissions.CommandMute, true)]
         static bool HandleMuteCommand(StringArguments args, CommandHandler handler)
         {
-            string nameStr;
-            string delayStr;
-            handler.ExtractOptFirstArg(args, out nameStr, out delayStr);
+            handler.ExtractOptFirstArg(args, out string nameStr, out string delayStr);
             if (string.IsNullOrEmpty(delayStr))
                 return false;
 
@@ -1323,10 +1310,7 @@ namespace Game.Chat
             if (muteReason != null)
                 muteReasonStr = muteReason;
 
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             uint accountId = target ? target.GetSession().GetAccountId() : Global.CharacterCacheStorage.GetCharacterAccountIdByGuid(targetGuid);
@@ -1496,18 +1480,17 @@ namespace Game.Chat
 
         [CommandNonGroup("pinfo", RBACPermissions.CommandPinfo, true)]
         static bool HandlePInfoCommand(StringArguments args, CommandHandler handler)
-        {            
+        {
             // Define ALL the player variables!
             Player target;
             ObjectGuid targetGuid;
-            string targetName;
             PreparedStatement stmt;
 
             // To make sure we get a target, we convert our guid to an omniversal...
             ObjectGuid parseGUID = ObjectGuid.Create(HighGuid.Player, args.NextUInt64());
 
             // ... and make sure we get a target, somehow.
-            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out targetName))
+            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(parseGUID, out string targetName))
             {
                 target = Global.ObjAccessor.FindPlayer(parseGUID);
                 targetGuid = parseGUID;
@@ -1907,8 +1890,7 @@ namespace Game.Chat
         [CommandNonGroup("recall", RBACPermissions.CommandRecall)]
         static bool HandleRecallCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             // check online security
@@ -1936,8 +1918,7 @@ namespace Game.Chat
         [CommandNonGroup("repairitems", RBACPermissions.CommandRepairitems, true)]
         static bool HandleRepairitemsCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            if (!handler.ExtractPlayerTarget(args, out target))
+            if (!handler.ExtractPlayerTarget(args, out Player target))
                 return false;
 
             // check online security
@@ -1995,9 +1976,7 @@ namespace Game.Chat
         [CommandNonGroup("revive", RBACPermissions.CommandRevive, true)]
         static bool HandleReviveCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid))
                 return false;
 
             if (target != null)
@@ -2072,7 +2051,7 @@ namespace Game.Chat
                 return false;
             }
 
-            uint offset = (uint)area.AreaBit / 64;
+            int offset = area.AreaBit / 64;
             if (offset >= PlayerConst.ExploredZonesSize)
             {
                 handler.SendSysMessage(CypherStrings.BadValue);
@@ -2090,10 +2069,7 @@ namespace Game.Chat
         [CommandNonGroup("summon", RBACPermissions.CommandSummon)]
         static bool HandleSummonCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             Player _player = handler.GetSession().GetPlayer();
@@ -2180,8 +2156,7 @@ namespace Game.Chat
                     target.SaveRecallPosition();
 
                 // before GM
-                float x, y, z;
-                _player.GetClosePoint(out x, out y, out z, target.GetCombatReach());
+                _player.GetClosePoint(out float x, out float y, out float z, target.GetCombatReach());
                 target.TeleportTo(_player.GetMapId(), x, y, z, target.GetOrientation());
                 PhasingHandler.InheritPhaseShift(target, _player);
                 target.UpdateObjectVisibility();
@@ -2256,7 +2231,7 @@ namespace Game.Chat
                         return true;
                     }
 
-                    // If player found: delete his freeze aura    
+                    // If player found: delete his freeze aura
                     PreparedStatement stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_CHAR_AURA_FROZEN);
                     stmt.AddValue(0, guid.GetCounter());
                     DB.Characters.Execute(stmt);
@@ -2278,10 +2253,7 @@ namespace Game.Chat
         [CommandNonGroup("unmute", RBACPermissions.CommandUnmute, true)]
         static bool HandleUnmuteCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            string targetName;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid, out string targetName))
                 return false;
 
             uint accountId = target ? target.GetSession().GetAccountId() : Global.CharacterCacheStorage.GetCharacterAccountIdByGuid(targetGuid);
@@ -2362,9 +2334,7 @@ namespace Game.Chat
             if (string.IsNullOrEmpty(loc))
                 location_str = loc;
 
-            Player player;
-            ObjectGuid targetGUID;
-            if (!handler.ExtractPlayerTarget(args, out player, out targetGUID))
+            if (!handler.ExtractPlayerTarget(args, out Player player, out ObjectGuid targetGUID))
                 return false;
 
             if (!player)
@@ -2391,7 +2361,7 @@ namespace Game.Chat
                 if (caster)
                 {
                     ObjectGuid castId = ObjectGuid.Create(HighGuid.Cast, SpellCastSource.Normal, player.GetMapId(), SPELL_UNSTUCK_ID, player.GetMap().GenerateLowGuid(HighGuid.Cast));
-                    Spell.SendCastResult(caster, spellInfo, new Networking.Packets.SpellCastVisual(SPELL_UNSTUCK_VISUAL, 0), castId, SpellCastResult.CantDoThatRightNow);
+                    Spell.SendCastResult(caster, spellInfo, SPELL_UNSTUCK_VISUAL, castId, SpellCastResult.CantDoThatRightNow);
                 }
 
                 return false;
@@ -2433,14 +2403,14 @@ namespace Game.Chat
                 return false;
             }
 
-            // *Change the weather of a cell            
+            // *Change the weather of a cell
             //0 to 3, 0: fine, 1: rain, 2: snow, 3: sand
             if (!uint.TryParse(args.NextString(), out uint type))
-                return false; 
-            
+                return false;
+
             //0 to 1, sending -1 is instand good weather
             if (!float.TryParse(args.NextString(), out float grade))
-                return false;                       
+                return false;
 
             Player player = handler.GetSession().GetPlayer();
             uint zoneid = player.GetZoneId();
@@ -2453,36 +2423,6 @@ namespace Game.Chat
             }
 
             weather.SetWeather((WeatherType)type, grade);
-            return true;
-        }
-    }
-
-    [CommandGroup("achievement", RBACPermissions.CommandAchievement)]
-    class AchievementCommand
-    {
-        [Command("add", RBACPermissions.CommandAchievementAdd)]
-        static bool Add(StringArguments args, CommandHandler handler)
-        {
-            if (args.Empty())
-                return false;
-
-            string idStr = handler.ExtractKeyFromLink(args, "Hachievement");
-            if (string.IsNullOrEmpty(idStr))
-                return false;
-
-            if (!uint.TryParse(idStr, out uint achievementId) || achievementId == 0)
-                return false;
-
-            Player target = handler.GetSelectedPlayer();
-            if (!target)
-            {
-                handler.SendSysMessage(CypherStrings.NoCharSelected);
-                return false;
-            }
-            AchievementRecord achievementEntry = CliDB.AchievementStorage.LookupByKey(achievementId);
-            if (achievementEntry != null)
-                target.CompletedAchievement(achievementEntry);
-
             return true;
         }
     }

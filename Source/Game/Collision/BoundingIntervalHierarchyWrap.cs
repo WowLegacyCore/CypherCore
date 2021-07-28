@@ -30,8 +30,7 @@ namespace Game.Collision
         public void Remove(T obj)
         {
             ++unbalanced_times;
-            uint Idx;
-            if (m_obj2Idx.TryGetValue(obj, out Idx))
+            if (m_obj2Idx.TryGetValue(obj, out uint Idx))
                 m_objects[(int)Idx] = null;
             else
                 m_objects_to_push.Remove(obj);

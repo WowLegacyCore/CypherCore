@@ -58,8 +58,7 @@ namespace Game
 
         public AccountOpResult ChangePassword(uint accountId, string newPassword)
         {
-            string username;
-            if (!GetName(accountId, out username))
+            if (!GetName(accountId, out string username))
                 return AccountOpResult.NameNotExist;
 
             if (newPassword.Length > 16)
@@ -75,8 +74,7 @@ namespace Game
 
         public bool CheckPassword(uint accountId, string password)
         {
-            string username;
-            if (!GetName(accountId, out username))
+            if (!GetName(accountId, out string username))
                 return false;
 
             PreparedStatement stmt = DB.Login.GetPreparedStatement(LoginStatements.SEL_BNET_CHECK_PASSWORD);

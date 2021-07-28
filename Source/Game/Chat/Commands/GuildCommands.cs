@@ -31,8 +31,7 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player target;
-            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out target))
+            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out Player target))
                 return false;
 
             string guildname = handler.ExtractQuotedArg(args.NextString());
@@ -78,8 +77,7 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player target;
-            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out target))
+            if (!handler.ExtractPlayerTarget(args[0] != '"' ? args : null, out Player target))
                 return false;
 
             string guildName = handler.ExtractQuotedArg(args.NextString());
@@ -98,9 +96,7 @@ namespace Game.Chat
         [Command("uninvite", RBACPermissions.CommandGuildUninvite, true)]
         static bool HandleGuildUninviteCommand(StringArguments args, CommandHandler handler)
         {
-            Player target;
-            ObjectGuid targetGuid;
-            if (!handler.ExtractPlayerTarget(args, out target, out targetGuid))
+            if (!handler.ExtractPlayerTarget(args, out Player target, out ObjectGuid targetGuid))
                 return false;
 
             ulong guildId = target != null ? target.GetGuildId() : Global.CharacterCacheStorage.GetCharacterGuildIdByGuid(targetGuid);
@@ -118,15 +114,11 @@ namespace Game.Chat
         [Command("rank", RBACPermissions.CommandGuildRank, true)]
         static bool HandleGuildRankCommand(StringArguments args, CommandHandler handler)
         {
-            string nameStr;
-            string rankStr;
-            handler.ExtractOptFirstArg(args, out nameStr, out rankStr);
+            handler.ExtractOptFirstArg(args, out string nameStr, out string rankStr);
             if (string.IsNullOrEmpty(rankStr))
                 return false;
 
-            Player target;
-            ObjectGuid targetGuid;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out _))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out Player target, out ObjectGuid targetGuid, out _))
                 return false;
 
             ulong guildId = target ? target.GetGuildId() : Global.CharacterCacheStorage.GetCharacterGuildIdByGuid(targetGuid);
@@ -208,8 +200,7 @@ namespace Game.Chat
             // Display Guild Information
             handler.SendSysMessage(CypherStrings.GuildInfoName, guild.GetName(), guild.GetId()); // Guild Id + Name
 
-            string guildMasterName;
-            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(guild.GetLeaderGUID(), out guildMasterName))
+            if (Global.CharacterCacheStorage.GetCharacterNameByGuid(guild.GetLeaderGUID(), out string guildMasterName))
                 handler.SendSysMessage(CypherStrings.GuildInfoGuildMaster, guildMasterName, guild.GetLeaderGUID().ToString()); // Guild Master
 
             // Format creation date

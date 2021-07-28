@@ -934,8 +934,6 @@ namespace Game
             m_timers[WorldTimers.AhBot].SetInterval(WorldConfig.GetIntValue(WorldCfg.AhbotUpdateInterval) * Time.InMilliseconds); // every 20 sec
             m_timers[WorldTimers.GuildSave].SetInterval(WorldConfig.GetIntValue(WorldCfg.GuildSaveInterval) * Time.Minute * Time.InMilliseconds);
 
-            blackmarket_timer = 0;
-
             m_timers[WorldTimers.WhoList].SetInterval(5 * Time.InMilliseconds); // update who list cache every 5 seconds
 
             //to set mailtimer to return mails every day between 4 and 5 am
@@ -2353,7 +2351,6 @@ namespace Game
         Dictionary<WorldTimers, IntervalTimer> m_timers = new();
         long mail_timer;
         long mail_timer_expires;
-        long blackmarket_timer;
 
         ConcurrentDictionary<uint, WorldSession> m_sessions = new();
         Dictionary<uint, long> m_disconnects = new();

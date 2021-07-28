@@ -7301,7 +7301,6 @@ namespace Game.Spells
         int m_casttime;                                   // Calculated spell cast time initialized only in Spell.prepare
         bool m_canReflect;                                  // can reflect this spell?
         bool m_autoRepeat;
-        byte m_runesState;
         byte m_delayAtDamageCount;
 
         // Delayed spells system

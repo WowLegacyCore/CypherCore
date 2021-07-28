@@ -158,6 +158,7 @@ namespace Game.Entities
 
             UpdateType updateType = UpdateType.CreateObject;
             TypeId tempObjectType = ObjectTypeId;
+            TypeMask tempObjectTypeMask = ObjectTypeMask;
             CreateObjectBits flags = m_updateFlag;
 
             if (target == this)
@@ -165,6 +166,7 @@ namespace Game.Entities
                 flags.ThisIsYou = true;
                 flags.ActivePlayer = true;
                 tempObjectType = TypeId.ActivePlayer;
+                tempObjectTypeMask |= TypeMask.ActivePlayer;
             }
 
             switch (GetGUID().GetHigh())
@@ -223,6 +225,7 @@ namespace Game.Entities
             buffer.WriteUInt8((byte)updateType);
             buffer.WritePackedGuid(GetGUID());
             buffer.WriteUInt8((byte)tempObjectType);
+            buffer.WriteInt32((int)tempObjectTypeMask);     //< HeirFlags
 
             BuildMovementUpdate(buffer, flags);
 

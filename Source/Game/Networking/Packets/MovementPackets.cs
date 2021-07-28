@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -186,9 +186,9 @@ namespace Game.Networking.Packets
 
         public static void WriteCreateObjectSplineDataBlock(MoveSpline moveSpline, WorldPacket data)
         {
-            data.WriteUInt32(moveSpline.GetId());                                         // ID
+            data.WriteUInt32(moveSpline.GetId());                                           // ID
 
-            if (!moveSpline.IsCyclic())                                                 // Destination
+            if (!moveSpline.IsCyclic())                                                     // Destination
                 data.WriteVector3(moveSpline.FinalDestination());
             else
                 data.WriteVector3(Vector3.Zero);
@@ -198,19 +198,18 @@ namespace Game.Networking.Packets
 
             if (hasSplineMove)
             {
-                data.WriteUInt32((uint)moveSpline.splineflags.Flags);   // SplineFlags
-                data.WriteInt32(moveSpline.TimePassed());               // Elapsed
-                data.WriteInt32(moveSpline.Duration());                // Duration
-                data.WriteFloat(1.0f);                                  // DurationModifier
-                data.WriteFloat(1.0f);                                  // NextDurationModifier
-                data.WriteBits((byte)moveSpline.facing.type, 2);        // Face
+                data.WriteUInt32((uint)moveSpline.splineflags.Flags);                       // SplineFlags
+                data.WriteInt32(moveSpline.TimePassed());                                   // Elapsed
+                data.WriteInt32(moveSpline.Duration());                                     // Duration
+                data.WriteFloat(1.0f);                                                      // DurationModifier
+                data.WriteFloat(1.0f);                                                      // NextDurationModifier
+                data.WriteBits((byte)moveSpline.facing.type, 2);                            // Face
                 bool hasFadeObjectTime = data.WriteBit(moveSpline.splineflags.HasFlag(SplineFlag.FadeObject) && moveSpline.effect_start_time < moveSpline.Duration());
                 data.WriteBits(moveSpline.GetPath().Length, 16);
-                data.WriteBit(false);                                       // HasSplineFilter
-                data.WriteBit(moveSpline.spell_effect_extra.HasValue);  // HasSpellEffectExtraData
+                data.WriteBit(false);                                                       // HasSplineFilter
+                data.WriteBit(moveSpline.spell_effect_extra.HasValue);                      // HasSpellEffectExtraData
                 data.WriteBit(moveSpline.splineflags.HasFlag(SplineFlag.Parabolic));        // HasJumpExtraData
-                data.WriteBit(moveSpline.anim_tier.HasValue);                   // HasAnimationTierTransition
-                data.WriteBit(false);                                                   // HasUnknown901
+                data.WriteBit(moveSpline.anim_tier.HasValue);                               // HasAnimationTierTransition
                 data.FlushBits();
 
                 //if (HasSplineFilterKey)
@@ -267,17 +266,6 @@ namespace Game.Networking.Packets
                     data.WriteUInt32(0);
                     data.WriteUInt8(moveSpline.anim_tier.Value.AnimTier);
                 }
-
-                //if (HasUnknown901)
-                //{
-                //    for (WorldPackets::Movement::MonsterSplineUnknown901::Inner const& unkInner : unk.Data) size = 16
-                //    {
-                //        data << int32(unkInner.Unknown_1);
-                //        data << int32(unkInner.Unknown_2);
-                //        data << int32(unkInner.Unknown_3);
-                //        data << uint32(unkInner.Unknown_4);
-                //    }
-                //}
             }
         }
 
@@ -1278,7 +1266,7 @@ namespace Game.Networking.Packets
     }
 
     public class MonsterSplineUnknown901
-    {    
+    {
         public Array<Inner> Data = new(16);
 
         public void Write(WorldPacket data)

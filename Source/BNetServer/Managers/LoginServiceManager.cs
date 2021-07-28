@@ -24,7 +24,7 @@ namespace BNetServer
         IPEndPoint localAddress;
         X509Certificate2 certificate;
 
-        LoginServiceManager() 
+        LoginServiceManager()
         {
             serviceHandlers = new ConcurrentDictionary<(uint ServiceHash, uint MethodId), BnetServiceHandler>();
             formInputs = new FormInputs();
@@ -57,7 +57,7 @@ namespace BNetServer
 
             localAddress = new IPEndPoint(address, port);
 
-            // set up form inputs 
+            // set up form inputs
             formInputs.Type = "LOGIN_FORM";
 
             var input = new FormInput();

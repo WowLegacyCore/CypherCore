@@ -40,10 +40,10 @@ namespace BNetServer.Networking
 
             return command.Name switch
             {
-                "Command_RealmListTicketRequest_v1_b9" => GetRealmListTicket(Params, response),
-                "Command_LastCharPlayedRequest_v1_b9" => GetLastCharPlayed(Params, response),
-                "Command_RealmListRequest_v1_b9" => GetRealmList(Params, response),
-                "Command_RealmJoinRequest_v1_b9" => JoinRealm(Params, response),
+                "Command_RealmListTicketRequest_v1_bcc1" => GetRealmListTicket(Params, response),
+                "Command_LastCharPlayedRequest_v1_bcc1" => GetLastCharPlayed(Params, response),
+                "Command_RealmListRequest_v1_bcc1" => GetRealmList(Params, response),
+                "Command_RealmJoinRequest_v1_bcc1" => JoinRealm(Params, response),
                 _ => BattlenetRpcErrorCode.RpcNotImplemented
             };
         }
@@ -54,7 +54,7 @@ namespace BNetServer.Networking
             if (!authed)
                 return BattlenetRpcErrorCode.Denied;
 
-            if (request.AttributeKey == "Command_RealmListRequest_v1_b9")
+            if (request.AttributeKey == "Command_RealmListRequest_v1_bcc1")
             {
                 Global.RealmMgr.WriteSubRegions(response);
                 return BattlenetRpcErrorCode.Ok;
@@ -115,7 +115,7 @@ namespace BNetServer.Networking
 
         BattlenetRpcErrorCode GetLastCharPlayed(Dictionary<string, Variant> Params, ClientResponse response)
         {
-            Variant subRegion = Params.LookupByKey("Command_LastCharPlayedRequest_v1_b9");
+            Variant subRegion = Params.LookupByKey("Command_LastCharPlayedRequest_v1_bcc1");
             if (subRegion != null)
             {
                 var lastPlayerChar = gameAccountInfo.LastPlayedCharacters.LookupByKey(subRegion.StringValue);
@@ -162,7 +162,7 @@ namespace BNetServer.Networking
                 return BattlenetRpcErrorCode.UserServerBadWowAccount;
 
             string subRegionId = "";
-            Variant subRegion = Params.LookupByKey("Command_RealmListRequest_v1_b9");
+            Variant subRegion = Params.LookupByKey("Command_RealmListRequest_v1_bcc1");
             if (subRegion != null)
                 subRegionId = subRegion.StringValue;
 

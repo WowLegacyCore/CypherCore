@@ -42,7 +42,7 @@ namespace BNetServer.Networking
             var endpoint = Global.LoginServiceMgr.GetAddressForClient(GetRemoteIpEndPoint().Address);
 
             ChallengeExternalRequest externalChallenge = new();
-            externalChallenge.PayloadType = "web_auth_url";            
+            externalChallenge.PayloadType = "web_auth_url";
             externalChallenge.Payload = ByteString.CopyFromUtf8($"https://{endpoint.Address}:{endpoint.Port}/bnetserver/login/");
 
             SendRequest((uint)OriginalHash.ChallengeListener, 3, externalChallenge);

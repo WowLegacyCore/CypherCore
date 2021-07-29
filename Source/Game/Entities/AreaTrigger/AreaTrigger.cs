@@ -304,10 +304,7 @@ namespace Game.Entities
             _duration = newDuration;
 
             // should be sent in object create packets only
-            DoWithSuppressingObjectUpdates(() =>
-            {
-                SetUpdateField<uint>(AreaTriggerFields.Duration, (uint)newDuration, update: true);
-            });
+            m_updateValues[(int)AreaTriggerFields.Duration].SignedValue = newDuration;
         }
 
         float GetProgress() => GetTimeSinceCreated() < GetTimeToTargetScale() ? (float)GetTimeSinceCreated() / GetTimeToTargetScale() : 1.0f;
@@ -676,10 +673,7 @@ namespace Game.Entities
             _spline.InitLengths();
 
             // should be sent in object create packets only
-            DoWithSuppressingObjectUpdates(() =>
-            {
-                SetUpdateField<uint>(AreaTriggerFields.TimeToTarget, timeToTarget, update: true);
-            });
+            m_updateValues[(int)AreaTriggerFields.TimeToTarget].UnsignedValue = timeToTarget;
 
             if (IsInWorld)
             {
@@ -708,10 +702,7 @@ namespace Game.Entities
             Cypher.Assert(cmi.Center.HasValue || cmi.PathTarget.HasValue);
 
             // should be sent in object create packets only
-            DoWithSuppressingObjectUpdates(() =>
-            {
-                SetUpdateField<uint>(AreaTriggerFields.TimeToTarget, timeToTarget, update: true);
-            });
+            m_updateValues[(int)AreaTriggerFields.TimeToTarget].UnsignedValue = timeToTarget;
 
             _orbitInfo.Set(cmi);
 

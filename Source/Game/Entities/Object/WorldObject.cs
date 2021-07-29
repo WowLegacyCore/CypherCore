@@ -771,7 +771,7 @@ namespace Game.Entities
         }
 
         #region UpdateFields Get/Set Methods
-        public void SetUpdateField<T>(object index, T value, byte offset = 0, bool update = false) where T : new()
+        public void SetUpdateField<T>(object index, T value, byte offset = 0) where T : new()
         {
             if (value is byte byteValue)
             {
@@ -846,8 +846,7 @@ namespace Game.Entities
                 }
             }
 
-            if (!update)
-                AddToObjectUpdateIfNeeded();
+            AddToObjectUpdateIfNeeded();
         }
 
         public T GetUpdateField<T>(object index, byte offset = 0) =>
@@ -1193,17 +1192,6 @@ namespace Game.Entities
             SetDynamicValue(index, (ushort)((offset + 1) * blockCount - 1), 0); // reserve space
             for (var i = 0; i < blockCount; ++i)
                 SetDynamicValue(index, (ushort)(offset * blockCount + i), value.SerializeObject()[i]);
-        }
-
-        public void DoWithSuppressingObjectUpdates(Action action)
-        {
-            bool wasUpdatedBeforeAction = m_objectUpdated;
-            action();
-            if (m_objectUpdated && !wasUpdatedBeforeAction)
-            {
-                RemoveFromObjectUpdate();
-                m_objectUpdated = false;
-            }
         }
 
         public void ClearUpdateMask(bool remove)

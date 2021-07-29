@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -59,7 +59,7 @@ namespace Game.DataStorage
     public sealed class ChatChannelsRecord
     {
         public LocalizedString Name;
-        public string Shortcut; 
+        public string Shortcut;
         public uint Id;
         public ChannelDBCFlags Flags;
         public sbyte FactionGroup;
@@ -129,12 +129,11 @@ namespace Game.DataStorage
         public LocalizedString Name;
         public uint Id;
         public uint ChrCustomizationOptionID;
-        public uint ChrCustomizationReqID;
-        public ushort SortOrder;
-        public int SwatchColor1;
-        public int SwatchColor2;
+        public int ChrCustomizationReqID;
+        public ushort OrderIndex;
         public ushort UiOrderIndex;
         public int Flags;
+        public int[] SwatchColor = new int[2];
     }
 
     public sealed class ChrCustomizationDisplayInfoRecord
@@ -167,13 +166,13 @@ namespace Game.DataStorage
         public ushort SecondaryID;
         public int Flags;
         public uint ChrModelID;
-        public int SortIndex;
+        public int OrderIndex;
         public int ChrCustomizationCategoryID;
         public int OptionType;
         public float BarberShopCostModifier;
         public int ChrCustomizationID;
-        public int ChrCustomizationReqID;
-        public int UiOrderIndex;
+        public int Requirement;
+        public int SecondaryOrderIndex;
     }
 
     public sealed class ChrCustomizationReqRecord
@@ -221,7 +220,7 @@ namespace Game.DataStorage
         public int ChrRacesID;
         public int ChrModelID;
     }
-    
+
     public sealed class ChrRacesRecord
     {
         public string ClientPrefix;

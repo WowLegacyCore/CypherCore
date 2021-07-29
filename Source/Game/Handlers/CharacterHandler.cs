@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -238,7 +238,7 @@ namespace Game
                 if (customizationOptionData == null)
                     return false;
 
-                ChrCustomizationReqRecord req = CliDB.ChrCustomizationReqStorage.LookupByKey(customizationOptionData.ChrCustomizationReqID);
+                ChrCustomizationReqRecord req = CliDB.ChrCustomizationReqStorage.LookupByKey(customizationOptionData.Requirement);
                 if (req != null)
                     if (!MeetsChrCustomizationReq(req, playerClass, false, customizations))
                         return false;

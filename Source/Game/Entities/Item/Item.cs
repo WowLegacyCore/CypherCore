@@ -341,7 +341,7 @@ namespace Game.Entities
 
             SetModifier(ItemModifier.BattlePetSpeciesId, fields.Read<uint>(13));
             SetModifier(ItemModifier.BattlePetBreedData, fields.Read<uint>(14));
-            SetModifier(ItemModifier.BattlePetLevel, fields.Read<ushort>(14));
+            SetModifier(ItemModifier.BattlePetLevel, fields.Read<ushort>(15));
             SetModifier(ItemModifier.BattlePetDisplayId, fields.Read<uint>(16));
 
             SetContext((ItemContext)fields.Read<byte>(17));
@@ -363,25 +363,13 @@ namespace Game.Entities
                     SetSpellCharges(i, value);
             }
 
-            SetModifier(ItemModifier.TransmogAppearanceAllSpecs, fields.Read<uint>(19));
-            SetModifier(ItemModifier.TransmogAppearanceSpec1, fields.Read<uint>(20));
-            SetModifier(ItemModifier.TransmogAppearanceSpec2, fields.Read<uint>(21));
-            SetModifier(ItemModifier.TransmogAppearanceSpec3, fields.Read<uint>(22));
-            SetModifier(ItemModifier.TransmogAppearanceSpec4, fields.Read<uint>(23));
-
-            SetModifier(ItemModifier.EnchantIllusionAllSpecs, fields.Read<uint>(24));
-            SetModifier(ItemModifier.EnchantIllusionSpec1, fields.Read<uint>(25));
-            SetModifier(ItemModifier.EnchantIllusionSpec2, fields.Read<uint>(26));
-            SetModifier(ItemModifier.EnchantIllusionSpec3, fields.Read<uint>(27));
-            SetModifier(ItemModifier.EnchantIllusionSpec4, fields.Read<uint>(28));
-
             int gemFields = 4;
             ItemDynamicFieldGems[] gemData = new ItemDynamicFieldGems[ItemConst.MaxGemSockets];
             for (int i = 0; i < ItemConst.MaxGemSockets; ++i)
             {
                 gemData[i] = new ItemDynamicFieldGems();
-                gemData[i].ItemId = fields.Read<uint>(29 + i * gemFields);
-                var gemBonusListIDs = new StringArray(fields.Read<string>(30 + i * gemFields), ' ');
+                gemData[i].ItemId = fields.Read<uint>(19 + i * gemFields);
+                var gemBonusListIDs = new StringArray(fields.Read<string>(20 + i * gemFields), ' ');
                 if (!gemBonusListIDs.IsEmpty())
                 {
                     uint b = 0;
@@ -392,13 +380,13 @@ namespace Game.Entities
                     }
                 }
 
-                gemData[i].Context = fields.Read<byte>(31 + i * gemFields);
+                gemData[i].Context = fields.Read<byte>(21 + i * gemFields);
                 if (gemData[i].ItemId != 0)
-                    SetGem((ushort)i, gemData[i], fields.Read<uint>(32 + i * gemFields));
+                    SetGem((ushort)i, gemData[i], fields.Read<uint>(22 + i * gemFields));
             }
 
-            SetModifier(ItemModifier.TimewalkerLevel, fields.Read<uint>(41));
-            SetModifier(ItemModifier.ArtifactKnowledgeLevel, fields.Read<uint>(42));
+            SetModifier(ItemModifier.TimewalkerLevel, fields.Read<uint>(31));
+            SetModifier(ItemModifier.ArtifactKnowledgeLevel, fields.Read<uint>(32));
 
             // Enchants must be loaded after all other bonus/scaling data
             _LoadIntoDataField(fields.Read<string>(8), (uint)ItemFields.Enchantment, (uint)EnchantmentSlot.Max * (uint)EnchantmentOffset.Max);

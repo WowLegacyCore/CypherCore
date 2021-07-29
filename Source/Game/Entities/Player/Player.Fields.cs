@@ -24,6 +24,7 @@ using Game.Mails;
 using Game.Maps;
 using Game.Misc;
 using Game.Spells;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -617,9 +618,14 @@ namespace Game.Entities
         public QuestObjective Objective;
     }
 
-    public struct ChrCustomizationChoice
+    public struct ChrCustomizationChoice : IComparable<ChrCustomizationChoice>
     {
         public uint ChrCustomizationOptionID;
         public uint ChrCustomizationChoiceID;
+
+        public int CompareTo(ChrCustomizationChoice other)
+        {
+            return ChrCustomizationOptionID.CompareTo(other.ChrCustomizationOptionID);
+        }
     }
 }

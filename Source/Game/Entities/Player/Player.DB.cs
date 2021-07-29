@@ -53,9 +53,9 @@ namespace Game.Entities
                     Item item = _LoadItem(trans, zoneId, timeDiff, result.GetFields());
                     if (item != null)
                     {
-                        ulong counter = result.Read<ulong>(43);
+                        ulong counter = result.Read<ulong>(33);
                         ObjectGuid bagGuid = counter != 0 ? ObjectGuid.Create(HighGuid.Item, counter) : ObjectGuid.Empty;
-                        byte slot = result.Read<byte>(44);
+                        byte slot = result.Read<byte>(34);
 
                         GetSession().GetCollectionMgr().CheckHeirloomUpgrades(item);
 

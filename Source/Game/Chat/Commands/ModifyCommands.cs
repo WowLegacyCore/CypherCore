@@ -599,7 +599,7 @@ namespace Game.Chat
             WorldSession worldSession = target.GetSession();
             foreach (ChrCustomizationOptionRecord option in options)
             {
-                ChrCustomizationReqRecord optionReq = CliDB.ChrCustomizationReqStorage.LookupByKey(option.ChrCustomizationReqID);
+                ChrCustomizationReqRecord optionReq = CliDB.ChrCustomizationReqStorage.LookupByKey(option.Requirement);
                 if (optionReq != null && !worldSession.MeetsChrCustomizationReq(optionReq, target.GetClass(), false, customizations))
                     continue;
 

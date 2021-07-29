@@ -3652,7 +3652,7 @@ namespace Game.Entities
             if (m_regenTimerCount >= 2000 || forcesSetPower)
                 SetPower(power, curValue);
             else
-                SetUpdateField<int>(UnitFields.Power + (int)powerIndex, curValue, update: true);
+                SetUpdateField<int>(UnitFields.Power + (int)powerIndex, curValue);
         }
         void RegenerateHealth()
         {

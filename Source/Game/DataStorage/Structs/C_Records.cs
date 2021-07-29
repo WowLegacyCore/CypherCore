@@ -204,14 +204,6 @@ namespace Game.DataStorage
         public int CharComponentTextureLayoutID;
         public int Flags;
         public int SkeletonFileDataID;
-        public int ModelFallbackChrModelID;
-        public int TextureFallbackChrModelID;
-        public int HelmVisFallbackChrModelID;
-        public float CustomizeScale;
-        public float CustomizeFacing;
-        public float CameraDistanceOffset;
-        public float BarberShopCameraOffsetScale;
-        public float BarberShopCameraRotationOffset;
     }
 
     public sealed class ChrRaceXChrModelRecord

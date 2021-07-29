@@ -659,12 +659,14 @@ namespace Game.Networking.Packets
 
         public override void Read()
         {
-            Guid = _worldPacket.ReadPackedGuid();
+            Guid    = _worldPacket.ReadPackedGuid();
             FarClip = _worldPacket.ReadFloat();
+            UnkBit  = _worldPacket.HasBit();
         }
 
-        public ObjectGuid Guid;      // Guid of the player that is logging in
-        public float FarClip; // Visibility distance (for terrain)
+        public ObjectGuid Guid;         // Guid of the player that is logging in
+        public float FarClip;           // Visibility distance (for terrain)
+        public bool UnkBit;
     }
 
     public class LoginVerifyWorld : ServerPacket

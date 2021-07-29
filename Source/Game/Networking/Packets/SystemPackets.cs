@@ -89,6 +89,8 @@ namespace Game.Networking.Packets
             _worldPacket.WriteBit(IsMuted);
             _worldPacket.WriteBit(ClubFinderEnabled);
             _worldPacket.WriteBit(Unknown901CheckoutRelated);
+            _worldPacket.WriteBit(BattlegroundsEnabled);
+            _worldPacket.WriteBit(RaceClassExpansionLevels.HasValue);
             _worldPacket.FlushBits();
 
             {
@@ -122,6 +124,13 @@ namespace Game.Networking.Packets
                 _worldPacket.WriteInt32(SessionAlert.Value.Delay);
                 _worldPacket.WriteInt32(SessionAlert.Value.Period);
                 _worldPacket.WriteInt32(SessionAlert.Value.DisplayTime);
+            }
+
+            if (RaceClassExpansionLevels.HasValue)
+            {
+                _worldPacket.WriteInt32(RaceClassExpansionLevels.Value.Count);
+                for (var i = 0; i < RaceClassExpansionLevels.Value.Count; ++i)
+                    _worldPacket.WriteUInt8(RaceClassExpansionLevels.Value[i]);
             }
 
             _worldPacket.WriteBit(Squelch.IsSquelched);
@@ -176,6 +185,8 @@ namespace Game.Networking.Packets
         public bool IsMuted;
         public bool ClubFinderEnabled;
         public bool Unknown901CheckoutRelated;
+        public bool BattlegroundsEnabled;
+        public Optional<List<byte>> RaceClassExpansionLevels;
 
         public SocialQueueConfig QuickJoinConfig;
         public SquelchInfo Squelch;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -347,8 +347,8 @@ namespace Game.Entities
         }
 
         //Stats
-        public float GetStat(Stats stat) => GetUpdateField<float>(UnitFields.Stats + (int)stat);
-        public void SetStat(Stats stat, float val) => SetUpdateField<float>(UnitFields.Stats + (int)stat, val);
+        public int GetStat(Stats stat) => GetUpdateField<int>(UnitFields.Stats + (int)stat);
+        public void SetStat(Stats stat, int val) => SetUpdateField<int>(UnitFields.Stats + (int)stat, val);
         public uint GetCreateMana() => GetUpdateField<uint>(UnitFields.BaseMana);
         public void SetCreateMana(uint val) => SetUpdateField<uint>(UnitFields.BaseMana, val);
         public uint GetArmor() => (uint)GetResistance(SpellSchools.Normal);
@@ -1002,7 +1002,6 @@ namespace Game.Entities
         {
             // value = ((base_value * base_pct) + total_value) * total_pct
             float value = GetTotalStatValue(stat);
-
             SetStat(stat, (int)value);
 
             if (stat == Stats.Stamina || stat == Stats.Intellect || stat == Stats.Strength)

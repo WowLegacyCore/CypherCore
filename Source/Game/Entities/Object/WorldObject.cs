@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -48,6 +48,8 @@ namespace Game.Entities
 
             m_movementInfo = new MovementInfo();
             m_updateFlag.Clear();
+
+            m_fieldNotifyFlags = MirrorFlags.ViewerDependent;
 
             m_staticFloorZ = MapConst.VMAPInvalidHeightValue;
         }
@@ -771,7 +773,7 @@ namespace Game.Entities
         #region UpdateFields Get/Set Methods
         public void SetUpdateField<T>(object index, T value, byte offset = 0, bool update = false) where T : new()
         {
-            if (value is sbyte || value is byte)
+            if (value is byte byteValue)
             {
                 if (offset > 3)
                 {
@@ -779,23 +781,14 @@ namespace Game.Entities
                     return;
                 }
 
-                if ((byte)(GetUpdateField<uint>(index) >> (offset * 8)) != Convert.ToByte(value))
+                if ((byte)(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) != byteValue)
                 {
-                    if (value is byte)
-                    {
-                        m_updateValues[(int)index].UnsignedValue &= ~(uint)(0xFF << (offset * 8));
-                        m_updateValues[(int)index].UnsignedValue |= Convert.ToUInt32(value) << (offset * 8);
-                    }
-                    else
-                    {
-                        m_updateValues[(int)index].SignedValue &= ~(0xFF << (offset * 8));
-                        m_updateValues[(int)index].SignedValue |= Convert.ToInt32(value) << (offset * 8);
-                    }
-
+                    m_updateValues[(int)index].UnsignedValue &= ~(uint)(0xFF << (offset * 8));
+                    m_updateValues[(int)index].UnsignedValue |= (uint)byteValue << (offset * 8);
                     m_changesMask.Set((int)index, true);
                 }
             }
-            else if (value is short || value is ushort)
+            else if (value is ushort ushortValue)
             {
                 if (offset > 2)
                 {
@@ -803,64 +796,53 @@ namespace Game.Entities
                     return;
                 }
 
-                if ((ushort)(GetUpdateField<uint>(index) >> (offset * 16)) != Convert.ToUInt16(value))
+                if ((ushort)(GetUpdateField<uint>(index) >> (offset * 16)) != ushortValue)
                 {
-                    if (value is ushort)
-                    {
-                        m_updateValues[(int)index].UnsignedValue &= ~((uint)0xFFFF << (offset * 16));
-                        m_updateValues[(int)index].UnsignedValue |= Convert.ToUInt32(value) << (offset * 16);
-                    }
-                    else
-                    {
-                        m_updateValues[(int)index].SignedValue &= ~(0xFFFF << (offset * 16));
-                        m_updateValues[(int)index].SignedValue |= Convert.ToInt32(value) << (offset * 16);
-                    }
-
+                    m_updateValues[(int)index].UnsignedValue &= ~((uint)0xFFFF << (offset * 16));
+                    m_updateValues[(int)index].UnsignedValue |= (uint)ushortValue << (offset * 16);
                     m_changesMask.Set((int)index, true);
                 }
             }
-            else if (value is int || value is uint || value is float)
+            else if (value is int intValue)
             {
-                if (value is uint && GetUpdateField<uint>(index) != Convert.ToUInt32(value))
+                if (m_updateValues[(int)index].SignedValue != intValue)
                 {
-                    m_updateValues[(int)index].UnsignedValue = Convert.ToUInt32(value);
-                    m_changesMask.Set((int)index, true);
-                }
-                else if (value is int && GetUpdateField<int>(index) != Convert.ToInt32(value))
-                {
-                    m_updateValues[(int)index].SignedValue = Convert.ToInt32(value);
-                    m_changesMask.Set((int)index, true);
-                }
-                else if (value is float && GetUpdateField<float>(index) != Convert.ToSingle(value))
-                {
-                    m_updateValues[(int)index].FloatValue = Convert.ToSingle(value);
+                    m_updateValues[(int)index].SignedValue = intValue;
                     m_changesMask.Set((int)index, true);
                 }
             }
-            else if (value is long || value is ulong)
+            else if (value is uint uintValue)
             {
-                if (value is long && GetUpdateField<long>(index) != Convert.ToInt64(value))
+                if (m_updateValues[(int)index].UnsignedValue != uintValue)
                 {
-                    m_updateValues[(int)index].SignedValue = (int)MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
-                    m_updateValues[(int)index + 1].SignedValue = (int)MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
+                    m_updateValues[(int)index].UnsignedValue = uintValue;
                     m_changesMask.Set((int)index, true);
-                    m_changesMask.Set((int)index + 1, true);
                 }
-                else if (value is ulong && GetUpdateField<ulong>(index) != Convert.ToUInt64(value))
+            }
+            else if (value is float floatValue)
+            {
+                if (m_updateValues[(int)index].FloatValue != floatValue)
                 {
-                    m_updateValues[(int)index].UnsignedValue = MathFunctions.Pair64_LoPart(Convert.ToUInt64(value));
-                    m_updateValues[(int)index + 1].UnsignedValue = MathFunctions.Pair64_HiPart(Convert.ToUInt64(value));
+                    m_updateValues[(int)index].FloatValue = floatValue;
+                    m_changesMask.Set((int)index, true);
+                }
+            }
+            else if (value is ulong ulongValue)
+            {
+                if (GetUpdateField<ulong>(index) != ulongValue)
+                {
+                    m_updateValues[(int)index].UnsignedValue = MathFunctions.Pair64_LoPart(ulongValue);
+                    m_updateValues[(int)index + 1].UnsignedValue = MathFunctions.Pair64_HiPart(ulongValue);
                     m_changesMask.Set((int)index, true);
                     m_changesMask.Set((int)index + 1, true);
                 }
             }
-            else if (value is ObjectGuid)
+            else if (value is ObjectGuid objectGuid)
             {
-                var objectValue = (ObjectGuid)Convert.ChangeType(value, typeof(ObjectGuid));
-                if (GetUpdateField<ObjectGuid>(index) != objectValue)
+                if (GetUpdateField<ObjectGuid>(index) != objectGuid)
                 {
-                    SetUpdateField<ulong>(index, objectValue.GetLowValue());
-                    SetUpdateField<ulong>((int)index + 2, objectValue.GetHighValue());
+                    SetUpdateField<ulong>(index, objectGuid.GetLowValue());
+                    SetUpdateField<ulong>((int)index + 2, objectGuid.GetHighValue());
                 }
             }
 
@@ -871,17 +853,14 @@ namespace Game.Entities
         public T GetUpdateField<T>(object index, byte offset = 0) =>
             default(T) switch
             {
-                sbyte => (T)Convert.ChangeType((sbyte)(m_updateValues[(int)index].SignedValue >> (offset * 8)) & 0xFF, typeof(T)),
-                byte => (T)Convert.ChangeType((byte)(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) & 0xFF, typeof(T)),
-                short => (T)Convert.ChangeType((short)(m_updateValues[(int)index].SignedValue >> (offset * 16)) & 0xFFFF, typeof(T)),
-                ushort => (T)Convert.ChangeType((ushort)(m_updateValues[(int)index].UnsignedValue >> (offset * 16)) & 0xFFFF, typeof(T)),
-                int => (T)Convert.ChangeType(m_updateValues[(int)index].SignedValue, typeof(T)),
-                uint => (T)Convert.ChangeType(m_updateValues[(int)index].UnsignedValue, typeof(T)),
-                float => (T)Convert.ChangeType(m_updateValues[(int)index].FloatValue, typeof(T)),
-                long => (T)Convert.ChangeType((long)m_updateValues[(int)index + 1].SignedValue << 32 | (long)m_updateValues[(int)index].SignedValue, typeof(T)),
-                ulong => (T)Convert.ChangeType((ulong)m_updateValues[(int)index + 1].UnsignedValue << 32 | m_updateValues[(int)index].UnsignedValue, typeof(T)),
-                ObjectGuid => (T)Convert.ChangeType(new ObjectGuid(GetUpdateField<ulong>((int)index + 2), GetUpdateField<ulong>(index)), typeof(T)),
-                _ => throw new Exception($"{typeof(T)} is not implemented in GetUpdateField<T>"),
+                byte        => (T)Convert.ChangeType((byte)(m_updateValues[(int)index].UnsignedValue >> (offset * 8)) & 0xFF, typeof(T)),
+                ushort      => (T)Convert.ChangeType((ushort)(m_updateValues[(int)index].UnsignedValue >> (offset * 16)) & 0xFFFF, typeof(T)),
+                int         => (T)Convert.ChangeType(m_updateValues[(int)index].SignedValue, typeof(T)),
+                uint        => (T)Convert.ChangeType(m_updateValues[(int)index].UnsignedValue, typeof(T)),
+                float       => (T)Convert.ChangeType(m_updateValues[(int)index].FloatValue, typeof(T)),
+                ulong       => (T)Convert.ChangeType((ulong)m_updateValues[(int)index + 1].UnsignedValue << 32 | m_updateValues[(int)index].UnsignedValue, typeof(T)),
+                ObjectGuid  => (T)Convert.ChangeType(new ObjectGuid(GetUpdateField<ulong>((int)index + 2), GetUpdateField<ulong>(index)), typeof(T)),
+                _           => throw new Exception($"{typeof(T)} is not implemented in GetUpdateField<T>"),
             };
 
 
@@ -1081,12 +1060,12 @@ namespace Game.Entities
                 var cur = GetUpdateField<float>(index) + (apply ? Convert.ToSingle(val) : -Convert.ToSingle(val));
                 SetUpdateField<float>(index, cur);
             }
-            else if (val is short || val is ushort)
+            else if (val is ushort)
             {
-                var cur = (short)(GetUpdateField<short>(index, offset) + (apply ? Convert.ToInt16(val) : -Convert.ToInt16(val)));
+                var cur = (ushort)(GetUpdateField<ushort>(index, offset) + (apply ? Convert.ToUInt16(val) : -Convert.ToUInt16(val)));
                 if (cur < 0)
                     cur = 0;
-                SetUpdateField<short>(index, cur, offset);
+                SetUpdateField<ushort>(index, cur, offset);
             }
         }
 

@@ -964,6 +964,8 @@ namespace Framework.Constants
             MirrorFlags.All,                                             // PlayerFields::AvgItemLevel+1
             MirrorFlags.All,                                             // PlayerFields::AvgItemLevel+2
             MirrorFlags.All,                                             // PlayerFields::AvgItemLevel+3
+            MirrorFlags.All,                                             // PlayerFields::AvgItemLevel+4
+            MirrorFlags.All,                                             // PlayerFields::AvgItemLevel+5
             MirrorFlags.All,                                             // PlayerFields::CurrentBattlePetBreedQuality
             MirrorFlags.All,                                             // PlayerFields::HonorLevel
             MirrorFlags.All,                                             // PlayerFields::CustomizationChoices
@@ -2897,6 +2899,102 @@ namespace Framework.Constants
             MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+381
             MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+382
             MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+383
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+384
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+385
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+386
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+387
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+388
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+389
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+390
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+391
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+392
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+393
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+394
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+395
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+396
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+397
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+398
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+399
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+400
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+401
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+402
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+403
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+404
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+405
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+406
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+407
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+408
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+409
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+410
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+411
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+412
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+413
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+414
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+415
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+416
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+417
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+418
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+419
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+420
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+421
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+422
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+423
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+424
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+425
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+426
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+427
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+428
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+429
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+430
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+431
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+432
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+433
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+434
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+435
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+436
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+437
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+438
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+439
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+440
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+441
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+442
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+443
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+444
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+445
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+446
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+447
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+448
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+449
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+450
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+451
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+452
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+453
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+454
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+455
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+456
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+457
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+458
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+459
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+460
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+461
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+462
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+463
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+464
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+465
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+466
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+467
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+468
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+469
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+470
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+471
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+472
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+473
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+474
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+475
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+476
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+477
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+478
+            MirrorFlags.All,                                             // ActivePlayerFields::ExploredZones+479
             MirrorFlags.All,                                             // ActivePlayerFields::RestInfo
             MirrorFlags.All,                                             // ActivePlayerFields::RestInfo+1
             MirrorFlags.All,                                             // ActivePlayerFields::RestInfo+2

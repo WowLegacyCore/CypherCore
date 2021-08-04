@@ -808,6 +808,8 @@ namespace Game.Networking.Packets
     public class ItemInstance
     {
         public uint ItemID;
+        public uint RandomPropertiesSeed;
+        public uint RandomPropertiesID;
         public Optional<ItemBonuses> ItemBonus;
         public ItemModList Modifications = new();
 
@@ -859,6 +861,8 @@ namespace Game.Networking.Packets
         public void Write(WorldPacket data)
         {
             data.WriteUInt32(ItemID);
+            data.WriteUInt32(RandomPropertiesSeed);
+            data.WriteUInt32(RandomPropertiesID);
 
             data.WriteBit(ItemBonus.HasValue);
             data.FlushBits();
@@ -872,6 +876,8 @@ namespace Game.Networking.Packets
         public void Read(WorldPacket data)
         {
             ItemID = data.ReadUInt32();
+            RandomPropertiesSeed = data.ReadUInt32();
+            RandomPropertiesID = data.ReadUInt32();
 
             ItemBonus.HasValue = data.HasBit();
             data.ResetBitPos();

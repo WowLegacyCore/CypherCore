@@ -1808,7 +1808,7 @@ namespace Game.Spells
 
             ObjectGuid guid = m_caster.GetGUID();
             if (!guid.IsEmpty()) // the trainer is the caster
-                unitTarget.ToPlayer().SendRespecWipeConfirm(guid, unitTarget.ToPlayer().GetNextResetTalentsCost());
+                unitTarget.ToPlayer().SendRespecWipeConfirm(guid, unitTarget.ToPlayer().ResetTalentsCost());
         }
 
         [SpellEffectHandler(SpellEffectName.TeleportUnitsFaceCaster)]
@@ -3250,50 +3250,6 @@ namespace Game.Spells
             // int unk = effectInfo.MiscValue; // This is set for EffectActivateObject spells; needs research
 
             gameObjTarget.GetMap().ScriptCommandStart(activateCommand, 0, m_caster, gameObjTarget);
-        }
-
-        [SpellEffectHandler(SpellEffectName.ApplyGlyph)]
-        void EffectApplyGlyph(uint effIndex)
-        {
-            if (effectHandleMode != SpellEffectHandleMode.Hit)
-                return;
-
-            Player player = m_caster.ToPlayer();
-            if (player == null)
-                return;
-
-            List<uint> glyphs = player.GetGlyphs(player.GetActiveTalentGroup());
-            int replacedGlyph = glyphs.Count;
-            for (int i = 0; i < glyphs.Count; ++i)
-            {
-                List<uint> activeGlyphBindableSpells = Global.DB2Mgr.GetGlyphBindableSpells(glyphs[i]);
-                if (activeGlyphBindableSpells.Contains(m_misc.SpellId))
-                {
-                    replacedGlyph = i;
-                    player.RemoveAurasDueToSpell(CliDB.GlyphPropertiesStorage.LookupByKey(glyphs[i]).SpellID);
-                    break;
-                }
-            }
-
-            uint glyphId = (uint)effectInfo.MiscValue;
-            if (replacedGlyph < glyphs.Count)
-            {
-                if (glyphId != 0)
-                    glyphs[replacedGlyph] = glyphId;
-                else
-                    glyphs.RemoveAt(replacedGlyph);
-            }
-            else if (glyphId != 0)
-                glyphs.Add(glyphId);
-
-            GlyphPropertiesRecord glyphProperties = CliDB.GlyphPropertiesStorage.LookupByKey(glyphId);
-            if (glyphProperties != null)
-                player.CastSpell(player, glyphProperties.SpellID, true);
-
-            ActiveGlyphs activeGlyphs = new();
-            activeGlyphs.Glyphs.Add(new GlyphBinding(m_misc.SpellId, (ushort)glyphId));
-            activeGlyphs.IsFullUpdate = false;
-            player.SendPacket(activeGlyphs);
         }
 
         [SpellEffectHandler(SpellEffectName.EnchantHeldItem)]
@@ -5067,24 +5023,6 @@ namespace Game.Spells
 
             int duration = GetSpellInfo().CalcDuration(GetCaster());
             AreaTrigger.CreateAreaTrigger((uint)effectInfo.MiscValue, GetCaster(), null, GetSpellInfo(), destTarget.GetPosition(), duration, m_spellXSpellVisualId, m_castId);
-        }
-
-        [SpellEffectHandler(SpellEffectName.RemoveTalent)]
-        void EffectRemoveTalent(uint effIndex)
-        {
-            if (effectHandleMode != SpellEffectHandleMode.HitTarget)
-                return;
-
-            TalentRecord talent = CliDB.TalentStorage.LookupByKey(m_misc.TalentId);
-            if (talent == null)
-                return;
-
-            Player player = unitTarget ? unitTarget.ToPlayer() : null;
-            if (player == null)
-                return;
-
-            player.RemoveTalent(talent);
-            player.SendTalentsInfoData();
         }
 
         [SpellEffectHandler(SpellEffectName.DestroyItem)]

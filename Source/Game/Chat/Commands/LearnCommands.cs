@@ -302,7 +302,7 @@ namespace Game.Chat.Commands
 
                         // learn highest rank of talent and learn all non-talent spell ranks (recursive by tree)
                         player.LearnSpellHighestRank(talentInfo.SpellID);
-                        player.AddTalent(talentInfo, player.GetActiveTalentGroup(), true);
+                        player.AddTalent(talentInfo.SpellID, player.GetActiveTalentGroup(), true);
                     }
 
                     handler.SendSysMessage(CypherStrings.CommandLearnClassTalents);

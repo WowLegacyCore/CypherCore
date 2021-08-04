@@ -1399,7 +1399,7 @@ namespace Game.Entities
         public void SetModifier(ItemModifier modifier, uint value)
         {
             ApplyFlag(ItemFields.ModifiersMask, 1 << (int)modifier, value != 0);
-            SetDynamicValue(ItemDynamicFields.Modifiers, (ushort)modifier, value);
+            // SetDynamicValue(ItemDynamicFields.Modifiers, (ushort)modifier, value);
         }
 
         public uint GetVisibleEntry(Player owner)

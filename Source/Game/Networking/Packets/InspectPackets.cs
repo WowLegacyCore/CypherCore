@@ -47,7 +47,6 @@ namespace Game.Networking.Packets
             DisplayInfo.Write(_worldPacket);
             _worldPacket.WriteInt32(Glyphs.Count);
             _worldPacket.WriteInt32(Talents.Count);
-            _worldPacket.WriteInt32(PvpTalents.Count);
             _worldPacket.WriteInt32(ItemLevel);
             _worldPacket.WriteUInt8(LifetimeMaxRank);
             _worldPacket.WriteUInt16(TodayHK);
@@ -59,10 +58,7 @@ namespace Game.Networking.Packets
                 _worldPacket.WriteUInt16(Glyphs[i]);
 
             for (int i = 0; i < Talents.Count; ++i)
-                _worldPacket.WriteUInt16(Talents[i]);
-
-            for (int i = 0; i < PvpTalents.Count; ++i)
-                _worldPacket.WriteUInt16(PvpTalents[i]);
+                _worldPacket.WriteUInt8(Talents[i]);
 
             _worldPacket.WriteBit(GuildData.HasValue);
             _worldPacket.WriteBit(AzeriteLevel.HasValue);
@@ -80,8 +76,7 @@ namespace Game.Networking.Packets
 
         public PlayerModelDisplayInfo DisplayInfo;
         public List<ushort> Glyphs = new();
-        public List<ushort> Talents = new();
-        public Array<ushort> PvpTalents = new(PlayerConst.MaxPvpTalentSlots, 0);
+        public List<byte> Talents = new();
         public Optional<InspectGuildData> GuildData = new();
         public Array<PVPBracketData> Bracket = new(6, default);
         public uint? AzeriteLevel;
@@ -275,6 +270,7 @@ namespace Game.Networking.Packets
             data.WriteInt32(WeeklyBestRating);
             data.WriteInt32(SeasonBestRating);
             data.WriteInt32(PvpTierID);
+            data.WriteInt32(UnkBCC);
             data.WriteBit(Disqualified);
             data.FlushBits();
         }
@@ -288,6 +284,7 @@ namespace Game.Networking.Packets
         public int WeeklyBestRating;
         public int SeasonBestRating;
         public int PvpTierID;
+        public int UnkBCC;
         public byte Bracket;
         public bool Disqualified;
     }

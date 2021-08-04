@@ -62,18 +62,18 @@ namespace Game.Networking.Packets
         }
     }
 
-    class LearnTalents : ClientPacket
+    class LearnTalent : ClientPacket
     {
-        public LearnTalents(WorldPacket packet) : base(packet) { }
+        public int TalentID { get; set; }
+        public ushort Rank { get; set; }
+
+        public LearnTalent(WorldPacket packet) : base(packet) { }
 
         public override void Read()
         {
-            uint count = _worldPacket.ReadBits<uint>(6);
-            for (int i = 0; i < count; ++i)
-                Talents[i] = _worldPacket.ReadUInt16();
+            TalentID    = _worldPacket.ReadInt32();
+            Rank        = _worldPacket.ReadUInt16();
         }
-
-        public Array<ushort> Talents = new(PlayerConst.MaxTalentTiers);
     }
 
     class RespecWipeConfirm : ServerPacket

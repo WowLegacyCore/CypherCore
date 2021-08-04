@@ -17,6 +17,7 @@
  */
 
 using Framework.Constants;
+using Game.DataStorage;
 using Game.Entities;
 using Game.Guilds;
 using Game.Networking;
@@ -48,10 +49,14 @@ namespace Game
             if (GetPlayer().CanBeGameMaster() || WorldConfig.GetIntValue(WorldCfg.TalentsInspecting) + (GetPlayer().GetTeamId() == player.GetTeamId() ? 1 : 0) > 1)
             {
                 var talents = player.GetTalentMap(player.GetActiveTalentGroup());
-                foreach (var v in talents)
+                foreach (var (spellId, state) in talents)
                 {
-                    if (v.Value != PlayerSpellState.Removed)
-                        inspectResult.Talents.Add((ushort)v.Key);
+                    if (state != PlayerSpellState.Removed)
+                    {
+                        TalentSpellPos talentPos = Global.DB2Mgr.GetTalentSpellPos(spellId);
+                        if (talentPos != null)
+                            inspectResult.Talents.Add((byte)talentPos.TalentID);
+                    }
                 }
             }
 

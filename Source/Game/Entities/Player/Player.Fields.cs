@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -193,7 +193,6 @@ namespace Game.Entities
         uint m_movie;
         bool m_customizationsChanged;
 
-        SpecializationInfo _specializationInfo;
         public List<ObjectGuid> m_clientGUIDs = new();
         public List<ObjectGuid> m_visibleTransports = new();
         public WorldObject seerView;
@@ -234,7 +233,6 @@ namespace Game.Entities
 
         ulong m_GuildIdInvited;
         DeclinedName _declinedname;
-        Runes m_runes = new();
         uint m_hostileReferenceCheckTimer;
         uint m_drunkTimer;
         long m_logintime;
@@ -248,6 +246,8 @@ namespace Game.Entities
         uint m_ingametime;
 
         PlayerCommandStates _activeCheats;
+
+        SpecializationInfo specializationInfo;
     }
 
     public class PlayerInfo
@@ -316,44 +316,16 @@ namespace Game.Entities
     {
         public SpecializationInfo()
         {
-            for (byte i = 0; i < PlayerConst.MaxSpecializations; ++i)
-            {
+            for (byte i = 0; i < PlayerConst.MaxTalentSpecs; ++i)
                 Talents[i] = new Dictionary<uint, PlayerSpellState>();
-                PvpTalents[i] = new uint[PlayerConst.MaxPvpTalentSlots];
-                Glyphs[i] = new List<uint>();
-            }
         }
 
-        public Dictionary<uint, PlayerSpellState>[] Talents = new Dictionary<uint, PlayerSpellState>[PlayerConst.MaxSpecializations];
-        public uint[][] PvpTalents = new uint[PlayerConst.MaxSpecializations][];
-        public List<uint>[] Glyphs = new List<uint>[PlayerConst.MaxSpecializations];
+        public Dictionary<uint, PlayerSpellState>[] Talents = new Dictionary<uint, PlayerSpellState>[PlayerConst.MaxTalentSpecs];
         public uint ResetTalentsCost;
         public long ResetTalentsTime;
-        public byte ActiveGroup;
-    }
-
-    public class Runes
-    {
-        public void SetRuneState(byte index, bool set = true)
-        {
-            bool foundRune = CooldownOrder.Contains(index);
-            if (set)
-            {
-                RuneState |= (byte)(1 << index);                      // usable
-                if (foundRune)
-                    CooldownOrder.Remove(index);
-            }
-            else
-            {
-                RuneState &= (byte)~(1 << index);                     // on cooldown
-                if (!foundRune)
-                    CooldownOrder.Add(index);
-            }
-        }
-
-        public List<byte> CooldownOrder = new();
-        public uint[] Cooldown = new uint[PlayerConst.MaxRunes];
-        public byte RuneState;                                        // mask of available runes
+        public byte ActiveSpec;
+        public uint SpecCount;
+        public uint UsedTalentCount;
     }
 
     public class ActionButton

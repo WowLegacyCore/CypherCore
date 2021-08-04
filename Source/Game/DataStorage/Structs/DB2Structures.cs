@@ -5132,7 +5132,7 @@ namespace Game.DataStorage
         public uint OverridesSpellID;
         public int RequiredSpellID;
         public byte[] CategoryMask = new byte[2];
-        public int[] SpellRank = new int[9];
+        public uint[] SpellRank = new uint[9];
         public int[] PrereqTalent = new int[3];
         public int[] PrereqRank = new int[3];
     }

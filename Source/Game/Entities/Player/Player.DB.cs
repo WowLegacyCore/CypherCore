@@ -893,9 +893,7 @@ namespace Game.Entities
             {
                 do
                 {
-                    TalentRecord talent = CliDB.TalentStorage.LookupByKey(result.Read<uint>(0));
-                    if (talent != null)
-                        AddTalent(talent, result.Read<byte>(1), false);
+                    AddTalent(result.Read<uint>(0), result.Read<byte>(1), false);
                 }
                 while (result.NextRow());
             }
@@ -919,11 +917,6 @@ namespace Game.Entities
             //    GetGlyphs(spec).Add(glyphId);
 
             //} while (result.NextRow());
-        }
-        void _LoadGlyphAuras()
-        {
-            foreach (uint glyphId in GetGlyphs(GetActiveTalentGroup()))
-                CastSpell(this, CliDB.GlyphPropertiesStorage.LookupByKey(glyphId).SpellID, true);
         }
         public void LoadCorpse(SQLResult result)
         {
@@ -1598,20 +1591,20 @@ namespace Game.Entities
             stmt.AddValue(0, GetGUID().GetCounter());
             trans.Append(stmt);
 
-            for (byte spec = 0; spec < PlayerConst.MaxSpecializations; ++spec)
-            {
-                foreach (uint glyphId in GetGlyphs(spec))
-                {
-                    byte index = 0;
+            //for (byte spec = 0; spec < PlayerConst.MaxTalentSpecs; ++spec)
+            //{
+            //    foreach (uint glyphId in GetGlyphs(spec))
+            //    {
+            //        byte index = 0;
 
-                    stmt = DB.Characters.GetPreparedStatement(CharStatements.INS_CHAR_GLYPHS);
-                    stmt.AddValue(index++, GetGUID().GetCounter());
-                    stmt.AddValue(index++, spec);
-                    stmt.AddValue(index++, glyphId);
+            //        stmt = DB.Characters.GetPreparedStatement(CharStatements.INS_CHAR_GLYPHS);
+            //        stmt.AddValue(index++, GetGUID().GetCounter());
+            //        stmt.AddValue(index++, spec);
+            //        stmt.AddValue(index++, glyphId);
 
-                    trans.Append(stmt);
-                }
-            }
+            //        trans.Append(stmt);
+            //    }
+            //}
         }
         void _SaveCurrency(SQLTransaction trans)
         {
@@ -1917,7 +1910,7 @@ namespace Game.Entities
             stmt.AddValue(0, GetGUID().GetCounter());
             trans.Append(stmt);
 
-            for (byte group = 0; group < PlayerConst.MaxSpecializations; ++group)
+            for (byte group = 0; group < PlayerConst.MaxTalentSpecs; ++group)
             {
                 var talents = GetTalentMap(group);
                 foreach (var pair in talents.ToList())
@@ -2752,16 +2745,6 @@ namespace Game.Entities
             SetNumRespecs(numRespecs);
             SetPrimarySpecialization(primarySpecialization);
             SetActiveTalentGroup(activeTalentGroup);
-            ChrSpecializationRecord primarySpec = CliDB.ChrSpecializationStorage.LookupByKey(GetPrimarySpecialization());
-            if (primarySpec == null || primarySpec.ClassID != (byte)GetClass() || GetActiveTalentGroup() >= PlayerConst.MaxSpecializations)
-                ResetTalentSpecialization();
-
-            ChrSpecializationRecord chrSpec = CliDB.ChrSpecializationStorage.LookupByKey(lootSpecId);
-            if (chrSpec != null)
-            {
-                if (chrSpec.ClassID == (uint)GetClass())
-                    SetLootSpecId(lootSpecId);
-            }
 
             UpdateDisplayPower();
             _LoadTalents(holder.GetResult(PlayerLoginQueryLoad.Talents));
@@ -2771,7 +2754,6 @@ namespace Game.Entities
 
             _LoadGlyphs(holder.GetResult(PlayerLoginQueryLoad.Glyphs));
             _LoadAuras(holder.GetResult(PlayerLoginQueryLoad.Auras), holder.GetResult(PlayerLoginQueryLoad.AuraEffects), time_diff);
-            _LoadGlyphAuras();
             // add ghost flag (must be after aura load: PLAYER_FLAGS_GHOST set in aura)
             if (HasPlayerFlag(PlayerFlags.Ghost))
                 m_deathState = DeathState.Dead;
@@ -2792,8 +2774,6 @@ namespace Game.Entities
             InitTalentForLevel();
             LearnDefaultSkills();
             LearnCustomSpells();
-            if (GetLevel() < PlayerConst.LevelMinHonor)
-                ResetPvpTalents();
 
             // must be before inventory (some items required reputation check)
             reputationMgr.LoadFromDB(holder.GetResult(PlayerLoginQueryLoad.Reputation));

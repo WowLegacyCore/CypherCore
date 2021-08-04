@@ -136,7 +136,7 @@ namespace Game
 
         static void CleanCharacterTalent()
         {
-            DB.Characters.DirectExecute("DELETE FROM character_talent WHERE talentGroup > {0}", PlayerConst.MaxSpecializations);
+            DB.Characters.DirectExecute("DELETE FROM character_talent WHERE talentGroup > {0}", PlayerConst.MaxTalentSpecs);
             CheckUnique("talentId", "character_talent", TalentCheck);
         }
 

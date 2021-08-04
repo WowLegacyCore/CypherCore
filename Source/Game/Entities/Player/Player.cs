@@ -78,7 +78,7 @@ namespace Game.Entities
             m_legacyRaidDifficulty = Difficulty.Raid10N;
             m_InstanceValid = true;
 
-            _specializationInfo = new SpecializationInfo();
+            specializationInfo = new SpecializationInfo();
 
             for (byte i = 0; i < (byte)BaseModGroup.End; ++i)
             {
@@ -128,7 +128,7 @@ namespace Game.Entities
             }
 
             m_spells.Clear();
-            _specializationInfo = null;
+            specializationInfo = null;
             m_mail.Clear();
 
             foreach (var item in mMitems.Values)
@@ -138,7 +138,6 @@ namespace Game.Entities
             ItemSetEff.Clear();
 
             _declinedname = null;
-            m_runes = null;
             reputationMgr = null;
 
             _cinematicMgr.Dispose();
@@ -2329,7 +2328,7 @@ namespace Game.Entities
                     break;
                 case GossipOption.Unlearntalents:
                     PlayerTalkClass.SendCloseGossip();
-                    SendRespecWipeConfirm(guid, GetNextResetTalentsCost());
+                    SendRespecWipeConfirm(guid, ResetTalentsCost());
                     break;
                 case GossipOption.Taxivendor:
                     GetSession().SendTaxiMenu(source.ToCreature());
@@ -4989,9 +4988,6 @@ namespace Game.Entities
             InitTalentForLevel();
             InitTaxiNodesForLevel();
 
-            if (level < PlayerConst.LevelMinHonor)
-                ResetPvpTalents();
-
             UpdateAllStats();
 
             _ApplyAllLevelScaleItemMods(true); // Moved to above SetFullHealth so player will have full health from Heirlooms
@@ -5213,18 +5209,6 @@ namespace Game.Entities
             GetSpellHistory().WritePacket(sendSpellCharges);
             SendPacket(sendSpellCharges);
 
-            ActiveGlyphs activeGlyphs = new();
-            foreach (uint glyphId in GetGlyphs(GetActiveTalentGroup()))
-            {
-                List<uint> bindableSpells = Global.DB2Mgr.GetGlyphBindableSpells(glyphId);
-                foreach (uint bindableSpell in bindableSpells)
-                    if (HasSpell(bindableSpell) && !m_overrideSpells.ContainsKey(bindableSpell))
-                        activeGlyphs.Glyphs.Add(new GlyphBinding(bindableSpell, (ushort)glyphId));
-            }
-
-            activeGlyphs.IsFullUpdate = true;
-            SendPacket(activeGlyphs);
-
             // SMSG_INITIALIZE_FACTIONS
             reputationMgr.SendInitialReputations();
 
@@ -5337,7 +5321,7 @@ namespace Game.Entities
                 m_prevMapDifficulty = GetMap().GetDifficultyID();
                 SendDungeonDifficulty((int)m_prevMapDifficulty);
             }
-            else if (!GetMap().Instanceable())
+            else if (!GetMap().Instanceable() && m_prevMapDifficulty != Difficulty.None)
             {
                 DifficultyRecord difficulty = CliDB.DifficultyStorage.LookupByKey(m_prevMapDifficulty);
                 SendRaidDifficulty(difficulty.Flags.HasAnyFlag(DifficultyFlags.Legacy));

@@ -21,61 +21,16 @@ using Game.Entities;
 using Game.Networking;
 using Game.Networking.Packets;
 using System;
+using System.Collections.Generic;
 
 namespace Game
 {
     public partial class WorldSession
     {
-        [WorldPacketHandler(ClientOpcodes.LearnTalents, Processing = PacketProcessing.Inplace)]
-        void HandleLearnTalents(LearnTalents packet)
+        [WorldPacketHandler(ClientOpcodes.LearnTalent, Processing = PacketProcessing.Inplace)]
+        void HandleLearnTalent(LearnTalent packet)
         {
-            LearnTalentFailed learnTalentFailed = new();
-            bool anythingLearned = false;
-            foreach (uint talentId in packet.Talents)
-            {
-                TalentLearnResult result = _player.LearnTalent(talentId, ref learnTalentFailed.SpellID);
-                if (result != 0)
-                {
-                    if (learnTalentFailed.Reason == 0)
-                        learnTalentFailed.Reason = (uint)result;
-
-                    learnTalentFailed.Talents.Add((ushort)talentId);
-                }
-                else
-                    anythingLearned = true;
-            }
-
-            if (learnTalentFailed.Reason != 0)
-                SendPacket(learnTalentFailed);
-
-            if (anythingLearned)
-                GetPlayer().SendTalentsInfoData();
-        }
-
-        [WorldPacketHandler(ClientOpcodes.LearnPvpTalents, Processing = PacketProcessing.Inplace)]
-        void HandleLearnPvpTalents(LearnPvpTalents packet)
-        {
-            LearnPvpTalentFailed learnPvpTalentFailed = new();
-            bool anythingLearned = false;
-            foreach (var pvpTalent in packet.Talents)
-            {
-                TalentLearnResult result = _player.LearnPvpTalent(pvpTalent.PvPTalentID, pvpTalent.Slot, ref learnPvpTalentFailed.SpellID);
-                if (result != 0)
-                {
-                    if (learnPvpTalentFailed.Reason == 0)
-                        learnPvpTalentFailed.Reason = (uint)result;
-
-                    learnPvpTalentFailed.Talents.Add(pvpTalent);
-                }
-                else
-                    anythingLearned = true;
-            }
-
-            if (learnPvpTalentFailed.Reason != 0)
-                SendPacket(learnPvpTalentFailed);
-
-            if (anythingLearned)
-                _player.SendTalentsInfoData();
+            _player.LearnTalent((uint)packet.TalentID, packet.Rank);
         }
 
         [WorldPacketHandler(ClientOpcodes.ConfirmRespecWipe)]

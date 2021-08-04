@@ -324,7 +324,7 @@ namespace Framework.Constants
         KeepAlive                                           = 0x3680,
         KeyboundOverride                                    = 0x3220,
         LearnPvpTalents                                     = 0x3554,
-        LearnTalents                                        = 0x3551,
+        LearnTalent                                         = 0x3551,
         LeaveGroup                                          = 0x364B,
         LeavePetBattleQueue                                 = 0x31DF,
         LfgListApplyToGroup                                 = 0x360D,

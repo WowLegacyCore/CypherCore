@@ -177,7 +177,6 @@ namespace Game.Chat
             if (target)
             {
                 target.ResetTalents(true);
-                target.ResetTalentSpecialization();
                 target.SendTalentsInfoData();
                 target.SendSysMessage(CypherStrings.ResetTalents);
                 if (handler.GetSession() == null || handler.GetSession().GetPlayer() != target)

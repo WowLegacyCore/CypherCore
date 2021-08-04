@@ -4771,67 +4771,6 @@ namespace Game.Spells
                         }
                         break;
                     }
-                    case SpellEffectName.ApplyGlyph:
-                    {
-                        if (!m_caster.IsTypeId(TypeId.Player))
-                            return SpellCastResult.GlyphNoSpec;
-
-                        Player caster = m_caster.ToPlayer();
-                        if (!caster.HasSpell(m_misc.SpellId))
-                            return SpellCastResult.NotKnown;
-
-                        uint glyphId = (uint)effect.MiscValue;
-                        if (glyphId != 0)
-                        {
-                            GlyphPropertiesRecord glyphProperties = CliDB.GlyphPropertiesStorage.LookupByKey(glyphId);
-                            if (glyphProperties == null)
-                                return SpellCastResult.InvalidGlyph;
-
-                            List<uint> glyphBindableSpells = Global.DB2Mgr.GetGlyphBindableSpells(glyphId);
-                            if (glyphBindableSpells.Empty())
-                                return SpellCastResult.InvalidGlyph;
-
-                            if (!glyphBindableSpells.Contains(m_misc.SpellId))
-                                return SpellCastResult.InvalidGlyph;
-
-                            List<uint> glyphRequiredSpecs = Global.DB2Mgr.GetGlyphRequiredSpecs(glyphId);
-                            if (!glyphRequiredSpecs.Empty())
-                            {
-                                if (caster.GetPrimarySpecialization() == 0)
-                                    return SpellCastResult.GlyphNoSpec;
-
-                                if (!glyphRequiredSpecs.Contains(caster.GetPrimarySpecialization()))
-                                    return SpellCastResult.GlyphInvalidSpec;
-                            }
-
-                            uint replacedGlyph = 0;
-                            foreach (uint activeGlyphId in caster.GetGlyphs(caster.GetActiveTalentGroup()))
-                            {
-                                List<uint> activeGlyphBindableSpells = Global.DB2Mgr.GetGlyphBindableSpells(activeGlyphId);
-                                if (!activeGlyphBindableSpells.Empty())
-                                {
-                                    if (activeGlyphBindableSpells.Contains(m_misc.SpellId))
-                                    {
-                                        replacedGlyph = activeGlyphId;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            foreach (uint activeGlyphId in caster.GetGlyphs(caster.GetActiveTalentGroup()))
-                            {
-                                if (activeGlyphId == replacedGlyph)
-                                    continue;
-
-                                if (activeGlyphId == glyphId)
-                                    return SpellCastResult.UniqueGlyph;
-
-                                if (CliDB.GlyphPropertiesStorage.LookupByKey(activeGlyphId).GlyphExclusiveCategoryID == glyphProperties.GlyphExclusiveCategoryID)
-                                    return SpellCastResult.GlyphExclusiveCategory;
-                            }
-                        }
-                        break;
-                    }
                     case SpellEffectName.FeedPet:
                     {
                         if (!m_caster.IsTypeId(TypeId.Player))

@@ -1016,15 +1016,6 @@ namespace Game.Entities
             m_lastPotionId = 0;
         }
 
-        public bool CanUseMastery()
-        {
-            ChrSpecializationRecord chrSpec = CliDB.ChrSpecializationStorage.LookupByKey(GetPrimarySpecialization());
-            if (chrSpec != null)
-                return HasSpell(chrSpec.MasterySpellID[0]) || HasSpell(chrSpec.MasterySpellID[1]);
-
-            return false;
-        }
-
         public bool HasSkill(SkillType skill)
         {
             if (skill == 0)

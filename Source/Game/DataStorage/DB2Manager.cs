@@ -286,26 +286,20 @@ namespace Game.DataStorage
             foreach (SpellClassOptionsRecord classOption in SpellClassOptionsStorage.Values)
                 _spellFamilyNames.Add(classOption.SpellClassSet);
 
-            //for (var i = 0; i < (int)Class.Max; ++i)
-            //{
-            //    _talentsByPosition[i] = new List<TalentRecord>[PlayerConst.MaxTalentTiers][];
-            //    for (var x = 0; x < PlayerConst.MaxTalentTiers; ++x)
-            //    {
-            //        _talentsByPosition[i][x] = new List<TalentRecord>[PlayerConst.MaxTalentColumns];
+            foreach (TalentRecord talent in TalentStorage.Values)
+            {
+                TalentTabRecord talentTab = TalentTabStorage.LookupByKey(talent.TabID);
+                if (talentTab != null)
+                    continue;
 
-            //        for (var c = 0; c < PlayerConst.MaxTalentColumns; ++c)
-            //            _talentsByPosition[i][x][c] = new List<TalentRecord>();
-            //    }
-            //}
+                for (byte i = 0; i < PlayerConst.MaxTalentRank; ++i)
+                {
+                    if (talent.SpellRank[i] == 0)
+                        continue;
 
-            //foreach (TalentRecord talentInfo in TalentStorage.Values)
-            //{
-            //    //ASSERT(talentInfo.ClassID < MAX_CLASSES);
-            //    //ASSERT(talentInfo.TierID < MAX_TALENT_TIERS, "MAX_TALENT_TIERS must be at least {0}", talentInfo.TierID);
-            //    //ASSERT(talentInfo.ColumnIndex < MAX_TALENT_COLUMNS, "MAX_TALENT_COLUMNS must be at least {0}", talentInfo.ColumnIndex);
-
-            //    _talentsByPosition[talentInfo.ClassID][talentInfo.TierID][talentInfo.ColumnIndex].Add(talentInfo);
-            //}
+                    talentSpellPosMap[talent.SpellRank[i]] = new(talent.Id, i);
+                }
+            }
 
             for (var i = 0; i < (int)UiMapSystem.Max; ++i)
             {
@@ -1585,6 +1579,15 @@ namespace Game.DataStorage
 
         public Dictionary<uint, Dictionary<uint, MapDifficultyRecord>> GetMapDifficulties() { return _mapDifficulties; }
 
+        public TalentSpellPos GetTalentSpellPos(uint spellId)
+        {
+            var talentPos = talentSpellPosMap.LookupByKey(spellId);
+            if (talentPos != null)
+                return talentPos;
+
+            return null;
+        }
+
         public void AddDB2<T>(uint tableHash, DB6Storage<T> store) where T : new()
         {
             _storage[tableHash] = store;
@@ -1639,6 +1642,8 @@ namespace Game.DataStorage
         MultiMap<int, UiMapAssignmentRecord>[] _uiMapAssignmentByWmoGroup = new MultiMap<int, UiMapAssignmentRecord>[(int)UiMapSystem.Max];
         List<int> _uiMapPhases = new();
         Dictionary<(short, sbyte, int), WMOAreaTableRecord> _wmoAreaTableLookup = new();
+
+        Dictionary<uint, TalentSpellPos> talentSpellPosMap = new();
     }
 
     class UiMapBounds
@@ -1864,5 +1869,17 @@ namespace Game.DataStorage
         Bezier4 = 4,
         Bezier = 5,
         Constant = 6,
+    }
+
+    public class TalentSpellPos
+    {
+        public TalentSpellPos(uint talentId = 0, byte rank = 0)
+        {
+            TalentID = talentId;
+            Rank = rank;
+        }
+
+        public uint TalentID;
+        public byte Rank;
     }
 }

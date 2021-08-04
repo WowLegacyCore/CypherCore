@@ -1427,50 +1427,12 @@ namespace Game.Entities
                     if (affectStats)
                         UpdateArmorPenetration(amount);
                     break;
-                case CombatRating.Mastery:
-                    UpdateMastery();
-                    break;
                 case CombatRating.VersatilityDamageDone:
                     UpdateVersatilityDamageDone();
                     break;
                 case CombatRating.VersatilityHealingDone:
                     UpdateHealingDonePercentMod();
                     break;
-            }
-        }
-        public void UpdateMastery()
-        {
-            if (!CanUseMastery())
-            {
-                SetUpdateField<float>(ActivePlayerFields.Mastery, 0.0f);
-                return;
-            }
-
-            float value = GetTotalAuraModifier(AuraType.Mastery);
-            value += GetRatingBonusValue(CombatRating.Mastery);
-            SetUpdateField<float>(ActivePlayerFields.Mastery, value);
-
-            ChrSpecializationRecord chrSpec = CliDB.ChrSpecializationStorage.LookupByKey(GetPrimarySpecialization());
-            if (chrSpec == null)
-                return;
-
-            for (uint i = 0; i < PlayerConst.MaxMasterySpells; ++i)
-            {
-                Aura aura = GetAura(chrSpec.MasterySpellID[i]);
-                if (aura != null)
-                {
-                    foreach (SpellEffectInfo effect in aura.GetSpellInfo().GetEffects())
-                    {
-                        if (effect == null)
-                            continue;
-
-                        float mult = effect.BonusCoefficient;
-                        if (MathFunctions.fuzzyEq(mult, 0.0f))
-                            continue;
-
-                        aura.GetEffect(effect.EffectIndex).ChangeAmount((int)(value * mult));
-                    }
-                }
             }
         }
 

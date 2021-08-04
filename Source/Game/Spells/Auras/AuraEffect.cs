@@ -4769,19 +4769,6 @@ namespace Game.Spells
                 target.AddPlayerLocalFlag(PlayerLocalFlags.ReleaseTimer);
         }
 
-        [AuraEffectHandler(AuraType.Mastery)]
-        void HandleMastery(AuraApplication aurApp, AuraEffectHandleModes mode, bool apply)
-        {
-            if (!mode.HasAnyFlag(AuraEffectHandleModes.Real))
-                return;
-
-            Player target = aurApp.GetTarget().ToPlayer();
-            if (target == null)
-                return;
-
-            target.UpdateMastery();
-        }
-
         void HandlePeriodicTriggerSpellAuraTick(Unit target, Unit caster)
         {
             uint triggerSpellId = GetSpellEffectInfo().TriggerSpell;
@@ -5473,22 +5460,6 @@ namespace Game.Spells
                 Unit caster = GetCaster();
                 if (caster)
                     caster.RemoveAreaTrigger(this);
-            }
-        }
-
-        [AuraEffectHandler(AuraType.PvpTalents)]
-        void HandleAuraPvpTalents(AuraApplication auraApp, AuraEffectHandleModes mode, bool apply)
-        {
-            if (!mode.HasAnyFlag(AuraEffectHandleModes.Real))
-                return;
-
-            Player target = auraApp.GetTarget().ToPlayer();
-            if (target)
-            {
-                if (apply)
-                    target.TogglePvpTalents(true);
-                else if (!target.HasAuraType(AuraType.PvpTalents))
-                    target.TogglePvpTalents(false);
             }
         }
 

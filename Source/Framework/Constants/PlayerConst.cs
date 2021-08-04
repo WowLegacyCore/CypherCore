@@ -23,12 +23,12 @@ namespace Framework.Constants
     {
         public const Expansion CurrentExpansion = Expansion.BurningCrusade;
 
-        public const int MaxTalentTiers = 7;
-        public const int MaxTalentColumns = 3;
-        public const int MaxTalentRank = 5;
-        public const int MaxPvpTalentSlots = 4;
+        public const int MaxTalentRank = 9;
         public const int MinSpecializationLevel = 10;
-        public const int MaxSpecializations = 5;
+        public const int MinTalentSpec = 0;
+        public const int MaxTalentSpec = 1;
+        public const int MinTalentSpecs = 1;
+        public const int MaxTalentSpecs = 2;
         public const int InitialSpecializationIndex = 4;
         public const int MaxMasterySpells = 2;
 

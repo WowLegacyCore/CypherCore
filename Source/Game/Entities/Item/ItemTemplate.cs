@@ -30,9 +30,9 @@ namespace Game.Entities
             BasicData = item;
             ExtendedData = sparse;
 
-            Specializations[0] = new BitSet((int)Class.Max * PlayerConst.MaxSpecializations);
-            Specializations[1] = new BitSet((int)Class.Max * PlayerConst.MaxSpecializations);
-            Specializations[2] = new BitSet((int)Class.Max * PlayerConst.MaxSpecializations);
+            Specializations[0] = new BitSet((int)Class.Max * PlayerConst.MaxTalentSpecs);
+            Specializations[1] = new BitSet((int)Class.Max * PlayerConst.MaxTalentSpecs);
+            Specializations[2] = new BitSet((int)Class.Max * PlayerConst.MaxTalentSpecs);
         }
 
         public string GetName(Locale locale = SharedConst.DefaultLocale)
@@ -169,8 +169,6 @@ namespace Game.Entities
             uint spec = player.GetLootSpecId();
             if (spec == 0)
                 spec = player.GetPrimarySpecialization();
-            if (spec == 0)
-                spec = player.GetDefaultSpecId();
 
             ChrSpecializationRecord chrSpecialization = CliDB.ChrSpecializationStorage.LookupByKey(spec);
             if (chrSpecialization == null)
@@ -187,7 +185,7 @@ namespace Game.Entities
 
         public static int CalculateItemSpecBit(ChrSpecializationRecord spec)
         {
-            return (spec.ClassID - 1) * PlayerConst.MaxSpecializations + spec.OrderIndex;
+            return (spec.ClassID - 1) * PlayerConst.MaxTalentSpecs + spec.OrderIndex;
         }
 
         public uint GetId() => BasicData.Id;

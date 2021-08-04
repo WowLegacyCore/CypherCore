@@ -50,7 +50,7 @@ namespace Game.Entities
             ValuesCount = (int)ActivePlayerFields.End;
             m_dynamicValuesCount = (int)ActivePlayerDynamicFields.End;
 
-            Session = session;
+            this.session = session;
 
             // players always accept
             if (!GetSession().HasPermission(RBACPermissions.CanFilterWhispers))
@@ -75,9 +75,7 @@ namespace Game.Entities
             m_timeSyncServer = GameTime.GetGameTimeMS();
 
             m_dungeonDifficulty = Difficulty.Normal;
-            m_raidDifficulty = Difficulty.NormalRaid;
             m_legacyRaidDifficulty = Difficulty.Raid10N;
-            m_prevMapDifficulty = Difficulty.NormalRaid;
             m_InstanceValid = true;
 
             _specializationInfo = new SpecializationInfo();
@@ -111,7 +109,6 @@ namespace Game.Entities
             _cinematicMgr = new CinematicManager(this);
 
             reputationMgr = new ReputationMgr(this);
-            m_sceneMgr = new SceneMgr(this);
 
             m_bgBattlegroundQueueID[0] = new BgBattlegroundQueueID_Rec();
             m_bgBattlegroundQueueID[1] = new BgBattlegroundQueueID_Rec();
@@ -145,9 +142,6 @@ namespace Game.Entities
             reputationMgr = null;
 
             _cinematicMgr.Dispose();
-
-            for (byte i = 0; i < SharedConst.VoidStorageMaxSlot; ++i)
-                _voidStorageItems[i] = null;
 
             ClearResurrectRequestData();
 
@@ -300,13 +294,6 @@ namespace Game.Entities
                 }
             }
             // all item positions resolved
-
-            ChrSpecializationRecord defaultSpec = Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass());
-            if (defaultSpec != null)
-            {
-                SetActiveTalentGroup(defaultSpec.OrderIndex);
-                SetPrimarySpecialization(defaultSpec.Id);
-            }
 
             GetThreatManager().Initialize();
 
@@ -808,7 +795,7 @@ namespace Game.Entities
         new PlayerAI GetAI() => i_AI as PlayerAI;
 
         //Network
-        public void SendPacket(ServerPacket data) => Session.SendPacket(data);
+        public void SendPacket(ServerPacket data) => session.SendPacket(data);
 
         //Time
         void ResetTimeSync()
@@ -834,8 +821,6 @@ namespace Game.Entities
         }
 
         public DeclinedName GetDeclinedNames() => _declinedname;
-
-        public SceneMgr GetSceneMgr() => m_sceneMgr;
 
         public RestMgr GetRestMgr() => _restMgr;
 
@@ -1079,7 +1064,7 @@ namespace Game.Entities
             FactionRecord factionEntry = CliDB.FactionStorage.LookupByKey(currency.FactionID);
             if (factionEntry != null)
             {
-                if (currency.Flags[0].HasAnyFlag((int)CurrencyFlags.HighPrecision))
+                if (currency.Flags[0].HasAnyFlag(CurrencyFlags.HighPrecision))
                     count /= 100;
                 GetReputationMgr().ModifyReputation(factionEntry, count, false, true);
                 return;
@@ -1265,20 +1250,6 @@ namespace Game.Entities
                         return false;
                     }
                     break;
-                case ActionButtonType.Mount:
-                    var mount = CliDB.MountStorage.LookupByKey(action);
-                    if (mount == null)
-                    {
-                        Log.outError(LogFilter.Player, "Mount action {0} not added into button {1} for player {2} ({3}): mount does not exist", action, button, GetName(), GetGUID().ToString());
-                        return false;
-                    }
-
-                    if (!HasSpell(mount.SourceSpellID))
-                    {
-                        Log.outError(LogFilter.Player, "Mount action {0} not added into button {1} for player {2} ({3}): Player does not know this mount", action, button, GetName(), GetGUID().ToString());
-                        return false;
-                    }
-                    break;
                 case ActionButtonType.C:
                 case ActionButtonType.CMacro:
                 case ActionButtonType.Macro:
@@ -1437,13 +1408,8 @@ namespace Game.Entities
                 if (map.IsNonRaidDungeon())
                 {
                     LFGDungeonsRecord dungeon = Global.DB2Mgr.GetLfgDungeon(map.GetId(), map.GetDifficultyID());
-                    if (dungeon != null)
-                    {
-                        var dungeonLevels = Global.DB2Mgr.GetContentTuningData(dungeon.ContentTuningID);
-                        if (dungeonLevels.HasValue)
-                            if (dungeonLevels.Value.TargetLevelMax == Global.ObjectMgr.GetMaxLevelForExpansion(Expansion.WrathOfTheLichKing))
-                                ChampioningFaction = GetChampioningFaction();
-                    }
+                    if (dungeon?.TargetLevel == 80)
+                        ChampioningFaction = GetChampioningFaction();
                 }
             }
 
@@ -1773,9 +1739,6 @@ namespace Game.Entities
         public uint GetStartLevel(Race race, Class playerClass, Optional<uint> characterTemplateId = default)
         {
             uint startLevel = WorldConfig.GetUIntValue(WorldCfg.StartPlayerLevel);
-            if (CliDB.ChrRacesStorage.LookupByKey(race).GetFlags().HasAnyFlag(ChrRacesFlag.AlliedRace))
-                startLevel = WorldConfig.GetUIntValue(WorldCfg.StartAlliedRaceLevel);
-
             if (characterTemplateId.HasValue)
             {
                 if (GetSession().HasPermission(RBACPermissions.UseCharacterTemplates))
@@ -4199,7 +4162,7 @@ namespace Game.Entities
             SetDeathState(DeathState.Corpse);
 
             SetDynamicFlags(UnitDynFlags.None);
-            if (!CliDB.MapStorage.LookupByKey(GetMapId()).Instanceable() && !HasAuraType(AuraType.PreventResurrection))
+            if (!CliDB.MapStorage.LookupByKey(GetMapId()).IsInstanceable() && !HasAuraType(AuraType.PreventResurrection))
                 AddPlayerLocalFlag(PlayerLocalFlags.ReleaseTimer);
             else
                 RemovePlayerLocalFlag(PlayerLocalFlags.ReleaseTimer);
@@ -4268,7 +4231,7 @@ namespace Game.Entities
                     uint itemInventoryType;
                     ItemRecord itemEntry = CliDB.ItemStorage.LookupByKey(m_items[i].GetVisibleEntry(this));
                     if (itemEntry != null)
-                        itemInventoryType = (uint)itemEntry.inventoryType;
+                        itemInventoryType = (uint)itemEntry.InventoryType;
                     else
                         itemInventoryType = (uint)m_items[i].GetTemplate().GetInventoryType();
 
@@ -4998,8 +4961,8 @@ namespace Game.Entities
             for (Stats i = Stats.Strength; i < Stats.Max; ++i)
                 packet.StatDelta[(int)i] = info.stats[(int)i] - (int)GetCreateStat(i);
 
-            packet.NumNewTalents = (int)(Global.DB2Mgr.GetNumTalentsAtLevel(level, GetClass()) - Global.DB2Mgr.GetNumTalentsAtLevel(oldLevel, GetClass()));
-            packet.NumNewPvpTalentSlots = Global.DB2Mgr.GetPvpTalentNumSlotsAtLevel(level, GetClass()) - Global.DB2Mgr.GetPvpTalentNumSlotsAtLevel(oldLevel, GetClass());
+            // packet.NumNewTalents = (int)(Global.DB2Mgr.GetNumTalentsAtLevel(level, GetClass()) - Global.DB2Mgr.GetNumTalentsAtLevel(oldLevel, GetClass()));
+            // packet.NumNewPvpTalentSlots = Global.DB2Mgr.GetPvpTalentNumSlotsAtLevel(level, GetClass()) - Global.DB2Mgr.GetPvpTalentNumSlotsAtLevel(oldLevel, GetClass());
 
             SendPacket(packet);
 
@@ -5294,12 +5257,6 @@ namespace Game.Entities
             // Spell modifiers
             SendSpellModifiers();
 
-            // SMSG_ACCOUNT_HEIRLOOM_UPDATE
-            AccountHeirloomUpdate heirloomUpdate = new();
-            heirloomUpdate.IsFullUpdate = true;
-            heirloomUpdate.Heirlooms = GetSession().GetCollectionMgr().GetAccountHeirlooms();
-            SendPacket(heirloomUpdate);
-
             InitialSetup initialSetup = new();
             initialSetup.ServerExpansionLevel = (byte)WorldConfig.GetIntValue(WorldCfg.Expansion);
             SendPacket(initialSetup);
@@ -5403,7 +5360,7 @@ namespace Game.Entities
         public void RemoveSocial()
         {
             Global.SocialMgr.RemovePlayerSocial(GetGUID());
-            m_social = null;
+            playerSocial = null;
         }
 
         public void SaveRecallPosition() => m_recall_location = new WorldLocation(this);
@@ -5929,8 +5886,7 @@ namespace Game.Entities
             {
                 SetUpdateField<ulong>(ActivePlayerFields.ExploredZones + offset, currFields | val);
 
-                var areaLevels = Global.DB2Mgr.GetContentTuningData(areaEntry.ContentTuningID);
-                if (areaLevels.HasValue)
+                if (areaEntry.ExplorationLevel > 0)
                 {
                     if (GetLevel() >= WorldConfig.GetIntValue(WorldCfg.MaxPlayerLevel))
                     {
@@ -5938,8 +5894,7 @@ namespace Game.Entities
                     }
                     else
                     {
-                        ushort areaLevel = (ushort)Math.Min(Math.Max((ushort)GetLevel(), areaLevels.Value.MinLevel), areaLevels.Value.MaxLevel);
-                        int diff = (int)(GetLevel()) - areaLevel;
+                        int diff = (int)(GetLevel() - areaEntry.ExplorationLevel);
                         uint XP;
                         if (diff < -5)
                         {
@@ -5951,16 +5906,16 @@ namespace Game.Entities
                             if (exploration_percent < 0)
                                 exploration_percent = 0;
 
-                            XP = (uint)(Global.ObjectMgr.GetBaseXP(areaLevel) * exploration_percent / 100 * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore));
+                            XP = (uint)(Global.ObjectMgr.GetBaseXP(areaEntry.ExplorationLevel) * exploration_percent / 100 * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore));
                         }
                         else
                         {
-                            XP = (uint)(Global.ObjectMgr.GetBaseXP(areaLevel) * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore));
+                            XP = (uint)(Global.ObjectMgr.GetBaseXP(areaEntry.ExplorationLevel) * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore));
                         }
 
                         if (WorldConfig.GetIntValue(WorldCfg.MinDiscoveredScaledXpRatio) != 0)
                         {
-                            uint minScaledXP = (uint)(Global.ObjectMgr.GetBaseXP(areaLevel) * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore)) * WorldConfig.GetUIntValue(WorldCfg.MinDiscoveredScaledXpRatio) / 100;
+                            uint minScaledXP = (uint)(Global.ObjectMgr.GetBaseXP(areaEntry.ExplorationLevel) * WorldConfig.GetFloatValue(WorldCfg.RateXpExplore)) * WorldConfig.GetUIntValue(WorldCfg.MinDiscoveredScaledXpRatio) / 100;
                             XP = Math.Max(minScaledXP, XP);
                         }
 
@@ -5991,7 +5946,7 @@ namespace Game.Entities
         }
         public void SendSysMessage(string str, params object[] args)
         {
-            new CommandHandler(Session).SendSysMessage(string.Format(str, args));
+            new CommandHandler(session).SendSysMessage(string.Format(str, args));
         }
         public void SendBuyError(BuyResult msg, Creature creature, uint item)
         {
@@ -6475,7 +6430,7 @@ namespace Game.Entities
         }
 
         public uint GetDeathTimer() => m_deathTimer;
-        public bool ActivateTaxiPathTo(List<uint> nodes, Creature npc = null, uint spellid = 0, uint preferredMountDisplay = 0)
+        public bool ActivateTaxiPathTo(List<uint> nodes, Creature npc = null, uint spellid = 0)
         {
             if (nodes.Count < 2)
             {
@@ -6602,11 +6557,7 @@ namespace Game.Entities
             // only one mount ID for both sides. Probably not good to use 315 in case DBC nodes
             // change but I couldn't find a suitable alternative. OK to use class because only DK
             // can use this taxi.
-            uint mount_display_id;
-            if (node.Flags.HasAnyFlag(TaxiNodeFlags.UseFavoriteMount) && preferredMountDisplay != 0)
-                mount_display_id = preferredMountDisplay;
-            else
-                mount_display_id = Global.ObjectMgr.GetTaxiMountDisplayId(sourcenode, GetTeam(), npc == null);
+            uint mount_display_id = Global.ObjectMgr.GetTaxiMountDisplayId(sourcenode, GetTeam(), npc == null);
 
             // in spell case allow 0 model
             if ((mount_display_id == 0 && spellid == 0) || sourcepath == 0)

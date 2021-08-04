@@ -3788,7 +3788,7 @@ namespace Game.Spells
                                 {
                                     case ItemSubClassWeapon.Thrown:
                                         ammoDisplayID = Global.DB2Mgr.GetItemDisplayId(itemId, m_caster.GetVirtualItemAppearanceMod(i));
-                                        ammoInventoryType = itemEntry.inventoryType;
+                                        ammoInventoryType = itemEntry.InventoryType;
                                         break;
                                     case ItemSubClassWeapon.Bow:
                                     case ItemSubClassWeapon.Crossbow:
@@ -6136,16 +6136,20 @@ namespace Game.Spells
                         Item item = m_targets.GetItemTarget();
                         if (!item)
                             return SpellCastResult.CantBeProspected;
+
                         //ensure item is a prospectable ore
                         if (!Convert.ToBoolean(item.GetTemplate().GetFlags() & ItemFlags.IsProspectable))
                             return SpellCastResult.CantBeProspected;
+
                         //prevent prospecting in trade slot
                         if (item.GetOwnerGUID() != m_caster.GetGUID())
                             return SpellCastResult.CantBeProspected;
+
                         //Check for enough skill in jewelcrafting
                         uint item_prospectingskilllevel = item.GetTemplate().GetRequiredSkillRank();
                         if (item_prospectingskilllevel > player.GetSkillValue(SkillType.Jewelcrafting))
                             return SpellCastResult.LowCastlevel;
+
                         //make sure the player has the required ores in inventory
                         if (item.GetCount() < 5)
                         {
@@ -6156,34 +6160,6 @@ namespace Game.Spells
 
                         if (!LootStorage.Prospecting.HaveLootFor(m_targets.GetItemTargetEntry()))
                             return SpellCastResult.CantBeProspected;
-
-                        break;
-                    }
-                    case SpellEffectName.Milling:
-                    {
-                        Item item = m_targets.GetItemTarget();
-                        if (!item)
-                            return SpellCastResult.CantBeMilled;
-                        //ensure item is a millable herb
-                        if (!(item.GetTemplate().GetFlags().HasAnyFlag(ItemFlags.IsMillable)))
-                            return SpellCastResult.CantBeMilled;
-                        //prevent milling in trade slot
-                        if (item.GetOwnerGUID() != m_caster.GetGUID())
-                            return SpellCastResult.CantBeMilled;
-                        //Check for enough skill in inscription
-                        uint item_millingskilllevel = item.GetTemplate().GetRequiredSkillRank();
-                        if (item_millingskilllevel > player.GetSkillValue(SkillType.Inscription))
-                            return SpellCastResult.LowCastlevel;
-                        //make sure the player has the required herbs in inventory
-                        if (item.GetCount() < 5)
-                        {
-                            param1 = item.GetEntry();
-                            param2 = 5;
-                            return SpellCastResult.NeedMoreItems;
-                        }
-
-                        if (!LootStorage.Milling.HaveLootFor(m_targets.GetItemTargetEntry()))
-                            return SpellCastResult.CantBeMilled;
 
                         break;
                     }
@@ -6689,7 +6665,7 @@ namespace Game.Spells
 
             for (int j = 0; j < SharedConst.MaxLockCase; ++j)
             {
-                switch ((LockKeyType)lockInfo.LockType[j])
+                switch ((LockKeyType)lockInfo.Type[j])
                 {
                     // check key item (many fit cases can be)
                     case LockKeyType.Item:

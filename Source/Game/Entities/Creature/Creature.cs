@@ -1353,7 +1353,7 @@ namespace Game.Entities
             // health
             float healthmod = _GetHealthMod(rank);
 
-            uint basehp = (uint)GetMaxHealthByLevel(level);
+            uint basehp = (uint)stats.GenerateHealth(cInfo);
             uint health = (uint)(basehp * healthmod);
 
             SetCreateHealth(health);
@@ -1379,7 +1379,7 @@ namespace Game.Entities
             SetStatFlatModifier(UnitMods.Health, UnitModifierFlatType.Base, health);
 
             //Damage
-            float basedamage = GetBaseDamageForLevel(level);
+            float basedamage = stats.GenerateBaseDamange();
             float weaponBaseMinDamage = basedamage;
             float weaponBaseMaxDamage = basedamage * 1.5f;
 
@@ -1395,7 +1395,7 @@ namespace Game.Entities
             SetStatFlatModifier(UnitMods.AttackPower, UnitModifierFlatType.Base, stats.AttackPower);
             SetStatFlatModifier(UnitMods.AttackPowerRanged, UnitModifierFlatType.Base, stats.RangedAttackPower);
 
-            float armor = GetBaseArmorForLevel(level); /// @todo Why is this treated as uint32 when it's a float?
+            float armor = stats.GenerateArmor(cInfo); /// @todo Why is this treated as uint32 when it's a float?
             SetStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Base, armor);
         }
 
@@ -2452,62 +2452,6 @@ namespace Game.Entities
             CreatureLevelScaling scaling = cinfo.GetLevelScaling(GetMap().GetDifficultyID());
 
             return (scaling.MinLevel != 0 && scaling.MaxLevel != 0);
-        }
-
-        ulong GetMaxHealthByLevel(uint level)
-        {
-            CreatureTemplate cInfo = GetCreatureTemplate();
-            CreatureLevelScaling scaling = cInfo.GetLevelScaling(GetMap().GetDifficultyID());
-            float baseHealth = Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.CreatureHealth, level, cInfo.GetHealthScalingExpansion(), scaling.ContentTuningID, (Class)cInfo.UnitClass);
-
-            return (ulong)(baseHealth * cInfo.ModHealth * cInfo.ModHealthExtra);
-        }
-
-        public override float GetHealthMultiplierForTarget(WorldObject target)
-        {
-            if (!HasScalableLevels())
-                return 1.0f;
-
-            uint levelForTarget = GetLevelForTarget(target);
-            if (GetLevel() < levelForTarget)
-                return 1.0f;
-
-            return (float)GetMaxHealthByLevel(levelForTarget) / GetCreateHealth();
-        }
-
-        float GetBaseDamageForLevel(uint level)
-        {
-            CreatureTemplate cInfo = GetCreatureTemplate();
-            CreatureLevelScaling scaling = cInfo.GetLevelScaling(GetMap().GetDifficultyID());
-            return Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.CreatureAutoAttackDps, level, cInfo.GetHealthScalingExpansion(), scaling.ContentTuningID, (Class)cInfo.UnitClass);
-        }
-
-        public override float GetDamageMultiplierForTarget(WorldObject target)
-        {
-            if (!HasScalableLevels())
-                return 1.0f;
-
-            uint levelForTarget = GetLevelForTarget(target);
-
-            return GetBaseDamageForLevel(levelForTarget) / GetBaseDamageForLevel(GetLevel());
-        }
-
-        float GetBaseArmorForLevel(uint level)
-        {
-            CreatureTemplate cInfo = GetCreatureTemplate();
-            CreatureLevelScaling scaling = cInfo.GetLevelScaling(GetMap().GetDifficultyID());
-            float baseArmor = Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.CreatureArmor, level, cInfo.GetHealthScalingExpansion(), scaling.ContentTuningID, (Class)cInfo.UnitClass);
-            return baseArmor * cInfo.ModArmor;
-        }
-
-        public override float GetArmorMultiplierForTarget(WorldObject target)
-        {
-            if (!HasScalableLevels())
-                return 1.0f;
-
-            uint levelForTarget = GetLevelForTarget(target);
-
-            return GetBaseArmorForLevel(levelForTarget) / GetBaseArmorForLevel(GetLevel());
         }
 
         public override uint GetLevelForTarget(WorldObject target)

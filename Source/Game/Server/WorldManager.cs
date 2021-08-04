@@ -369,15 +369,15 @@ namespace Game
 
             Global.ObjectMgr.SetHighestGuids();
 
-            if (!Global.MapMgr.ExistMapAndVMap(0, -6240.32f, 331.033f) || !Global.MapMgr.ExistMapAndVMap(0, -8949.95f, -132.493f)
-                || !Global.MapMgr.ExistMapAndVMap(1, -618.518f, -4251.67f) || !Global.MapMgr.ExistMapAndVMap(0, 1676.35f, 1677.45f)
-                || !Global.MapMgr.ExistMapAndVMap(1, 10311.3f, 832.463f) || !Global.MapMgr.ExistMapAndVMap(1, -2917.58f, -257.98f)
-                || (WorldConfig.GetIntValue(WorldCfg.Expansion) != 0 && (!Global.MapMgr.ExistMapAndVMap(530, 10349.6f, -6357.29f) || !Global.MapMgr.ExistMapAndVMap(530, -3961.64f, -13931.2f))))
-            {
-                Log.outError(LogFilter.ServerLoading, "Unable to load critical files - server shutting down !!!");
-                ShutdownServ(0, 0, ShutdownExitCode.Error);
-                return;
-            }
+            //if (!Global.MapMgr.ExistMapAndVMap(0, -6240.32f, 331.033f) || !Global.MapMgr.ExistMapAndVMap(0, -8949.95f, -132.493f)
+            //    || !Global.MapMgr.ExistMapAndVMap(1, -618.518f, -4251.67f) || !Global.MapMgr.ExistMapAndVMap(0, 1676.35f, 1677.45f)
+            //    || !Global.MapMgr.ExistMapAndVMap(1, 10311.3f, 832.463f) || !Global.MapMgr.ExistMapAndVMap(1, -2917.58f, -257.98f)
+            //    || (WorldConfig.GetIntValue(WorldCfg.Expansion) != 0 && (!Global.MapMgr.ExistMapAndVMap(530, 10349.6f, -6357.29f) || !Global.MapMgr.ExistMapAndVMap(530, -3961.64f, -13931.2f))))
+            //{
+            //    Log.outError(LogFilter.ServerLoading, "Unable to load critical files - server shutting down !!!");
+            //    ShutdownServ(0, 0, ShutdownExitCode.Error);
+            //    return;
+            //}
 
             // Initialize pool manager
             Global.PoolMgr.Initialize();
@@ -514,7 +514,7 @@ namespace Game
             Global.TransportMgr.LoadTransportTemplates();
 
             Log.outInfo(LogFilter.ServerLoading, "Loading Transport animations and rotations...");
-            Global.TransportMgr.LoadTransportAnimationAndRotation();
+            Global.TransportMgr.LoadTransportAnimation();
 
             Log.outInfo(LogFilter.ServerLoading, "Loading Spell Rank Data...");
             Global.SpellMgr.LoadSpellRanks();
@@ -834,9 +834,6 @@ namespace Game
             Log.outInfo(LogFilter.ServerLoading, "Loading Conditions...");
             Global.ConditionMgr.LoadConditions();
 
-            Log.outInfo(LogFilter.ServerLoading, "Loading faction change achievement pairs...");
-            Global.ObjectMgr.LoadFactionChangeAchievements();
-
             Log.outInfo(LogFilter.ServerLoading, "Loading faction change spell pairs...");
             Global.ObjectMgr.LoadFactionChangeSpells();
 
@@ -851,9 +848,6 @@ namespace Game
 
             Log.outInfo(LogFilter.ServerLoading, "Loading faction change title pairs...");
             Global.ObjectMgr.LoadFactionChangeTitles();
-
-            Log.outInfo(LogFilter.ServerLoading, "Loading mount definitions...");
-            CollectionMgr.LoadMountDefinitions();
 
             Log.outInfo(LogFilter.ServerLoading, "Loading GM bugs...");
             Global.SupportMgr.LoadBugTickets();
@@ -1080,7 +1074,7 @@ namespace Game
             }
 
             for (byte i = 0; i < (int)UnitMoveType.Max; ++i)
-                SharedConst.playerBaseMoveSpeed[i] = SharedConst.baseMoveSpeed[i] * WorldConfig.GetFloatValue(WorldCfg.RateMovespeed);
+                SharedConst.PlayerBaseMoveSpeed[i] = SharedConst.BaseMoveSpeed[i] * WorldConfig.GetFloatValue(WorldCfg.RateMovespeed);
 
             var rateCreatureAggro = WorldConfig.GetFloatValue(WorldCfg.RateCreatureAggro);
             //visibility on continents

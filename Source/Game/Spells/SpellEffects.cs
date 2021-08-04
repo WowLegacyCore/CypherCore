@@ -4337,32 +4337,6 @@ namespace Game.Spells
             player.SendLoot(itemTarget.GetGUID(), LootType.Prospecting);
         }
 
-        [SpellEffectHandler(SpellEffectName.Milling)]
-        void EffectMilling(uint effIndex)
-        {
-            if (effectHandleMode != SpellEffectHandleMode.HitTarget)
-                return;
-
-            Player player = m_caster.ToPlayer();
-            if (player == null)
-                return;
-
-            if (itemTarget == null || !itemTarget.GetTemplate().GetFlags().HasAnyFlag(ItemFlags.IsMillable))
-                return;
-
-            if (itemTarget.GetCount() < 5)
-                return;
-
-            if (WorldConfig.GetBoolValue(WorldCfg.SkillMilling))
-            {
-                uint SkillValue = player.GetPureSkillValue(SkillType.Inscription);
-                uint reqSkillValue = itemTarget.GetTemplate().GetRequiredSkillRank();
-                player.UpdateGatherSkill(SkillType.Inscription, SkillValue, reqSkillValue);
-            }
-
-            player.SendLoot(itemTarget.GetGUID(), LootType.Milling);
-        }
-
         [SpellEffectHandler(SpellEffectName.Skill)]
         void EffectSkill(uint effIndex)
         {
@@ -4784,26 +4758,6 @@ namespace Game.Spells
             }
 
             unitTarget.ToPlayer().SendPacket(new PlayMusic(soundid));
-        }
-
-        [SpellEffectHandler(SpellEffectName.TalentSpecSelect)]
-        void EffectActivateSpec(uint effIndex)
-        {
-            if (effectHandleMode != SpellEffectHandleMode.HitTarget)
-                return;
-
-            if (unitTarget == null || !unitTarget.IsTypeId(TypeId.Player))
-                return;
-
-            Player player = unitTarget.ToPlayer();
-            uint specID = m_misc.SpecializationId;
-            ChrSpecializationRecord spec = CliDB.ChrSpecializationStorage.LookupByKey(specID);
-
-            // Safety checks done in Spell::CheckCast
-            if (!spec.IsPetSpecialization())
-                player.ActivateTalentGroup(spec);
-            else
-                player.GetPet().SetSpecialization(specID);
         }
 
         [SpellEffectHandler(SpellEffectName.PlaySound)]

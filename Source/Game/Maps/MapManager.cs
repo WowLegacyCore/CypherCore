@@ -80,7 +80,7 @@ namespace Game.Entities
         Map CreateBaseMap_i(MapRecord mapEntry)
         {
             Map map;
-            if (mapEntry.Instanceable())
+            if (mapEntry.IsInstanceable())
                 map = new MapInstanced(mapEntry.Id, i_gridCleanUpDelay);
             else
                 map = new Map(mapEntry.Id, i_gridCleanUpDelay, 0, Difficulty.None);
@@ -92,7 +92,7 @@ namespace Game.Entities
             foreach (uint childMapId in _parentMapData[mapEntry.Id])
                 map.AddChildTerrainMap(CreateBaseMap_i(CliDB.MapStorage.LookupByKey(childMapId)));
 
-            if (!mapEntry.Instanceable())
+            if (!mapEntry.IsInstanceable())
             {
                 map.LoadRespawnTimes();
                 map.LoadCorpseData();

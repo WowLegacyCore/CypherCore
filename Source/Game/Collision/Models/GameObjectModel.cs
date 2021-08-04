@@ -41,6 +41,16 @@ namespace Game.Collision
 
     public class GameObjectModel : IModel
     {
+        bool collisionEnabled;
+        AxisAlignedBox boundingBox;
+        Matrix3 invRotation;
+        Vector3 position;
+        float invScale;
+        float scale;
+        WorldModel model;
+        GameObjectModelOwnerBase owner;
+        bool isWmo;
+
         bool Initialize(GameObjectModelOwnerBase modelOwner)
         {
             var modelData = StaticModelList.models.LookupByKey(modelOwner.GetDisplayId());
@@ -55,24 +65,23 @@ namespace Game.Collision
                 return false;
             }
 
-            iModel = Global.VMapMgr.AcquireModelInstance(modelData.name);
-
-            if (iModel == null)
+            model = Global.VMapMgr.AcquireModelInstance(modelData.name);
+            if (model == null)
                 return false;
 
-            iPos = modelOwner.GetPosition();
-            iScale = modelOwner.GetScale();
-            iInvScale = 1.0f / iScale;
+            position = modelOwner.GetPosition();
+            scale = modelOwner.GetScale();
+            invScale = 1.0f / scale;
 
             Matrix3 iRotation = Matrix3.fromEulerAnglesZYX(modelOwner.GetOrientation(), 0, 0);
-            iInvRot = iRotation.inverse();
+            invRotation = iRotation.inverse();
             // transform bounding box:
-            mdl_box = new AxisAlignedBox(mdl_box.Lo * iScale, mdl_box.Hi * iScale);
+            mdl_box = new AxisAlignedBox(mdl_box.Lo * scale, mdl_box.Hi * scale);
             AxisAlignedBox rotated_bounds = new();
             for (int i = 0; i < 8; ++i)
                 rotated_bounds.merge(iRotation * mdl_box.corner(i));
 
-            iBound = rotated_bounds + iPos;
+            boundingBox = rotated_bounds + position;
             owner = modelOwner;
             isWmo = modelData.isWmo;
             return true;
@@ -95,18 +104,18 @@ namespace Game.Collision
             if (!owner.IsInPhase(phaseShift))
                 return false;
 
-            float time = ray.intersectionTime(iBound);
+            float time = ray.intersectionTime(boundingBox);
             if (time == float.PositiveInfinity)
                 return false;
 
             // child bounds are defined in object space:
-            Vector3 p = iInvRot * (ray.Origin - iPos) * iInvScale;
-            Ray modRay = new(p, iInvRot * ray.Direction);
-            float distance = maxDist * iInvScale;
-            bool hit = iModel.IntersectRay(modRay, ref distance, stopAtFirstHit, ignoreFlags);
+            Vector3 p = invRotation * (ray.Origin - position) * invScale;
+            Ray modRay = new(p, invRotation * ray.Direction);
+            float distance = maxDist * invScale;
+            bool hit = model.IntersectRay(modRay, ref distance, stopAtFirstHit, ignoreFlags);
             if (hit)
             {
-                distance *= iScale;
+                distance *= scale;
                 maxDist = distance;
             }
             return hit;
@@ -120,27 +129,27 @@ namespace Game.Collision
             if (!owner.IsInPhase(phaseShift))
                 return;
 
-            if (!iBound.contains(point))
+            if (!boundingBox.contains(point))
                 return;
 
             // child bounds are defined in object space:
-            Vector3 pModel = iInvRot * (point - iPos) * iInvScale;
-            Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            if (iModel.IntersectPoint(pModel, zDirModel, out float zDist, info))
+            Vector3 pModel = invRotation * (point - position) * invScale;
+            Vector3 zDirModel = invRotation * new Vector3(0.0f, 0.0f, -1.0f);
+            if (model.IntersectPoint(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
-                float world_Z = ((modelGround * iInvRot) * iScale + iPos).Z;
-                if (info.ground_Z < world_Z)
+                float world_Z = ((modelGround * invRotation) * scale + position).Z;
+                if (info.GroundZ < world_Z)
                 {
-                    info.ground_Z = world_Z;
-                    info.adtId = owner.GetNameSetId();
+                    info.GroundZ = world_Z;
+                    info.AdtId = owner.GetNameSetId();
                 }
             }
         }
 
         public bool UpdatePosition()
         {
-            if (iModel == null)
+            if (model == null)
                 return false;
 
             var it = StaticModelList.models.LookupByKey(owner.GetDisplayId());
@@ -155,26 +164,26 @@ namespace Game.Collision
                 return false;
             }
 
-            iPos = owner.GetPosition();
+            position = owner.GetPosition();
 
             Matrix3 iRotation = Matrix3.fromEulerAnglesZYX(owner.GetOrientation(), 0, 0);
-            iInvRot = iRotation.inverse();
+            invRotation = iRotation.inverse();
             // transform bounding box:
-            mdl_box = new AxisAlignedBox(mdl_box.Lo * iScale, mdl_box.Hi * iScale);
+            mdl_box = new AxisAlignedBox(mdl_box.Lo * scale, mdl_box.Hi * scale);
             AxisAlignedBox rotated_bounds = new();
             for (int i = 0; i < 8; ++i)
                 rotated_bounds.merge(iRotation * mdl_box.corner(i));
 
-            iBound = rotated_bounds + iPos;
+            boundingBox = rotated_bounds + position;
 
             return true;
         }
 
-        public override Vector3 GetPosition() { return iPos; }
-        public override AxisAlignedBox GetBounds() { return iBound; }
+        public override Vector3 GetPosition() { return position; }
+        public override AxisAlignedBox GetBounds() { return boundingBox; }
 
-        public void EnableCollision(bool enable) { _collisionEnabled = enable; }
-        bool IsCollisionEnabled() { return _collisionEnabled; }
+        public void EnableCollision(bool enable) { collisionEnabled = enable; }
+        bool IsCollisionEnabled() { return collisionEnabled; }
         public bool IsMapObject() { return isWmo; }
 
         public static void LoadGameObjectModelList()
@@ -204,8 +213,8 @@ namespace Game.Collision
 
                     uint displayId = reader.ReadUInt32();
                     bool isWmo = reader.ReadBoolean();
-                    int name_length = reader.ReadInt32();
-                    string name = reader.ReadString(name_length);
+                    int nameLength = reader.ReadInt32();
+                    string name = reader.ReadString(nameLength);
                     Vector3 v1 = reader.Read<Vector3>();
                     Vector3 v2 = reader.Read<Vector3>();
 
@@ -219,16 +228,6 @@ namespace Game.Collision
 
             Log.outInfo(LogFilter.ServerLoading, "Loaded {0} GameObject models in {1} ms", StaticModelList.models.Count, Time.GetMSTimeDiffToNow(oldMSTime));
         }
-
-        bool _collisionEnabled;
-        AxisAlignedBox iBound;
-        Matrix3 iInvRot;
-        Vector3 iPos;
-        float iInvScale;
-        float iScale;
-        WorldModel iModel;
-        GameObjectModelOwnerBase owner;
-        bool isWmo;
     }
     public class GameobjectModelData
     {

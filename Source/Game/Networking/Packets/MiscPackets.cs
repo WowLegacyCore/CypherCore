@@ -1131,33 +1131,6 @@ namespace Game.Networking.Packets
         public bool EnablePVP;
     }
 
-    class AccountHeirloomUpdate : ServerPacket
-    {
-        public AccountHeirloomUpdate() : base(ServerOpcodes.AccountHeirloomUpdate, ConnectionType.Instance) { }
-
-        public override void Write()
-        {
-            _worldPacket.WriteBit(IsFullUpdate);
-            _worldPacket.FlushBits();
-
-            _worldPacket.WriteInt32(Unk);
-
-            // both lists have to have the same size
-            _worldPacket.WriteInt32(Heirlooms.Count);
-            _worldPacket.WriteInt32(Heirlooms.Count);
-
-            foreach (var item in Heirlooms)
-                _worldPacket.WriteUInt32(item.Key);
-
-            foreach (var flags in Heirlooms)
-                _worldPacket.WriteUInt32((uint)flags.Value.flags);
-        }
-
-        public bool IsFullUpdate;
-        public Dictionary<uint, HeirloomData> Heirlooms = new();
-        public int Unk = 0;
-    }
-
     class MountSpecial : ClientPacket
     {
         public MountSpecial(WorldPacket packet) : base(packet) { }

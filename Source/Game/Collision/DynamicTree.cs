@@ -136,13 +136,13 @@ namespace Game.Collision
             Vector3 v = new(x, y, z + 0.5f);
             DynamicTreeAreaInfoCallback intersectionCallBack = new(phaseShift);
             impl.IntersectPoint(v, intersectionCallBack);
-            if (intersectionCallBack.GetAreaInfo().result)
+            if (intersectionCallBack.GetAreaInfo().Result)
             {
-                flags = intersectionCallBack.GetAreaInfo().flags;
-                adtId = intersectionCallBack.GetAreaInfo().adtId;
-                rootId = intersectionCallBack.GetAreaInfo().rootId;
-                groupId = intersectionCallBack.GetAreaInfo().groupId;
-                z = intersectionCallBack.GetAreaInfo().ground_Z;
+                flags = intersectionCallBack.GetAreaInfo().Flags;
+                adtId = intersectionCallBack.GetAreaInfo().AdtId;
+                rootId = intersectionCallBack.GetAreaInfo().RootId;
+                groupId = intersectionCallBack.GetAreaInfo().GroupId;
+                z = intersectionCallBack.GetAreaInfo().GroundZ;
                 return true;
             }
             return false;

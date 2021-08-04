@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -115,25 +115,36 @@ namespace Game.Networking.Packets
             {
                 _worldPacket.WriteUInt32(Info.QuestID);
                 _worldPacket.WriteInt32(Info.QuestType);
+                _worldPacket.WriteInt32(Info.QuestLevel);
+                _worldPacket.WriteInt32(Info.QuestScalingFactionGroup);
+                _worldPacket.WriteInt32(Info.QuestMaxScalingLevel);
                 _worldPacket.WriteUInt32(Info.QuestPackageID);
-                _worldPacket.WriteUInt32(Info.ContentTuningID);
+                _worldPacket.WriteInt32(Info.QuestMinLevel);
                 _worldPacket.WriteInt32(Info.QuestSortID);
                 _worldPacket.WriteUInt32(Info.QuestInfoID);
                 _worldPacket.WriteUInt32(Info.SuggestedGroupNum);
                 _worldPacket.WriteUInt32(Info.RewardNextQuest);
                 _worldPacket.WriteUInt32(Info.RewardXPDifficulty);
+
                 _worldPacket.WriteFloat(Info.RewardXPMultiplier);
+
                 _worldPacket.WriteInt32(Info.RewardMoney);
                 _worldPacket.WriteUInt32(Info.RewardMoneyDifficulty);
                 _worldPacket.WriteFloat(Info.RewardMoneyMultiplier);
                 _worldPacket.WriteUInt32(Info.RewardBonusMoney);
-                _worldPacket.WriteInt32(Info.RewardDisplaySpell.Count);
+
+                for (uint i = 0; i < SharedConst.QuestRewardDisplaySpellCount; ++i)
+                    _worldPacket.WriteUInt32(Info.RewardDisplaySpell[i]);
+
                 _worldPacket.WriteUInt32(Info.RewardSpell);
                 _worldPacket.WriteUInt32(Info.RewardHonor);
+
                 _worldPacket.WriteFloat(Info.RewardKillHonor);
+
                 _worldPacket.WriteInt32(Info.RewardArtifactXPDifficulty);
                 _worldPacket.WriteFloat(Info.RewardArtifactXPMultiplier);
                 _worldPacket.WriteInt32(Info.RewardArtifactCategoryID);
+
                 _worldPacket.WriteUInt32(Info.StartItem);
                 _worldPacket.WriteUInt32(Info.Flags);
                 _worldPacket.WriteUInt32(Info.FlagsEx);
@@ -194,11 +205,6 @@ namespace Game.Networking.Packets
                 _worldPacket.WriteInt64(Info.AllowableRaces);
                 _worldPacket.WriteInt32(Info.TreasurePickerID);
                 _worldPacket.WriteInt32(Info.Expansion);
-                _worldPacket.WriteInt32(Info.ManagedWorldStateID);
-                _worldPacket.WriteInt32(Info.QuestSessionBonus);
-
-                foreach (QuestCompleteDisplaySpell rewardDisplaySpell in Info.RewardDisplaySpell)
-                    rewardDisplaySpell.Write(_worldPacket);
 
                 _worldPacket.WriteBits(Info.LogTitle.GetByteCount(), 9);
                 _worldPacket.WriteBits(Info.LogDescription.GetByteCount(), 12);
@@ -417,7 +423,7 @@ namespace Game.Networking.Packets
 
         public uint QuestID;
     }
-    
+
     public class QuestGiverQuestDetails : ServerPacket
     {
         public QuestGiverQuestDetails() : base(ServerOpcodes.QuestGiverQuestDetails) { }
@@ -897,24 +903,6 @@ namespace Game.Networking.Packets
         public uint DisplayID;
     }
 
-    public struct QuestCompleteDisplaySpell
-    {
-        public uint SpellID;
-        public uint PlayerConditionID;
-
-        public QuestCompleteDisplaySpell(uint spellID, uint playerConditionID)
-        {
-            SpellID = spellID;
-            PlayerConditionID = playerConditionID;
-        }
-
-        public void Write(WorldPacket data)
-        {
-            data.WriteUInt32(SpellID);
-            data.WriteUInt32(PlayerConditionID);
-        }
-    }
-
     public class QuestInfo
     {
         public QuestInfo()
@@ -932,8 +920,11 @@ namespace Game.Networking.Packets
 
         public uint QuestID;
         public int QuestType; // Accepted values: 0, 1 or 2. 0 == IsAutoComplete() (skip objectives/details)
-        public uint ContentTuningID;
+        public int QuestLevel;
+        public int QuestScalingFactionGroup;
+        public int QuestMaxScalingLevel;
         public uint QuestPackageID;
+        public int QuestMinLevel;
         public int QuestSortID; // zone or sort to display in quest log
         public uint QuestInfoID;
         public uint SuggestedGroupNum;
@@ -944,7 +935,7 @@ namespace Game.Networking.Packets
         public uint RewardMoneyDifficulty;
         public float RewardMoneyMultiplier = 1.0f;
         public uint RewardBonusMoney;
-        public List<QuestCompleteDisplaySpell> RewardDisplaySpell = new(); // reward spell, this spell will be displayed (icon)
+        public uint[] RewardDisplaySpell = new uint[SharedConst.QuestRewardDisplaySpellCount]; // reward spell, this spell will be displayed (icon)
         public uint RewardSpell;
         public uint RewardHonor;
         public float RewardKillHonor;
@@ -983,8 +974,6 @@ namespace Game.Networking.Packets
         public uint TimeAllowed;
         public int TreasurePickerID;
         public int Expansion;
-        public int ManagedWorldStateID;
-        public int QuestSessionBonus;
         public List<QuestObjective> Objectives = new();
         public uint[] RewardItems = new uint[SharedConst.QuestRewardItemCount];
         public uint[] RewardAmount = new uint[SharedConst.QuestRewardItemCount];
@@ -1281,7 +1270,7 @@ namespace Game.Networking.Packets
     }
 
     class PlayerChoiceResponse
-    {    
+    {
         public int ResponseID;
         public ushort ResponseIdentifier;
         public int ChoiceArtFileID;

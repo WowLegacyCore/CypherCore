@@ -453,7 +453,10 @@ namespace Game.Entities
                 CreatureBaseStats stats = Global.ObjectMgr.GetCreatureBaseStats(petlevel, cinfo.UnitClass);
                 CreatureLevelScaling scaling = cinfo.GetLevelScaling(GetMap().GetDifficultyID());
 
-                SetCreateHealth((uint)(Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.CreatureHealth, petlevel, cinfo.GetHealthScalingExpansion(), scaling.ContentTuningID, (Class)cinfo.UnitClass) * cinfo.ModHealth * cinfo.ModHealthExtra));
+                float healthMod = _GetHealthMod(cinfo.Rank);
+                uint baseHp = stats.GenerateHealth(cinfo);
+                uint health = (uint)(baseHp * healthMod);
+                SetCreateHealth(health);
 
                 SetCreateMana(stats.BaseMana);
 
@@ -623,6 +626,19 @@ namespace Game.Entities
             SetFullHealth();
             SetFullPower(PowerType.Mana);
             return true;
+        }
+
+        float _GetHealthMod(CreatureEliteType rank)
+        {
+            return rank switch // define rates for each elite rank
+            {
+                CreatureEliteType.Normal => WorldConfig.GetFloatValue(WorldCfg.RateCreatureNormalHp),
+                CreatureEliteType.Elite => WorldConfig.GetFloatValue(WorldCfg.RateCreatureEliteEliteHp),
+                CreatureEliteType.RareElite => WorldConfig.GetFloatValue(WorldCfg.RateCreatureEliteRareeliteHp),
+                CreatureEliteType.WorldBoss => WorldConfig.GetFloatValue(WorldCfg.RateCreatureEliteWorldbossHp),
+                CreatureEliteType.Rare => WorldConfig.GetFloatValue(WorldCfg.RateCreatureEliteRareHp),
+                _ => WorldConfig.GetFloatValue(WorldCfg.RateCreatureEliteRareeliteHp),
+            };
         }
 
         const int ENTRY_IMP = 416;

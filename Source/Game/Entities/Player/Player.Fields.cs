@@ -32,12 +32,12 @@ namespace Game.Entities
 {
     public partial class Player
     {
-        public WorldSession GetSession() { return Session; }
-        public PlayerSocial GetSocial() { return m_social; }
+        public WorldSession GetSession() => session;
+        public PlayerSocial GetSocial() => playerSocial;
 
         //Gossip
         public PlayerMenu PlayerTalkClass;
-        PlayerSocial m_social;
+        PlayerSocial playerSocial;
         List<Channel> m_channels = new();
         List<ObjectGuid> WhisperList = new();
         public string autoReplyMsg;
@@ -50,7 +50,6 @@ namespace Game.Entities
         List<ObjectGuid> m_itemSoulboundTradeable = new();
         List<ObjectGuid> m_refundableItems = new();
         public List<Item> ItemUpdateQueue = new();
-        VoidStorageItem[] _voidStorageItems = new VoidStorageItem[SharedConst.VoidStorageMaxSlot];
         Item[] m_items = new Item[(int)PlayerSlots.Count];
         uint m_WeaponProficiency;
         uint m_ArmorProficiency;
@@ -186,7 +185,7 @@ namespace Game.Entities
         WorldLocation _corpseLocation;
 
         //Core
-        WorldSession Session;
+        WorldSession session;
 
         uint m_nextSave;
         byte m_cinematic;
@@ -226,8 +225,6 @@ namespace Game.Entities
         uint m_HomebindTimer;
 
         ResurrectionData _resurrectionData;
-
-        SceneMgr m_sceneMgr;
 
         Dictionary<ObjectGuid /*LootObject*/, ObjectGuid /*WorldObject*/> m_AELootView = new();
 
@@ -423,7 +420,6 @@ namespace Game.Entities
         public uint item2;
         public uint quest_A;
         public uint quest_H;
-        public uint achievement;
         public string questFailedText;
     }
 
@@ -439,32 +435,6 @@ namespace Game.Entities
         public Item item;
         public EnchantmentSlot slot;
         public uint leftduration;
-    }
-
-    public class VoidStorageItem
-    {
-        public VoidStorageItem(ulong id, uint entry, ObjectGuid creator, uint randomBonusListId, uint fixedScalingLevel, uint artifactKnowledgeLevel, ItemContext context, List<uint> bonuses)
-        {
-            ItemId = id;
-            ItemEntry = entry;
-            CreatorGuid = creator;
-            RandomBonusListId = randomBonusListId;
-            FixedScalingLevel = fixedScalingLevel;
-            ArtifactKnowledgeLevel = artifactKnowledgeLevel;
-            Context = context;
-
-            foreach (var value in bonuses)
-                BonusListIDs.Add(value);
-        }
-
-        public ulong ItemId;
-        public uint ItemEntry;
-        public ObjectGuid CreatorGuid;
-        public uint RandomBonusListId;
-        public uint FixedScalingLevel;
-        public uint ArtifactKnowledgeLevel;
-        public ItemContext Context;
-        public List<uint> BonusListIDs = new();
     }
 
     public class EquipmentSetInfo

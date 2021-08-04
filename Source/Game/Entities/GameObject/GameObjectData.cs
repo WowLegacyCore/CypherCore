@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -937,8 +937,8 @@ namespace Game.Entities
 
         public struct meetingstone
         {
-            public uint Unused;                                  // 0 Unused, int, Min value: 0, Max value: 65535, Default value: 1
-            public uint Unused2;                                 // 1 Unused, int, Min value: 1, Max value: 65535, Default value: 60
+            public uint minLevel;                                // 0 minLevel, int, Min value: 0, Max value: 65535, Default value: 1
+            public uint maxLevel;                                // 1 maxLevel, int, Min value: 1, Max value: 65535, Default value: 60
             public uint areaID;                                  // 2 areaID, References: AreaTable, NoValue = 0
             public uint InteractRadiusOverride;                  // 3 Interact Radius Override (in hundredths), int, Min value: 0, Max value: 2147483647, Default value: 0
         }
@@ -1344,7 +1344,7 @@ namespace Game.Entities
             public uint open;                                    // 1 open, References: Lock_, NoValue = 0
             public uint InteractRadiusOverride;                  // 2 Interact Radius Override (in hundredths), int, Min value: 0, Max value: 2147483647, Default value: 0
         }
-        
+
         public struct clientmodel
         {
             public uint LargeAOI;                                // 0 Large AOI, enum { false, true, }; Default: false

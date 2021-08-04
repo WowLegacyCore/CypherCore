@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -383,8 +383,8 @@ namespace Framework.Constants
         RemoveAllGameobjects = 126,
         StopMotion = 127,	  // stopMoving, movementExpired
         PlayAnimkit = 128,
-        ScenePlay = 129,    // sceneId
-        SceneCancel = 130,    // sceneId
+        // 129 unused
+        // 130 unused
         SpawnSpawngroup = 131,    // Group ID, min secs, max secs, spawnflags
         DespawnSpawngroup = 132,    // Group ID, min secs, max secs, spawnflags
         // 131 - 134 : 3.3.5 reserved

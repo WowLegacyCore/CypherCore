@@ -1536,6 +1536,10 @@ namespace Game.DungeonFinding
                     lockStatus = LfgLockStatusType.RaidLocked;
                 else if (dungeon.difficulty > Difficulty.Normal && player.GetBoundInstance(dungeon.map, dungeon.difficulty) != null)
                     lockStatus = LfgLockStatusType.RaidLocked;
+                else if (dungeon.minlevel > level)
+                    lockStatus = LfgLockStatusType.TooLowLevel;
+                else if (dungeon.maxlevel < level)
+                    lockStatus = LfgLockStatusType.TooHighLevel;
                 else if (dungeon.seasonal && !IsSeasonActive(dungeon.id))
                     lockStatus = LfgLockStatusType.NotInSeason;
                 else if (dungeon.requiredItemLevel > player.GetAverageItemLevel())
@@ -1554,17 +1558,6 @@ namespace Game.DungeonFinding
                     }
                     else if (ar.item2 != 0 && !player.HasItemCount(ar.item2))
                         lockStatus = LfgLockStatusType.MissingItem;
-                }
-                else
-                {
-                    var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId);
-                    if (levels.HasValue)
-                    {
-                        if (levels.Value.MinLevel > level)
-                            lockStatus = LfgLockStatusType.TooLowLevel;
-                        if (levels.Value.MaxLevel < level)
-                            lockStatus = LfgLockStatusType.TooHighLevel;
-                    }
                 }
 
                 /* @todo VoA closed if WG is not under team control (LFG_LOCKSTATUS_RAID_LOCKED)
@@ -1998,11 +1991,6 @@ namespace Game.DungeonFinding
                 if (dungeon.expansion > expansion)
                     continue;
 
-                var levels = Global.DB2Mgr.GetContentTuningData(dungeon.contentTuningId);
-                if (levels.HasValue)
-                    if (levels.Value.MinLevel > level || level > levels.Value.MaxLevel)
-                        continue;
-
                 randomDungeons.Add(dungeon.Entry());
             }
             return randomDungeons;
@@ -2196,8 +2184,9 @@ namespace Game.DungeonFinding
             type = dbc.TypeID;
             expansion = dbc.ExpansionLevel;
             group = dbc.GroupID;
-            contentTuningId = dbc.ContentTuningID;
             difficulty = dbc.DifficultyID;
+            minlevel = dbc.MinLevel;
+            maxlevel = dbc.MaxLevel;
             seasonal = dbc.Flags[0].HasAnyFlag(LfgFlags.Seasonal);
         }
 
@@ -2207,8 +2196,9 @@ namespace Game.DungeonFinding
         public LfgType type;
         public uint expansion;
         public uint group;
-        public uint contentTuningId;
         public Difficulty difficulty;
+        public uint minlevel;
+        public uint maxlevel;
         public bool seasonal;
         public float x, y, z, o;
         public ushort requiredItemLevel;

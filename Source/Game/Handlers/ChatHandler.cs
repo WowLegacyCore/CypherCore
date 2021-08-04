@@ -553,8 +553,7 @@ namespace Game
             if (em == null)
                 return;
 
-            Emote emoteAnim = (Emote)em.EmoteId;
-
+            Emote emoteAnim = em.EmoteID;
             switch (emoteAnim)
             {
                 case Emote.StateSleep:
@@ -563,7 +562,6 @@ namespace Game
                 case Emote.OneshotNone:
                     break;
                 case Emote.StateDance:
-                case Emote.StateRead:
                     GetPlayer().SetEmoteState(emoteAnim);
                     break;
                 default:

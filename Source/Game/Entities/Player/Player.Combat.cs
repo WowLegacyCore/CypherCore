@@ -337,12 +337,10 @@ namespace Game.Entities
         public override float GetBlockPercent(uint attackerLevel)
         {
             float blockArmor = GetUpdateField<float>(ActivePlayerFields.ShieldBlock);
-            float armorConstant = Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.ArmorConstant, attackerLevel, -2, 0, Class.None);
-
-            if ((blockArmor + armorConstant) == 0)
+            if (blockArmor == 0)
                 return 0;
 
-            return Math.Min(blockArmor / (blockArmor + armorConstant), 0.85f);
+            return Math.Min(blockArmor / blockArmor, 0.85f);
         }
 
         public void SetCanParry(bool value)

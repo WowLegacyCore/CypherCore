@@ -477,7 +477,7 @@ namespace Game.Maps
         {
             // global reset for all instances of the given map
             MapRecord mapEntry = CliDB.MapStorage.LookupByKey(mapid);
-            if (!mapEntry.Instanceable())
+            if (!mapEntry.IsInstanceable())
                 return;
 
             Log.outDebug(LogFilter.Misc, "InstanceSaveManager.ResetOrWarnAll: Processing map {0} ({1}) on difficulty {2} (warn? {3})", mapEntry.MapName[Global.WorldMgr.GetDefaultDbcLocale()], mapid, difficulty, warn);

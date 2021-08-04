@@ -51,17 +51,9 @@ namespace Game
             return (ReputationRank)rank;
         }
 
-        ReputationRank ReputationToRank(FactionRecord factionEntry, int standing)
+        ReputationRank ReputationToRank(int standing)
         {
-            ReputationRank rank = ReputationRank.Min;
-
-            var friendshipReactions = Global.DB2Mgr.GetFriendshipRepReactions(factionEntry.FriendshipRepID);
-            if (!friendshipReactions.Empty())
-                rank = ReputationToRankHelper(friendshipReactions, standing, (FriendshipRepReactionRecord frr) => { return frr.ReactionThreshold; });
-            else
-                rank = ReputationToRankHelper(ReputationRankThresholds, standing, (int threshold) => { return threshold; });
-
-            return rank;
+            return ReputationToRankHelper(ReputationRankThresholds, standing, (int threshold) => { return threshold; }); ;
         }
 
         public FactionState GetState(FactionRecord factionEntry)
@@ -110,41 +102,10 @@ namespace Game
             return factionEntry.ReputationBase[dataIndex];
         }
 
-        int GetMinReputation(FactionRecord factionEntry)
-        {
-            var friendshipReactions = Global.DB2Mgr.GetFriendshipRepReactions(factionEntry.FriendshipRepID);
-            if (!friendshipReactions.Empty())
-                return friendshipReactions[0].ReactionThreshold;
-
-            return ReputationRankThresholds[0];
-        }
+        int GetMinReputation(FactionRecord factionEntry) => ReputationRankThresholds[0];
 
         int GetMaxReputation(FactionRecord factionEntry)
         {
-            ParagonReputationRecord paragonReputation = Global.DB2Mgr.GetParagonReputation(factionEntry.Id);
-            if (paragonReputation != null)
-            {
-                // has reward quest, cap is just before threshold for another quest reward
-                // for example: if current reputation is 12345 and questa are given every 10000 and player has unclaimed reward
-                // then cap will be 19999
-
-                // otherwise cap is one theshold level larger
-                // if current reputation is 12345 and questa are given every 10000 and player does NOT have unclaimed reward
-                // then cap will be 29999
-
-                int reputation = GetReputation(factionEntry);
-                int cap = reputation + paragonReputation.LevelThreshold - reputation % paragonReputation.LevelThreshold - 1;
-
-                if (_player.GetQuestStatus((uint)paragonReputation.QuestID) == QuestStatus.None)
-                    cap += paragonReputation.LevelThreshold;
-
-                return cap;
-            }
-
-            var friendshipReactions = Global.DB2Mgr.GetFriendshipRepReactions(factionEntry.FriendshipRepID);
-            if (!friendshipReactions.Empty())
-                return friendshipReactions.LastOrDefault().ReactionThreshold;
-
             int dataIndex = GetFactionDataIndexForRaceAndClass(factionEntry);
             if (dataIndex >= 0)
                 return factionEntry.ReputationMax[dataIndex];
@@ -168,35 +129,18 @@ namespace Game
         public ReputationRank GetRank(FactionRecord factionEntry)
         {
             int reputation = GetReputation(factionEntry);
-            return ReputationToRank(factionEntry, reputation);
+            return ReputationToRank(reputation);
         }
 
         ReputationRank GetBaseRank(FactionRecord factionEntry)
         {
             int reputation = GetBaseReputation(factionEntry);
-            return ReputationToRank(factionEntry, reputation);
+            return ReputationToRank(reputation);
         }
 
         public ReputationRank GetForcedRankIfAny(FactionTemplateRecord factionTemplateEntry)
         {
             return GetForcedRankIfAny(factionTemplateEntry.Faction);
-        }
-
-        public int GetParagonLevel(uint paragonFactionId)
-        {
-            return GetParagonLevel(CliDB.FactionStorage.LookupByKey(paragonFactionId));
-        }
-
-        int GetParagonLevel(FactionRecord paragonFactionEntry)
-        {
-            if (paragonFactionEntry == null)
-                return 0;
-
-            ParagonReputationRecord paragonReputation = Global.DB2Mgr.GetParagonReputation(paragonFactionEntry.Id);
-            if (paragonReputation != null)
-                return GetReputation(paragonFactionEntry) / paragonReputation.LevelThreshold;
-
-            return 0;
         }
 
         public void ApplyForceReaction(uint faction_id, ReputationRank rank, bool apply)
@@ -214,9 +158,6 @@ namespace Game
             int dataIndex = GetFactionDataIndexForRaceAndClass(factionEntry);
             if (dataIndex > 0)
                 flags = (ReputationFlags)factionEntry.ReputationFlags[dataIndex];
-
-            if (Global.DB2Mgr.GetParagonReputation(factionEntry.Id) != null)
-                flags |= ReputationFlags.ShowPropagated;
 
             return flags;
         }
@@ -398,22 +339,12 @@ namespace Game
             var faction = _factions.LookupByKey(factionEntry.ReputationIndex);
             if (faction != null)
             {
-                FactionRecord primaryFactionToModify = factionEntry;
-                if (incremental && standing > 0 && CanGainParagonReputationForFaction(factionEntry))
-                {
-                    primaryFactionToModify = CliDB.FactionStorage.LookupByKey(factionEntry.ParagonFactionID);
-                    faction = _factions.LookupByKey(primaryFactionToModify.ReputationIndex);
-                }
+                // if we update spillover only, do not update main reputation (rank exceeds creature reward rate)
+                if (!spillOverOnly)
+                    res = SetOneFactionReputation(factionEntry, standing, incremental);
 
-                if (faction != null)
-                {
-                    // if we update spillover only, do not update main reputation (rank exceeds creature reward rate)
-                    if (!spillOverOnly)
-                        res = SetOneFactionReputation(primaryFactionToModify, standing, incremental);
-
-                    // only this faction gets reported to client, even if it has no own visible standing
-                    SendState(faction);
-                }
+                // only this faction gets reported to client, even if it has no own visible standing
+                SendState(faction);
             }
             return res;
         }
@@ -437,8 +368,8 @@ namespace Game
                 else if (standing < GetMinReputation(factionEntry))
                     standing = GetMinReputation(factionEntry);
 
-                ReputationRank old_rank = ReputationToRank(factionEntry, factionState.Standing + BaseRep);
-                ReputationRank new_rank = ReputationToRank(factionEntry, standing);
+                ReputationRank old_rank = ReputationToRank(factionState.Standing + BaseRep);
+                ReputationRank new_rank = ReputationToRank(standing);
 
                 int oldStanding = factionState.Standing + BaseRep;
                 int newStanding = standing - BaseRep;
@@ -457,20 +388,7 @@ namespace Game
                 if (new_rank > old_rank)
                     _sendFactionIncreased = true;
 
-                ParagonReputationRecord paragonReputation = Global.DB2Mgr.GetParagonReputation(factionEntry.Id);
-                if (paragonReputation != null)
-                {
-                    int oldParagonLevel = oldStanding / paragonReputation.LevelThreshold;
-                    int newParagonLevel = standing / paragonReputation.LevelThreshold;
-                    if (oldParagonLevel != newParagonLevel)
-                    {
-                        Quest paragonRewardQuest = Global.ObjectMgr.GetQuestTemplate((uint)paragonReputation.QuestID);
-                        if (paragonRewardQuest != null)
-                            _player.AddQuestAndCheckCompletion(paragonRewardQuest, null);
-                    }
-                }
-
-                if (factionEntry.FriendshipRepID == 0 && paragonReputation == null)
+                if (factionEntry.FriendshipRepID == 0)
                     UpdateRankCounters(old_rank, new_rank);
 
                 return true;
@@ -509,9 +427,6 @@ namespace Game
                 return;
 
             if (faction.Flags.HasFlag(ReputationFlags.Header) && !faction.Flags.HasFlag(ReputationFlags.HeaderShowsBar))
-                return;
-
-            if (Global.DB2Mgr.GetParagonReputation(faction.Id) != null)
                 return;
 
             // already set
@@ -609,8 +524,8 @@ namespace Game
                         if (factionEntry.FriendshipRepID == 0)
                         {
                             int BaseRep = GetBaseReputation(factionEntry);
-                            ReputationRank old_rank = ReputationToRank(factionEntry, BaseRep);
-                            ReputationRank new_rank = ReputationToRank(factionEntry, BaseRep + faction.Standing);
+                            ReputationRank old_rank = ReputationToRank(BaseRep);
+                            ReputationRank new_rank = ReputationToRank(BaseRep + faction.Standing);
                             UpdateRankCounters(old_rank, new_rank);
                         }
 
@@ -702,25 +617,6 @@ namespace Game
             }
 
             return -1;
-        }
-
-        bool CanGainParagonReputationForFaction(FactionRecord factionEntry)
-        {
-            if (!CliDB.FactionStorage.ContainsKey(factionEntry.ParagonFactionID))
-                return false;
-
-            if (GetRank(factionEntry) != ReputationRank.Exalted)
-                return false;
-
-            ParagonReputationRecord paragonReputation = Global.DB2Mgr.GetParagonReputation(factionEntry.ParagonFactionID);
-            if (paragonReputation == null)
-                return false;
-
-            Quest quest = Global.ObjectMgr.GetQuestTemplate((uint)paragonReputation.QuestID);
-            if (quest == null)
-                return false;
-
-            return _player.GetLevel() >= _player.GetQuestMinLevel(quest);
         }
 
         public byte GetVisibleFactionCount() { return _visibleFactionCount; }

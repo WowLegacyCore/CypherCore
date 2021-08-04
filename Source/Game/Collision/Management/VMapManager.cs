@@ -235,12 +235,12 @@ namespace Game.Collision
                     Vector3 pos = ConvertPositionToInternalRep(x, y, z);
                     if (instanceTree.GetLocationInfo(pos, info))
                     {
-                        floor = info.ground_Z;
+                        floor = info.GroundZ;
                         Cypher.Assert(floor < float.MaxValue);
-                        type = info.hitModel.GetLiquidType();  // entry from LiquidType.dbc
+                        type = info.HitModel.GetLiquidType();  // entry from LiquidType.dbc
                         if (reqLiquidType != 0 && !Convert.ToBoolean(Global.DB2Mgr.GetLiquidFlags(type) & reqLiquidType))
                             return false;
-                        if (info.hitInstance.GetLiquidLevel(pos, info, ref level))
+                        if (info.HitInstance.GetLiquidLevel(pos, info, ref level))
                             return true;
                     }
                 }
@@ -266,15 +266,15 @@ namespace Game.Collision
                 Vector3 pos = ConvertPositionToInternalRep(x, y, z);
                 if (instanceTree.GetLocationInfo(pos, info))
                 {
-                    data.floorZ = info.ground_Z;
-                    uint liquidType = info.hitModel.GetLiquidType();
+                    data.floorZ = info.GroundZ;
+                    uint liquidType = info.HitModel.GetLiquidType();
                     float liquidLevel = 0;
                     if (reqLiquidType == 0 || Convert.ToBoolean(Global.DB2Mgr.GetLiquidFlags(liquidType) & reqLiquidType))
-                        if (info.hitInstance.GetLiquidLevel(pos, info, ref liquidLevel))
+                        if (info.HitInstance.GetLiquidLevel(pos, info, ref liquidLevel))
                             data.liquidInfo.Set(new AreaAndLiquidData.LiquidInfo(liquidType, liquidLevel));
 
                     if (!Global.DisableMgr.IsDisabledFor(DisableType.VMAP, mapId, null, DisableFlags.VmapLiquidStatus))
-                        data.areaInfo.Set(new AreaAndLiquidData.AreaInfo(info.hitInstance.adtId, info.rootId, (int)info.hitModel.GetWmoID(), info.hitModel.GetMogpFlags()));
+                        data.areaInfo.Set(new AreaAndLiquidData.AreaInfo(info.HitInstance.AdtId, info.RootId, (int)info.HitModel.GetWmoID(), info.HitModel.GetMogpFlags()));
                 }
             }
 
@@ -292,11 +292,11 @@ namespace Game.Collision
                     model = new ManagedModel();
                     if (!model.GetModel().ReadFile(VMapPath + filename))
                     {
-                        Log.outError(LogFilter.Server, "VMapManager: could not load '{0}'", filename);
+                        Log.outError(LogFilter.Server, $"VMapManager: Could not load '{filename}'");
                         return null;
                     }
 
-                    Log.outDebug(LogFilter.Maps, "VMapManager: loading file '{0}'", filename);
+                    Log.outDebug(LogFilter.Maps, $"VMapManager: Loading file '{filename}'");
                     model.GetModel().Flags = flags;
 
                     iLoadedModelFiles.Add(filename, model);

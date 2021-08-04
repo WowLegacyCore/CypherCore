@@ -65,7 +65,7 @@ namespace Game.Entities
             SkillType[] item_weapon_skills =
             {
                 SkillType.Axes,             SkillType.TwoHandedAxes,    SkillType.Bows,     SkillType.Guns,             SkillType.Maces,
-                SkillType.TwoHandedMaces,   SkillType.Polearms,         SkillType.Swords,   SkillType.TwoHandedSwords,  SkillType.Warglaives,
+                SkillType.TwoHandedMaces,   SkillType.Polearms,         SkillType.Swords,   SkillType.TwoHandedSwords,  0,
                 SkillType.Staves,           0,                          0,                  SkillType.FistWeapons,      0,
                 SkillType.Daggers,          0,                          0,                  SkillType.Crossbows,        SkillType.Wands,
                 SkillType.Fishing
@@ -94,66 +94,6 @@ namespace Game.Entities
                 default:
                     return 0;
             }
-        }
-
-        public uint GetArmor(uint itemLevel)
-        {
-            ItemQuality quality = GetQuality() != ItemQuality.Heirloom ? GetQuality() : ItemQuality.Rare;
-            if (quality > ItemQuality.Artifact)
-                return 0;
-
-            // all items but shields
-            if (GetClass() != ItemClass.Armor || GetSubClass() != (uint)ItemSubClassArmor.Shield)
-            {
-                ItemArmorQualityRecord armorQuality = CliDB.ItemArmorQualityStorage.LookupByKey(itemLevel);
-                ItemArmorTotalRecord armorTotal = CliDB.ItemArmorTotalStorage.LookupByKey(itemLevel);
-                if (armorQuality == null || armorTotal == null)
-                    return 0;
-
-                InventoryType inventoryType = GetInventoryType();
-                if (inventoryType == InventoryType.Robe)
-                    inventoryType = InventoryType.Chest;
-
-                ArmorLocationRecord location = CliDB.ArmorLocationStorage.LookupByKey(inventoryType);
-                if (location == null)
-                    return 0;
-
-                if (GetSubClass() < (uint)ItemSubClassArmor.Cloth || GetSubClass() > (uint)ItemSubClassArmor.Plate)
-                    return 0;
-
-                float total = 1.0f;
-                float locationModifier = 1.0f;
-                switch ((ItemSubClassArmor)GetSubClass())
-                {
-                    case ItemSubClassArmor.Cloth:
-                        total = armorTotal.Cloth;
-                        locationModifier = location.Clothmodifier;
-                        break;
-                    case ItemSubClassArmor.Leather:
-                        total = armorTotal.Leather;
-                        locationModifier = location.Leathermodifier;
-                        break;
-                    case ItemSubClassArmor.Mail:
-                        total = armorTotal.Mail;
-                        locationModifier = location.Chainmodifier;
-                        break;
-                    case ItemSubClassArmor.Plate:
-                        total = armorTotal.Plate;
-                        locationModifier = location.Platemodifier;
-                        break;
-                    default:
-                        break;
-                }
-
-                return (uint)(armorQuality.QualityMod[(int)quality] * total * locationModifier + 0.5f);
-            }
-
-            // shields
-            ItemArmorShieldRecord shield = CliDB.ItemArmorShieldStorage.LookupByKey(itemLevel);
-            if (shield == null)
-                return 0;
-
-            return (uint)(shield.Quality[(int)quality] + 0.5f);
         }
 
         public float GetDPS(uint itemLevel)
@@ -263,7 +203,7 @@ namespace Game.Entities
         public uint GetBuyCount() => Math.Max(ExtendedData.VendorStackCount, 1u);
         public uint GetBuyPrice() => ExtendedData.BuyPrice;
         public uint GetSellPrice() => ExtendedData.SellPrice;
-        public InventoryType GetInventoryType() => ExtendedData.inventoryType;
+        public InventoryType GetInventoryType() => ExtendedData.InventoryType;
         public int GetAllowableClass() => ExtendedData.AllowableClass;
         public long GetAllowableRace() => ExtendedData.AllowableRace;
         public uint GetBaseItemLevel() => ExtendedData.ItemLevel;
@@ -278,8 +218,7 @@ namespace Game.Entities
         public int GetStatModifierBonusStat(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatModifierBonusStat[index]; }
         public int GetStatPercentEditor(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatPercentEditor[index]; }
         public float GetStatPercentageOfSocket(uint index) { Cypher.Assert(index < ItemConst.MaxStats); return ExtendedData.StatPercentageOfSocket[index]; }
-        public uint GetScalingStatContentTuning() => ExtendedData.ContentTuningID;
-        public uint GetPlayerLevelToItemLevelCurveId() => ExtendedData.PlayerLevelToItemLevelCurveID;
+        public uint GetScalingStatDistribution() => ExtendedData.ScalingStatDistributionID;
         public uint GetDamageType() => ExtendedData.DamageType;
         public uint GetDelay() => ExtendedData.ItemDelay;
         public float GetRangedModRange() => ExtendedData.ItemRange;
@@ -297,7 +236,7 @@ namespace Game.Entities
             Cypher.Assert(index < ItemConst.MaxGemSockets);
             return (SocketColor)ExtendedData.SocketType[index];
         }
-        public uint GetSocketBonus() => ExtendedData.SocketMatchEnchantmentId;
+        public uint GetSocketBonus() => ExtendedData.SocketMatchenchantmentID;
         public uint GetGemProperties() => ExtendedData.GemProperties;
         public float GetQualityModifier() => ExtendedData.QualityModifier;
         public uint GetDuration() => ExtendedData.DurationInInventory;

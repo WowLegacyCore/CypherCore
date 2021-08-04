@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -91,7 +91,7 @@ namespace Game.Entities
             return tab.BonusListIDs.SelectRandomElementByWeight(x => (float)tab.Chances[tab.BonusListIDs.IndexOf(x)]);
         }
 
-        public static float GetRandomPropertyPoints(uint itemLevel, ItemQuality quality, InventoryType inventoryType, uint subClass)
+        public static uint GetRandomPropertyPoints(uint itemLevel, ItemQuality quality, InventoryType inventoryType, uint subClass)
         {
             uint propIndex;
 
@@ -147,14 +147,14 @@ namespace Game.Entities
             switch (quality)
             {
                 case ItemQuality.Uncommon:
-                    return randPropPointsEntry.GoodF[propIndex];
+                    return randPropPointsEntry.Good[propIndex];
                 case ItemQuality.Rare:
                 case ItemQuality.Heirloom:
-                    return randPropPointsEntry.SuperiorF[propIndex];
+                    return randPropPointsEntry.Superior[propIndex];
                 case ItemQuality.Epic:
                 case ItemQuality.Legendary:
                 case ItemQuality.Artifact:
-                    return randPropPointsEntry.EpicF[propIndex];
+                    return randPropPointsEntry.Epic[propIndex];
             }
 
             return 0;

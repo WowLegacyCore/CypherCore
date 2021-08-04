@@ -349,8 +349,8 @@ namespace Game
             uint oldMSTime = Time.GetMSTime();
             _raceUnlockRequirementStorage.Clear();
 
-            //                                         0       1          2
-            SQLResult result = DB.World.Query("SELECT raceID, expansion, achievementId FROM `race_unlock_requirement`");
+            //                                         0       1
+            SQLResult result = DB.World.Query("SELECT raceID, expansion FROM `race_unlock_requirement`");
             if (!result.IsEmpty())
             {
                 uint count = 0;
@@ -358,7 +358,6 @@ namespace Game
                 {
                     byte raceID = result.Read<byte>(0);
                     byte expansion = result.Read<byte>(1);
-                    uint achievementId = result.Read<uint>(2);
 
                     ChrRacesRecord raceEntry = CliDB.ChrRacesStorage.LookupByKey(raceID);
                     if (raceEntry == null)
@@ -373,15 +372,8 @@ namespace Game
                         continue;
                     }
 
-                    if (achievementId != 0 && !CliDB.AchievementStorage.ContainsKey(achievementId))
-                    {
-                        Log.outError(LogFilter.Sql, $"Race {raceID} defined in `race_unlock_requirement` has incorrect achievement {achievementId}, skipped.");
-                        continue;
-                    }
-
                     RaceUnlockRequirement raceUnlockRequirement = new();
                     raceUnlockRequirement.Expansion = expansion;
-                    raceUnlockRequirement.AchievementId = achievementId;
 
                     _raceUnlockRequirementStorage[raceID] = raceUnlockRequirement;
 
@@ -893,8 +885,7 @@ namespace Game
                     // if find graveyard at different map from where entrance placed (or no entrance data), use any first
                     if (mapEntry == null
                         || mapEntry.CorpseMapID < 0
-                        || mapEntry.CorpseMapID != entry.Loc.GetMapId()
-                        || (mapEntry.Corpse.X == 0 && mapEntry.Corpse.Y == 0))
+                        || mapEntry.CorpseMapID != entry.Loc.GetMapId())
                     {
                         // not have any corrdinates for check distance anyway
                         entryFar = entry;
@@ -902,8 +893,8 @@ namespace Game
                     }
 
                     // at entrance map calculate distance (2D);
-                    float dist2 = (entry.Loc.GetPositionX() - mapEntry.Corpse.X) * (entry.Loc.GetPositionX() - mapEntry.Corpse.X)
-                        + (entry.Loc.GetPositionY() - mapEntry.Corpse.Y) * (entry.Loc.GetPositionY() - mapEntry.Corpse.Y);
+                    float dist2 = entry.Loc.GetPositionX() * entry.Loc.GetPositionX()
+                        + entry.Loc.GetPositionY() * entry.Loc.GetPositionY();
                     if (foundEntr)
                     {
                         if (dist2 < distEntr)
@@ -2205,15 +2196,15 @@ namespace Game
                         continue;
                     }
 
-                    if (dbcItem.inventoryType != InventoryType.Weapon &&
-                        dbcItem.inventoryType != InventoryType.Shield &&
-                        dbcItem.inventoryType != InventoryType.Ranged &&
-                        dbcItem.inventoryType != InventoryType.Weapon2Hand &&
-                        dbcItem.inventoryType != InventoryType.WeaponMainhand &&
-                        dbcItem.inventoryType != InventoryType.WeaponOffhand &&
-                        dbcItem.inventoryType != InventoryType.Holdable &&
-                        dbcItem.inventoryType != InventoryType.Thrown &&
-                        dbcItem.inventoryType != InventoryType.RangedRight)
+                    if (dbcItem.InventoryType != InventoryType.Weapon &&
+                        dbcItem.InventoryType != InventoryType.Shield &&
+                        dbcItem.InventoryType != InventoryType.Ranged &&
+                        dbcItem.InventoryType != InventoryType.Weapon2Hand &&
+                        dbcItem.InventoryType != InventoryType.WeaponMainhand &&
+                        dbcItem.InventoryType != InventoryType.WeaponOffhand &&
+                        dbcItem.InventoryType != InventoryType.Holdable &&
+                        dbcItem.InventoryType != InventoryType.Thrown &&
+                        dbcItem.InventoryType != InventoryType.RangedRight)
                     {
                         Log.outError(LogFilter.Sql, "Item (ID {0}) in creature_equip_template.ItemID{1} for CreatureID  = {2} is not equipable in a hand, forced to 0.",
                             equipmentInfo.Items[i].ItemId, i + 1, entry);
@@ -2725,7 +2716,7 @@ namespace Game
                             }
 
                             MapRecord map = CliDB.MapStorage.LookupByKey(master.spawnPoint.GetMapId());
-                            if (map == null || !map.Instanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
+                            if (map == null || !map.IsInstanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
                             {
                                 Log.outError(LogFilter.Sql, "Creature '{0}' linking to '{1}' on an unpermitted map.", guidLow, linkedGuidLow);
                                 error = true;
@@ -2763,7 +2754,7 @@ namespace Game
                             }
 
                             MapRecord map = CliDB.MapStorage.LookupByKey(master.spawnPoint.GetMapId());
-                            if (map == null || !map.Instanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
+                            if (map == null || !map.IsInstanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
                             {
                                 Log.outError(LogFilter.Sql, "Creature '{0}' linking to '{1}' on an unpermitted map.", guidLow, linkedGuidLow);
                                 error = true;
@@ -2801,7 +2792,7 @@ namespace Game
                             }
 
                             MapRecord map = CliDB.MapStorage.LookupByKey(master.spawnPoint.GetMapId());
-                            if (map == null || !map.Instanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
+                            if (map == null || !map.IsInstanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
                             {
                                 Log.outError(LogFilter.Sql, "Creature '{0}' linking to '{1}' on an unpermitted map.", guidLow, linkedGuidLow);
                                 error = true;
@@ -2839,7 +2830,7 @@ namespace Game
                             }
 
                             MapRecord map = CliDB.MapStorage.LookupByKey(master.spawnPoint.GetMapId());
-                            if (map == null || !map.Instanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
+                            if (map == null || !map.IsInstanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
                             {
                                 Log.outError(LogFilter.Sql, "Creature '{0}' linking to '{1}' on an unpermitted map.", guidLow, linkedGuidLow);
                                 error = true;
@@ -3450,7 +3441,7 @@ namespace Game
             data.spawntimesecs = (int)spawntimedelay;
             data.spawndist = 0;
             data.currentwaypoint = 0;
-            data.curhealth = (uint)(Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.CreatureHealth, level, cInfo.HealthScalingExpansion, scaling.ContentTuningID, (Class)cInfo.UnitClass) * cInfo.ModHealth * cInfo.ModHealthExtra);
+            data.curhealth = stats.GenerateHealth(cInfo);
             data.curmana = stats.GenerateMana(cInfo);
             data.movementType = (byte)cInfo.MovementType;
             data.spawnDifficulties.Add(Difficulty.None);
@@ -3542,7 +3533,7 @@ namespace Game
             }
 
             MapRecord map = CliDB.MapStorage.LookupByKey(master.spawnPoint.GetMapId());
-            if (map == null || !map.Instanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
+            if (map == null || !map.IsInstanceable() || (master.spawnPoint.GetMapId() != slave.spawnPoint.GetMapId()))
             {
                 Log.outError(LogFilter.Sql, "Creature '{0}' linking to '{1}' on an unpermitted map.", guidLow, linkedGuidLow);
                 return false;
@@ -4488,7 +4479,7 @@ namespace Game
                     continue;
 
                 var itemTemplate = new ItemTemplate(db2Data, sparse);
-                itemTemplate.MaxDurability = FillMaxDurability(db2Data.ClassID, db2Data.SubclassID, sparse.inventoryType, (ItemQuality)sparse.OverallQualityID, sparse.ItemLevel);
+                itemTemplate.MaxDurability = FillMaxDurability(db2Data.ClassID, db2Data.SubclassID, sparse.InventoryType, (ItemQuality)sparse.OverallQualityID, sparse.ItemLevel);
 
                 var itemSpecOverrides = Global.DB2Mgr.GetItemSpecOverrides(sparse.Id);
                 if (itemSpecOverrides != null)
@@ -5019,8 +5010,8 @@ namespace Game
 
             _accessRequirementStorage.Clear();
 
-            //                                          0      1           2          3          4           5      6             7             8                      9
-            SQLResult result = DB.World.Query("SELECT mapid, difficulty, level_min, level_max, item, item2, quest_done_A, quest_done_H, completed_achievement, quest_failed_text FROM access_requirement");
+            //                                          0      1           2          3          4           5      6             7             8
+            SQLResult result = DB.World.Query("SELECT mapid, difficulty, level_min, level_max, item, item2, quest_done_A, quest_done_H, quest_failed_text FROM access_requirement");
             if (result.IsEmpty())
             {
                 Log.outInfo(LogFilter.ServerLoading, "Loaded 0 access requirement definitions. DB table `access_requirement` is empty.");
@@ -5053,8 +5044,7 @@ namespace Game
                 ar.item2 = result.Read<uint>(5);
                 ar.quest_A = result.Read<uint>(6);
                 ar.quest_H = result.Read<uint>(7);
-                ar.achievement = result.Read<uint>(8);
-                ar.questFailedText = result.Read<string>(9);
+                ar.questFailedText = result.Read<string>(8);
 
                 if (ar.item != 0)
                 {
@@ -5091,15 +5081,6 @@ namespace Game
                     {
                         Log.outError(LogFilter.Sql, "Required Horde Quest {0} not exist for map {1} difficulty {2}, remove quest done requirement.", ar.quest_H, mapid, difficulty);
                         ar.quest_H = 0;
-                    }
-                }
-
-                if (ar.achievement != 0)
-                {
-                    if (!CliDB.AchievementStorage.ContainsKey(ar.achievement))
-                    {
-                        Log.outError(LogFilter.Sql, "Required Achievement {0} not exist for map {1} difficulty {2}, remove quest done requirement.", ar.achievement, mapid, difficulty);
-                        ar.achievement = 0;
                     }
                 }
 
@@ -5533,7 +5514,7 @@ namespace Game
                         continue;
                     }
 
-                    if (CliDB.MapStorage.LookupByKey(mapId).Instanceable())
+                    if (CliDB.MapStorage.LookupByKey(mapId).IsInstanceable())
                     {
                         Log.outError(LogFilter.Sql, $"Home position in instanceable map for class {currentclass} race {currentrace} pair in `playercreateinfo` table, ignoring.");
                         continue;
@@ -5663,6 +5644,12 @@ namespace Game
                         }
 
                         uint itemid = result.Read<uint>(2);
+                        if (GetItemTemplate(itemid) == null)
+                        {
+                            Log.outError(LogFilter.Sql, $"Item id {itemid} (race {currentrace} class {currentclass}) does not exist in Item.db2 in `playercreateinfo_item`, ignoring");
+                            continue;
+                        }
+
                         if (GetItemTemplate(itemid).GetId() == 0)
                         {
                             Log.outError(LogFilter.Sql, "Item id {0} (race {1} class {2}) in `playercreateinfo_item` table but not listed in `itemtemplate`, ignoring.", itemid, currentrace, currentclass);
@@ -6361,36 +6348,6 @@ namespace Game
         }
 
         //Faction Change
-        public void LoadFactionChangeAchievements()
-        {
-            uint oldMSTime = Time.GetMSTime();
-
-            SQLResult result = DB.World.Query("SELECT alliance_id, horde_id FROM player_factionchange_achievement");
-            if (result.IsEmpty())
-            {
-                Log.outInfo(LogFilter.ServerLoading, "Loaded 0 faction change achievement pairs. DB table `player_factionchange_achievement` is empty.");
-                return;
-            }
-
-            uint count = 0;
-            do
-            {
-                uint alliance = result.Read<uint>(0);
-                uint horde = result.Read<uint>(1);
-
-                if (!CliDB.AchievementStorage.ContainsKey(alliance))
-                    Log.outError(LogFilter.Sql, "Achievement {0} (alliance_id) referenced in `player_factionchange_achievement` does not exist, pair skipped!", alliance);
-                else if (!CliDB.AchievementStorage.ContainsKey(horde))
-                    Log.outError(LogFilter.Sql, "Achievement {0} (horde_id) referenced in `player_factionchange_achievement` does not exist, pair skipped!", horde);
-                else
-                    FactionChangeAchievements[alliance] = horde;
-
-                ++count;
-            }
-            while (result.NextRow());
-
-            Log.outInfo(LogFilter.ServerLoading, "Loaded {0} faction change achievement pairs in {1} ms", count, Time.GetMSTimeDiffToNow(oldMSTime));
-        }
         public void LoadFactionChangeItems()
         {
             uint oldMSTime = Time.GetMSTime();
@@ -6555,35 +6512,35 @@ namespace Game
             _exclusiveQuestGroups.Clear();
 
             SQLResult result = DB.World.Query("SELECT " +
-                //0   1          2               3                4            5            6                  7                8                   9
-                "ID, QuestType, QuestPackageID, ContentTuningID, QuestSortID, QuestInfoID, SuggestedGroupNum, RewardNextQuest, RewardXPDifficulty, RewardXPMultiplier, " +
-                //10           11                     12                     13                14           15           16               17
-                "RewardMoney, RewardMoneyDifficulty, RewardMoneyMultiplier, RewardBonusMoney, RewardSpell, RewardHonor, RewardKillHonor, StartItem, " +
-                //18                          19                          20                        21     22       23
+                //0  1          2           3                    4                5               6         7            8            9                  10               11                  12
+                "ID, QuestType, QuestLevel, ScalingFactionGroup, MaxScalingLevel, QuestPackageID, MinLevel, QuestSortID, QuestInfoID, SuggestedGroupNum, RewardNextQuest, RewardXPDifficulty, RewardXPMultiplier, " +
+                //13          14                     15                     16                17                   18                   19                   20           21           22               23
+                "RewardMoney, RewardMoneyDifficulty, RewardMoneyMultiplier, RewardBonusMoney, RewardDisplaySpell1, RewardDisplaySpell2, RewardDisplaySpell3, RewardSpell, RewardHonor, RewardKillHonor, StartItem, " +
+                //24                         25                          26                        27     28       29
                 "RewardArtifactXPDifficulty, RewardArtifactXPMultiplier, RewardArtifactCategoryID, Flags, FlagsEx, FlagsEx2, " +
-                //24           25             26         27                 28           29             30         31
+                //30          31             32           33               34           35             36         37
                 "RewardItem1, RewardAmount1, ItemDrop1, ItemDropQuantity1, RewardItem2, RewardAmount2, ItemDrop2, ItemDropQuantity2, " +
-                //32           33             34         35                 36           37             38         39
+                //38           39            40         41                42            43             44         45
                 "RewardItem3, RewardAmount3, ItemDrop3, ItemDropQuantity3, RewardItem4, RewardAmount4, ItemDrop4, ItemDropQuantity4, " +
-                //40                   41                         42                          43                   44                         45
+                //46                  47                         48                          49                   50                         51
                 "RewardChoiceItemID1, RewardChoiceItemQuantity1, RewardChoiceItemDisplayID1, RewardChoiceItemID2, RewardChoiceItemQuantity2, RewardChoiceItemDisplayID2, " +
-                //46                   47                         48                          49                   50                         51
+                //52                  53                         54                          55                   56                         57
                 "RewardChoiceItemID3, RewardChoiceItemQuantity3, RewardChoiceItemDisplayID3, RewardChoiceItemID4, RewardChoiceItemQuantity4, RewardChoiceItemDisplayID4, " +
-                //52                   53                         54                          55                   56                         57
+                //58                  59                         60                          61                   62                         63
                 "RewardChoiceItemID5, RewardChoiceItemQuantity5, RewardChoiceItemDisplayID5, RewardChoiceItemID6, RewardChoiceItemQuantity6, RewardChoiceItemDisplayID6, " +
-                //58            59    60    61           62           63                 64                 65                 66             67                  68
+                //64           65    66    67           68           69                 70                 71                 72             73                  74
                 "POIContinent, POIx, POIy, POIPriority, RewardTitle, RewardArenaPoints, RewardSkillLineID, RewardNumSkillUps, PortraitGiver, PortraitGiverMount, PortraitTurnIn, " +
-                //69                70                   71                      72                   73                74                   75                      76
+                //75               76                   77                      78                   79                80                   81                      82
                 "RewardFactionID1, RewardFactionValue1, RewardFactionOverride1, RewardFactionCapIn1, RewardFactionID2, RewardFactionValue2, RewardFactionOverride2, RewardFactionCapIn2, " +
-                //77                78                   79                      80                   81                82                   83                      84
+                //83               84                   85                      86                   87                88                   89                      90
                 "RewardFactionID3, RewardFactionValue3, RewardFactionOverride3, RewardFactionCapIn3, RewardFactionID4, RewardFactionValue4, RewardFactionOverride4, RewardFactionCapIn4, " +
-                //85                86                   87                      88                   89
+                //91               92                   93                      94                   95
                 "RewardFactionID5, RewardFactionValue5, RewardFactionOverride5, RewardFactionCapIn5, RewardFactionFlags, " +
-                //90                 91                  92                 93                  94                 95                  96                 97
+                //96                97                  98                 99                  100                101                 102                103
                 "RewardCurrencyID1, RewardCurrencyQty1, RewardCurrencyID2, RewardCurrencyQty2, RewardCurrencyID3, RewardCurrencyQty3, RewardCurrencyID4, RewardCurrencyQty4, " +
-                //98                  99                  100          101          102             103               104        105                  106
-                "AcceptedSoundKitID, CompleteSoundKitID, AreaGroupID, TimeAllowed, AllowableRaces, TreasurePickerID, Expansion, ManagedWorldStateID, QuestSessionBonus, " +
-                //107       108             109               110              111                112                113                 114                 115
+                //104                105                 106          107          108             109               110
+                "AcceptedSoundKitID, CompleteSoundKitID, AreaGroupID, TimeAllowed, AllowableRaces, TreasurePickerID, Expansion," +
+                //111      112             113               114              115                116                117                 118                 119
                 "LogTitle, LogDescription, QuestDescription, AreaDescription, PortraitGiverText, PortraitGiverName, PortraitTurnInText, PortraitTurnInName, QuestCompletionLog" +
                 " FROM quest_template");
 
@@ -6626,29 +6583,6 @@ namespace Game
                         Log.outError(LogFilter.Sql, $"Table `quest_reward_choice_items` has data for quest {questId} but such quest does not exist");
                 } while (result.NextRow());
             }
-
-
-            // Load `quest_reward_display_spell`
-            //                               0        1        2
-            result = DB.World.Query("SELECT QuestID, SpellID, PlayerConditionID FROM quest_reward_display_spell ORDER BY QuestID ASC, Idx ASC");
-            if (result.IsEmpty())
-            {
-                Log.outInfo(LogFilter.ServerLoading, "Loaded 0 quest reward display spells. DB table `quest_reward_display_spell` is empty.");
-            }
-            else
-            {
-                do
-                {
-                    uint questId = result.Read<uint>(0);
-
-                    var quest = _questTemplates.LookupByKey(questId);
-                    if (quest != null)
-                        quest.LoadRewardDisplaySpell(result.GetFields());
-                    else
-                        Log.outError(LogFilter.Sql, $"Table `quest_reward_display_spell` has data for quest {questId} but such quest does not exist");
-                } while (result.NextRow());
-            }
-
 
             // Load `quest_details`
             //                               0   1       2       3       4       5            6            7            8
@@ -6885,8 +6819,8 @@ namespace Game
                     }
                 }
 
-                if (qinfo.ContentTuningId != 0 && !CliDB.ContentTuningStorage.ContainsKey(qinfo.ContentTuningId))
-                    Log.outError(LogFilter.Sql, $"Quest {qinfo.Id} has `ContentTuningID` = {qinfo.ContentTuningId} but content tuning with this id does not exist.");
+                if (qinfo.MinLevel == -1 || qinfo.MinLevel > SharedConst.DefaultMaxLevel)
+                    Log.outError(LogFilter.Sql, $"Quest {qinfo.Id} should be disabled because `MinLevel` = {qinfo.MinLevel}");
 
                 // client quest log visual (area case)
                 if (qinfo.QuestSortID > 0)
@@ -7117,10 +7051,6 @@ namespace Game
                         case QuestObjectiveType.WinPetBattleAgainstNpc:
                             if (obj.ObjectID != 0 && Global.ObjectMgr.GetCreatureTemplate((uint)obj.ObjectID) == null)
                                 Log.outError(LogFilter.Sql, "Quest {0} objective {1} has non existing creature entry {2}, quest can't be done.", qinfo.Id, obj.Id, obj.ObjectID);
-                            break;
-                        case QuestObjectiveType.DefeatBattlePet:
-                            if (!CliDB.BattlePetSpeciesStorage.ContainsKey((uint)obj.ObjectID))
-                                Log.outError(LogFilter.Sql, "Quest {0} objective {1} has non existing battlepet species id {2}", qinfo.Id, obj.Id, obj.ObjectID);
                             break;
                         case QuestObjectiveType.CriteriaTree:
                             if (!CliDB.CriteriaTreeStorage.ContainsKey((uint)obj.ObjectID))
@@ -8724,6 +8654,13 @@ namespace Game
                     if (repTemplate.faction[i] != 0)
                     {
                         var factionSpillover = CliDB.FactionStorage.LookupByKey(repTemplate.faction[i]);
+                        if (factionSpillover == null)
+                        {
+                            Log.outError(LogFilter.Sql, $"Spillover faction (faction.db2) {repTemplate.faction[i]} does not exist but is used in `reputation_spillover_template`, skipping.");
+                            invalidSpilloverFaction = true;
+                            break;
+                        }
+
                         if (factionSpillover.Id == 0)
                         {
                             Log.outError(LogFilter.Sql, "Spillover faction (faction.dbc) {0} does not exist but is used in `reputation_spillover_template` for faction {1}, skipping", repTemplate.faction[i], factionId);
@@ -9255,7 +9192,7 @@ namespace Game
                 } while (responses.NextRow());
             }
 
-            SQLResult rewards = DB.World.Query("SELECT ChoiceId, ResponseId, TitleId, PackageId, SkillLineId, SkillPointCount, ArenaPointCount, HonorPointCount, Money, Xp FROM playerchoice_response_reward");
+            SQLResult rewards = DB.World.Query("SELECT ChoiceId, ResponseId, TitleId, SkillLineId, SkillPointCount, ArenaPointCount, HonorPointCount, Money, Xp FROM playerchoice_response_reward");
             if (!rewards.IsEmpty())
             {
                 do
@@ -9279,24 +9216,17 @@ namespace Game
 
                     PlayerChoiceResponseReward reward = new();
                     reward.TitleId = rewards.Read<int>(2);
-                    reward.PackageId = rewards.Read<int>(3);
-                    reward.SkillLineId = rewards.Read<int>(4);
-                    reward.SkillPointCount = rewards.Read<uint>(5);
-                    reward.ArenaPointCount = rewards.Read<uint>(6);
-                    reward.HonorPointCount = rewards.Read<uint>(7);
-                    reward.Money = rewards.Read<ulong>(8);
-                    reward.Xp = rewards.Read<uint>(9);
+                    reward.SkillLineId = rewards.Read<int>(3);
+                    reward.SkillPointCount = rewards.Read<uint>(4);
+                    reward.ArenaPointCount = rewards.Read<uint>(5);
+                    reward.HonorPointCount = rewards.Read<uint>(6);
+                    reward.Money = rewards.Read<ulong>(7);
+                    reward.Xp = rewards.Read<uint>(8);
 
                     if (reward.TitleId != 0 && !CliDB.CharTitlesStorage.ContainsKey(reward.TitleId))
                     {
                         Log.outError(LogFilter.Sql, $"Table `playerchoice_response_reward` references non-existing Title {reward.TitleId} for ChoiceId {choiceId}, ResponseId: {responseId}, set to 0");
                         reward.TitleId = 0;
-                    }
-
-                    if (reward.PackageId != 0 && Global.DB2Mgr.GetQuestPackageItems((uint)reward.PackageId) == null)
-                    {
-                        Log.outError(LogFilter.Sql, $"Table `playerchoice_response_reward` references non-existing QuestPackage {reward.TitleId} for ChoiceId {choiceId}, ResponseId: {responseId}, set to 0");
-                        reward.PackageId = 0;
                     }
 
                     if (reward.SkillLineId != 0 && !CliDB.SkillLineStorage.ContainsKey(reward.SkillLineId))
@@ -9793,30 +9723,12 @@ namespace Game
         }
         public uint GetMaxLevelForExpansion(Expansion expansion)
         {
-            switch (expansion)
+            return expansion switch
             {
-                case Expansion.Classic:
-                    return 30;
-                case Expansion.BurningCrusade:
-                    return 30;
-                case Expansion.WrathOfTheLichKing:
-                    return 30;
-                case Expansion.Cataclysm:
-                    return 35;
-                case Expansion.MistsOfPandaria:
-                    return 35;
-                case Expansion.WarlordsOfDraenor:
-                    return 40;
-                case Expansion.Legion:
-                    return 45;
-                case Expansion.BattleForAzeroth:
-                    return 50;
-                case Expansion.ShadowLands:
-                    return 60;
-                default:
-                    break;
-            }
-            return 0;
+                Expansion.Classic           => 60,
+                Expansion.BurningCrusade    => 70,
+                _                           => 0,
+            };
         }
         CellObjectGuids CreateCellObjectGuids(uint mapid, Difficulty difficulty, uint cellid)
         {
@@ -10266,7 +10178,6 @@ namespace Game
         PlayerInfo[][] _playerInfo = new PlayerInfo[(int)Race.Max][];
 
         //Faction Change
-        public Dictionary<uint, uint> FactionChangeAchievements = new();
         public Dictionary<uint, uint> FactionChangeItems = new();
         public Dictionary<uint, uint> FactionChangeQuests = new();
         public Dictionary<uint, uint> FactionChangeReputation = new();
@@ -10962,7 +10873,7 @@ namespace Game
                 switch ((ItemSubClassArmor)item.SubclassID)
                 {
                     case ItemSubClassArmor.Cloth:
-                        if (sparse.inventoryType != InventoryType.Cloak)
+                        if (sparse.InventoryType != InventoryType.Cloak)
                         {
                             ItemType = 1;
                             break;

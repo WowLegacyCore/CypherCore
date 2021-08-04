@@ -41,19 +41,6 @@ namespace Framework.Constants
         public const int MaxWorldMapOverlayArea = 4;
         public const int MaxMountCapabilities = 24;
         public const int MaxLockCase = 8;
-        public const int MaxAzeriteEmpoweredTier = 5;
-        public const int MaxAzeriteEssenceSlot = 4;
-        public const int MaxAzeriteEssenceRank = 4;
-        public const int AchivementCategoryPetBattles = 15117;
-
-        /// <summary>
-        /// BattlePets Const
-        /// </summary>
-        public const int MaxBattlePetSpeciesId = 3084;
-        public const int MaxPetBattleSlots = 3;
-        public const int MaxBattlePetsPerSpecies = 3;
-        public const int BattlePetCageItemId = 82800;
-        public const int DefaultSummonBattlePetSpell = 118301;
 
         /// <summary>
         /// Lfg Const
@@ -81,13 +68,13 @@ namespace Framework.Constants
         /// <summary>
         /// Movement Const
         /// </summary>
-        public const double gravity = 19.29110527038574;
-        public const float terminalVelocity = 60.148003f;
-        public const float terminalSafefallVelocity = 7.0f;
-        public const float terminal_length = (float)((terminalVelocity * terminalVelocity) / (2.0f * gravity));
-        public const float terminal_safeFall_length = (float)((terminalSafefallVelocity * terminalSafefallVelocity) / (2.0f * gravity));
-        public const float terminal_fallTime = (float)(terminalVelocity / gravity); // the time that needed to reach terminalVelocity
-        public const float terminal_safeFall_fallTime = (float)(terminalSafefallVelocity / gravity); // the time that needed to reach terminalVelocity with safefall
+        public const double Gravity = 19.29110527038574;
+        public const float TerminalVelocity = 60.148003f;
+        public const float TerminalSafeFallVelocity = 7.0f;
+        public const float TerminalLength = (float)((TerminalVelocity * TerminalVelocity) / (2.0f * Gravity));
+        public const float TerminalSafeFallLength = (float)((TerminalSafeFallVelocity * TerminalSafeFallVelocity) / (2.0f * Gravity));
+        public const float TerminalFallTime = (float)(TerminalVelocity / Gravity); // the time that needed to reach terminalVelocity
+        public const float TerminalSafeFallTime = (float)(TerminalSafeFallVelocity / Gravity); // the time that needed to reach terminalVelocity with safefall
 
         /// <summary>
         /// Vehicle Const
@@ -128,15 +115,6 @@ namespace Framework.Constants
         public const uint BGAwardArenaPointsMinLevel = 71;
         public const int ArenaTimeLimitPointsLoss = -16;
         public const int MaxArenaSlot = 3;
-
-        /// <summary>
-        /// Void Storage Const
-        /// </summary>
-        public const uint VoidStorageUnlockCost = 100 * MoneyConstants.Gold;
-        public const uint VoidStorageStoreItemCost = 10 * MoneyConstants.Gold;
-        public const uint VoidStorageMaxDeposit = 9;
-        public const uint VoidStorageMaxWithdraw = 9;
-        public const byte VoidStorageMaxSlot = 160;
 
         /// <summary>
         /// Misc Const
@@ -244,7 +222,7 @@ namespace Framework.Constants
 
         public const int WorldTrigger = 12999;
 
-        public static float[] baseMoveSpeed =
+        public static float[] BaseMoveSpeed =
         {
             2.5f,                  // MOVE_WALK
             7.0f,                  // MOVE_RUN
@@ -257,7 +235,7 @@ namespace Framework.Constants
             3.14f                  // MOVE_PITCH_RATE
         };
 
-        public static float[] playerBaseMoveSpeed =
+        public static float[] PlayerBaseMoveSpeed =
         {
             2.5f,                  // MOVE_WALK
             7.0f,                  // MOVE_RUN
@@ -280,7 +258,7 @@ namespace Framework.Constants
             MaxVisibilityDistance
         };
 
-        static int[] raceBits =
+        static int[] RaceBits =
         {
             0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
             9, 10, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -312,83 +290,28 @@ namespace Framework.Constants
         }
         public static SkillType SkillByQuestSort(int sort)
         {
-            switch ((QuestSort)sort)
+            return (QuestSort)sort switch
             {
-                case QuestSort.Herbalism:
-                    return SkillType.Herbalism;
-                case QuestSort.Fishing:
-                    return SkillType.Fishing;
-                case QuestSort.Blacksmithing:
-                    return SkillType.Blacksmithing;
-                case QuestSort.Alchemy:
-                    return SkillType.Alchemy;
-                case QuestSort.Leatherworking:
-                    return SkillType.Leatherworking;
-                case QuestSort.Engineering:
-                    return SkillType.Engineering;
-                case QuestSort.Tailoring:
-                    return SkillType.Tailoring;
-                case QuestSort.Cooking:
-                    return SkillType.Cooking;
-                case QuestSort.Jewelcrafting:
-                    return SkillType.Jewelcrafting;
-                case QuestSort.Inscription:
-                    return SkillType.Inscription;
-                case QuestSort.Archaeology:
-                    return SkillType.Archaeology;
-            }
-            return SkillType.None;
+                QuestSort.Herbalism         => SkillType.Herbalism,
+                QuestSort.Fishing           => SkillType.Fishing,
+                QuestSort.Blacksmithing     => SkillType.Blacksmithing,
+                QuestSort.Alchemy           => SkillType.Alchemy,
+                QuestSort.Leatherworking    => SkillType.Leatherworking,
+                QuestSort.Engineering       => SkillType.Engineering,
+                QuestSort.Tailoring         => SkillType.Tailoring,
+                QuestSort.Cooking           => SkillType.Cooking,
+                _ => SkillType.None,
+            };
         }
         public static SkillType SkillByLockType(LockType locktype)
         {
-            switch (locktype)
+            return locktype switch
             {
-                case LockType.Herbalism:
-                    return SkillType.Herbalism;
-                case LockType.Mining:
-                    return SkillType.Mining;
-                case LockType.Fishing:
-                    return SkillType.Fishing;
-                case LockType.Inscription:
-                    return SkillType.Inscription;
-                case LockType.Archaeology:
-                    return SkillType.Archaeology;
-                case LockType.LumberMill:
-                    return SkillType.Logging;
-                case LockType.ClassicHerbalism:
-                    return SkillType.Herbalism2;
-                case LockType.OutlandHerbalism:
-                    return SkillType.OutlandHerbalism;
-                case LockType.NorthrendHerbalism:
-                    return SkillType.NorthrendHerbalism;
-                case LockType.CataclysmHerbalism:
-                    return SkillType.CataclysmHerbalism;
-                case LockType.PandariaHerbalism:
-                    return SkillType.PandariaHerbalism;
-                case LockType.DraenorHerbalism:
-                    return SkillType.DraenorHerbalism;
-                case LockType.LegionHerbalism:
-                    return SkillType.LegionHerbalism;
-                case LockType.KulTiranHerbalism:
-                    return SkillType.KulTiranHerbalism;
-                case LockType.ClassicMining:
-                    return SkillType.Mining2;
-                case LockType.OutlandMining:
-                    return SkillType.OutlandMining;
-                case LockType.NorthrendMining:
-                    return SkillType.NorthrendMining;
-                case LockType.CataclysmMining:
-                    return SkillType.CataclysmMining;
-                case LockType.PandariaMining:
-                    return SkillType.PandariaMining;
-                case LockType.DraenorMining:
-                    return SkillType.DraenorMining;
-                case LockType.LegionMining:
-                    return SkillType.LegionMining;
-                case LockType.KulTiranMining:
-                    return SkillType.KulTiranMining;
-            }
-            return SkillType.None;
+                LockType.Herbalism      => SkillType.Herbalism,
+                LockType.Mining         => SkillType.Mining,
+                LockType.Fishing        => SkillType.Fishing,
+                _                       => SkillType.None,
+            };
         }
 
         public static bool IsValidLocale(Locale locale)
@@ -398,7 +321,7 @@ namespace Framework.Constants
 
         public static long GetMaskForRace(Race raceId)
         {
-            return raceId < Race.Max && raceBits[(int)raceId] >= 0 && raceBits[(int)raceId] < 64 ? (1 << raceBits[(int)raceId]) : 0;
+            return raceId < Race.Max && RaceBits[(int)raceId] >= 0 && RaceBits[(int)raceId] < 64 ? (1 << RaceBits[(int)raceId]) : 0;
         }
     }
 
@@ -582,13 +505,6 @@ namespace Framework.Constants
         LevelCurrent = -1,
         Classic = 0,
         BurningCrusade = 1,
-        WrathOfTheLichKing = 2,
-        Cataclysm = 3,
-        MistsOfPandaria = 4,
-        WarlordsOfDraenor = 5,
-        Legion = 6,
-        BattleForAzeroth = 7,
-        ShadowLands = 8,
         Max,
 
         MaxAccountExpansions
@@ -728,41 +644,10 @@ namespace Framework.Constants
         Raid25N = 4,
         Raid10HC = 5,
         Raid25HC = 6,
-        LFR = 7,
-        MythicKeystone = 8,
         Raid40 = 9,
-        Scenario3ManHC = 11,
-        Scenario3ManN = 12,
-        NormalRaid = 14,
-        HeroicRaid = 15,
-        MythicRaid = 16,
-        LFRNew = 17,
-        EventRaid = 18,
-        EventDungeon = 19,
-        EventScenario = 20,
-        Mythic = 23,
-        Timewalking = 24,
-        WorldPvPScenario = 25,
-        Scenario5ManN = 26,
-        Scenario20ManN = 27,
-        PvEvPScenario = 29,
-        EventScenario6 = 30,
-        WorldPvPScenario2 = 32,
-        TimewalkingRaid = 33,
-        Pvp = 34,
-        NormalIsland = 38,
-        HeroicIsland = 39,
-        MythicIsland = 40,
-        PvpIsland = 45,
-        NormalWarfront = 147,
-        HeroicWarfront = 149,
-        LFR15thAnniversary = 151,
-
-        VisionsOfNzoth = 152,
-        TeemingIsland = 153
     }
 
-    public enum DifficultyFlags : ushort
+    public enum DifficultyFlags : sbyte
     {
         Heroic = 0x01,
         Default = 0x02,
@@ -771,7 +656,6 @@ namespace Framework.Constants
 
         Legacy = 0x20,
         DisplayHeroic = 0x40, // Controls icon displayed on minimap when inside the instance
-        DisplayMythic = 0x80  // Controls icon displayed on minimap when inside the instance
     }
 
     public enum SpawnMask

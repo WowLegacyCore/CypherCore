@@ -156,7 +156,7 @@ namespace Game
                 VehicleSeatRecord seat = vehicle.GetSeatForPassenger(mover);
                 if (seat != null)
                 {
-                    if (seat.HasFlag(VehicleSeatFlags.AllowTurning))
+                    if (seat.Flags.HasAnyFlag(VehicleSeatFlags.AllowTurning))
                     {
                         if (movementInfo.Pos.GetOrientation() != mover.GetOrientation())
                         {
@@ -725,7 +725,7 @@ namespace Game
                         TaxiPathNodeRecord node = flight.GetPath()[(int)flight.GetCurrentNode()];
                         flight.SkipCurrentNode();
 
-                        GetPlayer().TeleportTo(curDestNode.ContinentID, node.Loc.X, node.Loc.Y, node.Loc.Z, GetPlayer().GetOrientation());
+                        GetPlayer().TeleportTo((uint)curDestNode.ContinentID, node.Loc.X, node.Loc.Y, node.Loc.Z, GetPlayer().GetOrientation());
                     }
                 }
 

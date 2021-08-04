@@ -59,8 +59,8 @@ namespace Game.Entities
 
         void PropagateSpeedChange() => GetMotionMaster().PropagateSpeedChange();
 
-        public float GetSpeed(UnitMoveType mtype) => m_speed_rate[(int)mtype] * (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
-        public void SetSpeed(UnitMoveType mtype, float newValue) => SetSpeedRate(mtype, newValue / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]));
+        public float GetSpeed(UnitMoveType mtype) => m_speed_rate[(int)mtype] * (IsControlledByPlayer() ? SharedConst.PlayerBaseMoveSpeed[(int)mtype] : SharedConst.BaseMoveSpeed[(int)mtype]);
+        public void SetSpeed(UnitMoveType mtype, float newValue) => SetSpeedRate(mtype, newValue / (IsControlledByPlayer() ? SharedConst.PlayerBaseMoveSpeed[(int)mtype] : SharedConst.BaseMoveSpeed[(int)mtype]));
 
         public void SetSpeedRate(UnitMoveType mtype, float rate)
         {
@@ -485,7 +485,7 @@ namespace Game.Entities
                         }
 
                         // Use speed from aura
-                        float max_speed = normalization / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
+                        float max_speed = normalization / (IsControlledByPlayer() ? SharedConst.PlayerBaseMoveSpeed[(int)mtype] : SharedConst.BaseMoveSpeed[(int)mtype]);
                         if (speed > max_speed)
                             speed = max_speed;
                     }
@@ -496,7 +496,7 @@ namespace Game.Entities
                         int minSpeedMod1 = GetMaxPositiveAuraModifier(AuraType.ModMinimumSpeedRate);
                         if (minSpeedMod1 != 0)
                         {
-                            float minSpeed = minSpeedMod1 / (IsControlledByPlayer() ? SharedConst.playerBaseMoveSpeed[(int)mtype] : SharedConst.baseMoveSpeed[(int)mtype]);
+                            float minSpeed = minSpeedMod1 / (IsControlledByPlayer() ? SharedConst.PlayerBaseMoveSpeed[(int)mtype] : SharedConst.BaseMoveSpeed[(int)mtype]);
                             if (speed < minSpeed)
                                 speed = minSpeed;
                         }
@@ -646,110 +646,6 @@ namespace Game.Entities
             }
 
             return true;
-        }
-
-        public MountCapabilityRecord GetMountCapability(uint mountType)
-        {
-            if (mountType == 0)
-                return null;
-
-            var capabilities = Global.DB2Mgr.GetMountCapabilities(mountType);
-            if (capabilities == null)
-                return null;
-
-            uint areaId = GetAreaId();
-            uint ridingSkill = 5000;
-            AreaMountFlags mountFlags = 0;
-            bool isSubmerged;
-            bool isInWater;
-
-            if (IsTypeId(TypeId.Player))
-                ridingSkill = ToPlayer().GetSkillValue(SkillType.Riding);
-
-            if (HasAuraType(AuraType.MountRestrictions))
-            {
-                foreach (AuraEffect auraEffect in GetAuraEffectsByType(AuraType.MountRestrictions))
-                    mountFlags |= (AreaMountFlags)auraEffect.GetMiscValue();
-            }
-            else
-            {
-                AreaTableRecord areaTable = CliDB.AreaTableStorage.LookupByKey(areaId);
-                if (areaTable != null)
-                    mountFlags = (AreaMountFlags)areaTable.MountFlags;
-            }
-
-            ZLiquidStatus liquidStatus = GetMap().GetLiquidStatus(GetPhaseShift(), GetPositionX(), GetPositionY(), GetPositionZ(), LiquidHeaderTypeFlags.AllLiquids, out _);
-            isSubmerged = liquidStatus.HasAnyFlag(ZLiquidStatus.UnderWater) || HasUnitMovementFlag(MovementFlag.Swimming);
-            isInWater = liquidStatus.HasAnyFlag(ZLiquidStatus.InWater | ZLiquidStatus.UnderWater);
-
-            foreach (var mountTypeXCapability in capabilities)
-            {
-                MountCapabilityRecord mountCapability = CliDB.MountCapabilityStorage.LookupByKey(mountTypeXCapability.MountCapabilityID);
-                if (mountCapability == null)
-                    continue;
-
-                if (ridingSkill < mountCapability.ReqRidingSkill)
-                    continue;
-
-                if (!mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.IgnoreRestrictions))
-                {
-                    if (mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Ground) && !mountFlags.HasAnyFlag(AreaMountFlags.GroundAllowed))
-                        continue;
-                    if (mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Flying) && !mountFlags.HasAnyFlag(AreaMountFlags.FlyingAllowed))
-                        continue;
-                    if (mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Float) && !mountFlags.HasAnyFlag(AreaMountFlags.FloatAllowed))
-                        continue;
-                    if (mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Underwater) && !mountFlags.HasAnyFlag(AreaMountFlags.UnderwaterAllowed))
-                        continue;
-                }
-
-                if (!isSubmerged)
-                {
-                    if (!isInWater)
-                    {
-                        // player is completely out of water
-                        if (!mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Ground))
-                            continue;
-                    }
-                    else if (!mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Underwater))
-                        continue;
-                }
-                else if (isInWater)
-                {
-                    if (!mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Underwater))
-                        continue;
-                }
-                else if (!mountCapability.Flags.HasAnyFlag(MountCapabilityFlags.Float))
-                    continue;
-
-                if (mountCapability.ReqMapID != -1 &&
-                    GetMapId() != mountCapability.ReqMapID &&
-                    GetMap().GetEntry().CosmeticParentMapID != mountCapability.ReqMapID &&
-                    GetMap().GetEntry().ParentMapID != mountCapability.ReqMapID)
-                    continue;
-
-                if (mountCapability.ReqAreaID != 0 && !Global.DB2Mgr.IsInArea(areaId, mountCapability.ReqAreaID))
-                    continue;
-
-                if (mountCapability.ReqSpellAuraID != 0 && !HasAura(mountCapability.ReqSpellAuraID))
-                    continue;
-
-                if (mountCapability.ReqSpellKnownID != 0 && !HasSpell(mountCapability.ReqSpellKnownID))
-                    continue;
-
-                Player thisPlayer = ToPlayer();
-                if (thisPlayer != null)
-                {
-                    PlayerConditionRecord playerCondition = CliDB.PlayerConditionStorage.LookupByKey(mountCapability.PlayerConditionID);
-                    if (playerCondition != null)
-                        if (!ConditionManager.IsPlayerMeetingCondition(thisPlayer, playerCondition))
-                            continue;
-                }
-
-                return mountCapability;
-            }
-
-            return null;
         }
 
         public override void ProcessPositionDataChanged(PositionFullTerrainStatus data)

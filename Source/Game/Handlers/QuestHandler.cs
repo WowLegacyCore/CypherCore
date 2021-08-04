@@ -264,41 +264,6 @@ namespace Game
                             }
                         }
 
-                        if (!itemValid && quest.PackageID != 0)
-                        {
-                            var questPackageItems = Global.DB2Mgr.GetQuestPackageItems(quest.PackageID);
-                            if (questPackageItems != null)
-                            {
-                                foreach (var questPackageItem in questPackageItems)
-                                {
-                                    if (questPackageItem.ItemID != packet.Choice.Item.ItemID)
-                                        continue;
-
-                                    if (_player.CanSelectQuestPackageItem(questPackageItem))
-                                    {
-                                        itemValid = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!itemValid)
-                            {
-                                var questPackageItems1 = Global.DB2Mgr.GetQuestPackageItemsFallback(quest.PackageID);
-                                if (questPackageItems1 != null)
-                                {
-                                    foreach (var questPackageItem in questPackageItems1)
-                                    {
-                                        if (questPackageItem.ItemID != packet.Choice.Item.ItemID)
-                                            continue;
-
-                                        itemValid = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
                         if (!itemValid)
                         {
                             Log.outError(LogFilter.Network, "Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player {0} ({1}) tried to get reward item (Item Entry: {2}) wich is not a reward for quest {3} (possible packet-hacking detected)", GetPlayer().GetName(), GetPlayer().GetGUID().ToString(), packet.Choice.Item.ItemID, packet.QuestID);
@@ -720,9 +685,6 @@ namespace Game
                 var reward = playerChoiceResponse.Reward.Value;
                 if (reward.TitleId != 0)
                     _player.SetTitle(CliDB.CharTitlesStorage.LookupByKey(reward.TitleId), false);
-
-                if (reward.PackageId != 0)
-                    _player.RewardQuestPackage((uint)reward.PackageId);
 
                 if (reward.SkillLineId != 0 && _player.HasSkill((SkillType)reward.SkillLineId))
                     _player.UpdateSkillPro((uint)reward.SkillLineId, 1000, reward.SkillPointCount);

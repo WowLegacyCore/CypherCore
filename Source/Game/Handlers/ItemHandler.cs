@@ -937,8 +937,8 @@ namespace Game
 
                     itemTarget.SetGem(i, gemData[i], gemScalingLevel);
 
-                    if (gemProperties[i] != null && gemProperties[i].EnchantId != 0)
-                        itemTarget.SetEnchantment(EnchantmentSlot.Sock1 + i, gemProperties[i].EnchantId, 0, 0, GetPlayer().GetGUID());
+                    if (gemProperties[i] != null && gemProperties[i].EnchantID != 0)
+                        itemTarget.SetEnchantment(EnchantmentSlot.Sock1 + i, gemProperties[i].EnchantID, 0, 0, GetPlayer().GetGUID());
 
                     uint gemCount = 1;
                     GetPlayer().DestroyItemCount(gems[i], ref gemCount, true);

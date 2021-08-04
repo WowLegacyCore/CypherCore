@@ -238,8 +238,8 @@ namespace Game
                         if (entranceMap != null)
                         {
                             mapID = (uint)corpseMapEntry.CorpseMapID;
-                            x = corpseMapEntry.Corpse.X;
-                            y = corpseMapEntry.Corpse.Y;
+                            // x = corpseMapEntry.Corpse.X;
+                            // y = corpseMapEntry.Corpse.Y;
                             z = entranceMap.GetHeight(player.GetPhaseShift(), x, y, MapConst.MaxHeight);
                         }
                     }

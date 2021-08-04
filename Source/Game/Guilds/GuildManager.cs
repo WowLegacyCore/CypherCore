@@ -445,24 +445,6 @@ namespace Game
                     continue;
                 }
 
-                PreparedStatement stmt = DB.World.GetPreparedStatement(WorldStatements.SEL_GUILD_REWARDS_REQ_ACHIEVEMENTS);
-                stmt.AddValue(0, reward.ItemID);
-                SQLResult reqAchievementResult = DB.World.Query(stmt);
-                if (!reqAchievementResult.IsEmpty())
-                {
-                    do
-                    {
-                        uint requiredAchievementId = reqAchievementResult.Read<uint>(0);
-                        if (!CliDB.AchievementStorage.ContainsKey(requiredAchievementId))
-                        {
-                            Log.outError(LogFilter.ServerLoading, "Guild rewards constains not existing achievement entry {0}", requiredAchievementId);
-                            continue;
-                        }
-
-                        reward.AchievementsRequired.Add(requiredAchievementId);
-                    } while (reqAchievementResult.NextRow());
-                }
-
                 guildRewards.Add(reward);
                 ++count;
             } while (result.NextRow());
@@ -494,6 +476,5 @@ namespace Game
         public byte MinGuildRep;
         public ulong RaceMask;
         public ulong Cost;
-        public List<uint> AchievementsRequired = new();
     }
 }

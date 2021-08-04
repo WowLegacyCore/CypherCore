@@ -477,10 +477,6 @@ namespace Game.Entities
         public ulong CountPctFromMaxHealth(int pct) => MathFunctions.CalculatePct(GetMaxHealth(), pct);
         public ulong CountPctFromCurHealth(int pct) => MathFunctions.CalculatePct(GetHealth(), pct);
 
-        public virtual float GetHealthMultiplierForTarget(WorldObject target) => 1.0f;
-        public virtual float GetDamageMultiplierForTarget(WorldObject target) => 1.0f;
-        public virtual float GetArmorMultiplierForTarget(WorldObject target) => 1.0f;
-
         //Powers
         public PowerType GetPowerType() => (PowerType)GetUpdateField<uint>(UnitFields.DisplayPower);
         public void SetPowerType(PowerType powerType)

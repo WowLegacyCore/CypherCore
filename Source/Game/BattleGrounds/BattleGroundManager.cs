@@ -423,8 +423,8 @@ namespace Game.BattleGrounds
 
                 _battlegroundTemplates[bgTypeId] = bgTemplate;
 
-                if (bgTemplate.BattlemasterEntry.MapId[1] == -1) // in this case we have only one mapId
-                    _battlegroundMapTemplates[(uint)bgTemplate.BattlemasterEntry.MapId[0]] = _battlegroundTemplates[bgTypeId];
+                if (bgTemplate.BattlemasterEntry.MapID[1] == -1) // in this case we have only one mapId
+                    _battlegroundMapTemplates[(uint)bgTemplate.BattlemasterEntry.MapID[0]] = _battlegroundTemplates[bgTypeId];
 
                 ++count;
             }
@@ -702,7 +702,7 @@ namespace Game.BattleGrounds
             {
                 Dictionary<BattlegroundTypeId, float> selectionWeights = new();
 
-                foreach (var mapId in bgTemplate.BattlemasterEntry.MapId)
+                foreach (var mapId in bgTemplate.BattlemasterEntry.MapID)
                 {
                     if (mapId == -1)
                         break;
@@ -851,24 +851,10 @@ namespace Game.BattleGrounds
 
         public bool IsArena() { return BattlemasterEntry.InstanceType == (uint)MapTypes.Arena; }
 
-        public ushort GetMinPlayersPerTeam()
-        {
-            return BattlemasterEntry.MinPlayers;
-        }
+        public ushort GetMinPlayersPerTeam() => (ushort)BattlemasterEntry.MinPlayers;
+        public ushort GetMaxPlayersPerTeam() => (ushort)BattlemasterEntry.MaxPlayers;
 
-        public ushort GetMaxPlayersPerTeam()
-        {
-            return BattlemasterEntry.MaxPlayers;
-        }
-
-        public byte GetMinLevel()
-        {
-            return BattlemasterEntry.MinLevel;
-        }
-
-        public byte GetMaxLevel()
-        {
-            return BattlemasterEntry.MaxLevel;
-        }
+        public byte GetMinLevel() => BattlemasterEntry.MinLevel;
+        public byte GetMaxLevel() => BattlemasterEntry.MaxLevel;
     }
 }

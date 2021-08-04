@@ -2946,7 +2946,7 @@ namespace Scripts.Spells.Items
                 target.HandleEmoteCommand(Emote.OneshotTrain);
                 EmotesTextSoundRecord soundEntry = Global.DB2Mgr.GetTextSoundEmoteFor((uint)TextEmotes.Train, target.GetRace(), target.GetGender(), target.GetClass());
                 if (soundEntry != null)
-                    target.PlayDistanceSound(soundEntry.SoundId);
+                    target.PlayDistanceSound(soundEntry.SoundID);
             }
         }
 

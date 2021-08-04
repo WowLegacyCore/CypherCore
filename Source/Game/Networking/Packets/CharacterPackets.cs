@@ -145,10 +145,6 @@ namespace Game.Networking.Packets
                 ListPosition = fields.Read<byte>(19);
                 LastPlayedTime = fields.Read<long>(20);
 
-                var spec = Global.DB2Mgr.GetChrSpecializationByIndex(ClassId, fields.Read<byte>(21));
-                if (spec != null)
-                    SpecID = (ushort)spec.Id;
-
                 LastLoginVersion = fields.Read<uint>(22);
 
                 for (byte slot = 0; slot < InventorySlots.BagEnd; ++slot)
@@ -243,7 +239,7 @@ namespace Game.Networking.Packets
             public bool FirstLogin;
             public byte unkWod61x;
             public long LastPlayedTime;
-            public ushort SpecID;
+            public ushort SpecID = 0;
             public uint Unknown703;
             public uint LastLoginVersion;
             public uint OverrideSelectScreenFileDataID;

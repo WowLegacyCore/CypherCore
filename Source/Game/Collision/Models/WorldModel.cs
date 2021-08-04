@@ -339,10 +339,10 @@ namespace Game.Collision
             groupTree.IntersectPoint(p, callback);
             if (callback.hit != null)
             {
-                info.rootId = (int)RootWMOID;
-                info.groupId = (int)callback.hit.GetWmoID();
-                info.flags = callback.hit.GetMogpFlags();
-                info.result = true;
+                info.RootId = (int)RootWMOID;
+                info.GroupId = (int)callback.hit.GetWmoID();
+                info.Flags = callback.hit.GetMogpFlags();
+                info.Result = true;
                 dist = callback.zDist;
                 return true;
             }
@@ -359,8 +359,8 @@ namespace Game.Collision
             groupTree.IntersectPoint(p, callback);
             if (callback.hit != null)
             {
-                info.rootId = (int)RootWMOID;
-                info.hitModel = callback.hit;
+                info.RootId = (int)RootWMOID;
+                info.HitModel = callback.hit;
                 dist = callback.zDist;
                 return true;
             }

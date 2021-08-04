@@ -319,20 +319,6 @@ namespace Game.Entities
 
             Log.outDebug(LogFilter.Pet, "New Pet has guid {0}", GetGUID().ToString());
 
-            ushort specId = result.Read<ushort>(16);
-            ChrSpecializationRecord petSpec = CliDB.ChrSpecializationStorage.LookupByKey(specId);
-            if (petSpec != null)
-                specId = (ushort)Global.DB2Mgr.GetChrSpecializationByIndex(owner.HasAuraType(AuraType.OverridePetSpecs) ? Class.Max : 0, petSpec.OrderIndex).Id;
-
-            SetSpecialization(specId);
-
-            // The SetSpecialization function will run these functions if the pet's spec is not 0
-            if (GetSpecialization() == 0)
-            {
-                CleanupActionBar();                                     // remove unknown spells from action bar after load
-                owner.PetSpellInitialize();
-            }
-
             SetGroupUpdateFlag(GroupUpdatePetFlags.Full);
 
             if (GetPetType() == PetType.Hunter)
@@ -456,7 +442,6 @@ namespace Game.Entities
                 stmt.AddValue(13, GameTime.GetGameTime());
                 stmt.AddValue(14, GetUpdateField<uint>(UnitFields.CreatedBySpell));
                 stmt.AddValue(15, (byte)GetPetType());
-                stmt.AddValue(16, m_petSpecialization);
                 trans.Append(stmt);
 
                 DB.Characters.CommitTransaction(trans);
@@ -1470,8 +1455,6 @@ namespace Game.Entities
         public void SetPetExperience(uint xp) => SetUpdateField<uint>(UnitFields.PetExperience, xp);
         public void SetPetNextLevelExperience(uint xp) => SetUpdateField<uint>(UnitFields.PetNextLevelExperience, xp);
 
-        public ushort GetSpecialization() => m_petSpecialization;
-
         public GroupUpdatePetFlags GetGroupUpdateFlag() => m_groupUpdateMask;
         public void SetGroupUpdateFlag(GroupUpdatePetFlags flag)
         {
@@ -1486,84 +1469,6 @@ namespace Game.Entities
             m_groupUpdateMask = GroupUpdatePetFlags.None;
             if (GetOwner().GetGroup())
                 GetOwner().RemoveGroupUpdateFlag(GroupUpdateFlags.Pet);
-        }
-
-        void LearnSpecializationSpells()
-        {
-            List<uint> learnedSpells = new();
-
-            List<SpecializationSpellsRecord> specSpells = Global.DB2Mgr.GetSpecializationSpells(m_petSpecialization);
-            if (specSpells != null)
-            {
-                foreach (var specSpell in specSpells)
-                {
-                    SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(specSpell.SpellID, Difficulty.None);
-                    if (spellInfo == null || spellInfo.SpellLevel > GetLevel())
-                        continue;
-
-                    learnedSpells.Add(specSpell.SpellID);
-                }
-            }
-
-            LearnSpells(learnedSpells);
-        }
-
-        void RemoveSpecializationSpells(bool clearActionBar)
-        {
-            List<uint> unlearnedSpells = new();
-
-            for (uint i = 0; i < PlayerConst.MaxSpecializations; ++i)
-            {
-                ChrSpecializationRecord specialization = Global.DB2Mgr.GetChrSpecializationByIndex(0, i);
-                if (specialization != null)
-                {
-                    List<SpecializationSpellsRecord> specSpells = Global.DB2Mgr.GetSpecializationSpells(specialization.Id);
-                    if (specSpells != null)
-                    {
-                        foreach (var specSpell in specSpells)
-                            unlearnedSpells.Add(specSpell.SpellID);
-                    }
-                }
-
-                ChrSpecializationRecord specialization1 = Global.DB2Mgr.GetChrSpecializationByIndex(Class.Max, i);
-                if (specialization1 != null)
-                {
-                    List<SpecializationSpellsRecord> specSpells = Global.DB2Mgr.GetSpecializationSpells(specialization1.Id);
-                    if (specSpells != null)
-                    {
-                        foreach (var specSpell in specSpells)
-                            unlearnedSpells.Add(specSpell.SpellID);
-                    }
-                }
-            }
-
-            UnlearnSpells(unlearnedSpells, true, clearActionBar);
-        }
-
-        public void SetSpecialization(uint spec)
-        {
-            if (m_petSpecialization == spec)
-                return;
-
-            // remove all the old spec's specalization spells, set the new spec, then add the new spec's spells
-            // clearActionBars is false because we'll be updating the pet actionbar later so we don't have to do it now
-            RemoveSpecializationSpells(false);
-            if (!CliDB.ChrSpecializationStorage.ContainsKey(spec))
-            {
-                m_petSpecialization = 0;
-                return;
-            }
-
-            m_petSpecialization = (ushort)spec;
-            LearnSpecializationSpells();
-
-            // resend SMSG_PET_SPELLS_MESSAGE to remove old specialization spells from the pet action bar
-            CleanupActionBar();
-            GetOwner().PetSpellInitialize();
-
-            SetPetSpecialization setPetSpecialization = new();
-            setPetSpecialization.SpecID = m_petSpecialization;
-            GetOwner().SendPacket(setPetSpecialization);
         }
 
         string GenerateActionBarData()
@@ -1591,7 +1496,6 @@ namespace Game.Entities
         GroupUpdatePetFlags m_groupUpdateMask;
 
         DeclinedName _declinedname;
-        ushort m_petSpecialization;
     }
     public class PetSpell
     {

@@ -177,15 +177,15 @@ namespace Game.Maps
                     case LoadResult.Success:
                         break;
                     case LoadResult.FileNotFound:
-                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "vmaps/" + name}' does not exist");
-                        Log.outError(LogFilter.Maps, $"Please place VMAP files (*.vmtree and *.vmtile) in the vmap directory ({Global.WorldMgr.GetDataPath() + "vmaps/"}), or correct the DataDir setting in your worldserver.conf file.");
+                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "/vmaps/" + name}' does not exist");
+                        Log.outError(LogFilter.Maps, $"Please place VMAP files (*.vmtree and *.vmtile) in the vmap directory ({Global.WorldMgr.GetDataPath() + "/vmaps/"}), or correct the DataDir setting in your worldserver.conf file.");
                         return false;
                     case LoadResult.VersionMismatch:
-                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "vmaps/" + name}e' couldn't b loaded");
+                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "/vmaps/" + name}e' couldn't be loaded");
                         Log.outError(LogFilter.Maps, "This is because the version of the VMap file and the version of this module are different, please re-extract the maps with the tools compiled with this module.");
                         return false;
                     case LoadResult.ReadFromFileFailed:
-                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "vmaps/" + name}' couldn't be loaded");
+                        Log.outError(LogFilter.Maps, $"VMap file '{Global.WorldMgr.GetDataPath() + "/vmaps/" + name}' couldn't be loaded");
                         Log.outError(LogFilter.Maps, "This is because VMAP files are corrupted, please re-extract the maps with the tools compiled with this module.");
                         return false;
                 }
@@ -3565,7 +3565,7 @@ namespace Game.Maps
 
         public uint GetId() => i_mapRecord.Id;
 
-        public bool Instanceable() => i_mapRecord != null && i_mapRecord.Instanceable();
+        public bool Instanceable() => i_mapRecord != null && i_mapRecord.IsInstanceable();
 
         public bool IsDungeon() => i_mapRecord != null && i_mapRecord.IsDungeon();
 
@@ -3591,7 +3591,7 @@ namespace Game.Maps
 
         public bool IsBattlegroundOrArena() => i_mapRecord != null && i_mapRecord.IsBattlegroundOrArena();
 
-        private bool GetEntrancePos(out uint mapid, out float x, out float y)
+        private bool GetEntrancePos(out int mapid, out float x, out float y)
         {
             mapid = 0;
             x = 0;

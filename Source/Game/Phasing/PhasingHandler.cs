@@ -56,7 +56,7 @@ namespace Game
         {
             AddPhase(obj, phaseId, obj.GetGUID(), updateVisibility);
         }
-        
+
         static void AddPhase(WorldObject obj, uint phaseId, ObjectGuid personalGuid, bool updateVisibility)
         {
             bool changed = obj.GetPhaseShift().AddPhase(phaseId, GetPhaseFlags(phaseId), null);
@@ -100,7 +100,7 @@ namespace Game
         {
             AddPhaseGroup(obj, phaseGroupId, obj.GetGUID(), updateVisibility);
         }
-        
+
         static void AddPhaseGroup(WorldObject obj, uint phaseGroupId, ObjectGuid personalGuid, bool updateVisibility)
         {
             var phasesInGroup = Global.DB2Mgr.GetPhasesForGroup(phaseGroupId);

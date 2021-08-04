@@ -38,7 +38,6 @@ namespace Game.Groups
             m_leaderName = "";
             m_groupFlags = GroupFlags.None;
             m_dungeonDifficulty = Difficulty.Normal;
-            m_raidDifficulty = Difficulty.NormalRaid;
             m_legacyRaidDifficulty = Difficulty.Raid10N;
             m_lootMethod = LootMethod.FreeForAll;
             m_lootThreshold = ItemQuality.Uncommon;
@@ -69,7 +68,6 @@ namespace Game.Groups
             m_looterGuid = leaderGuid;
 
             m_dungeonDifficulty = Difficulty.Normal;
-            m_raidDifficulty = Difficulty.NormalRaid;
             m_legacyRaidDifficulty = Difficulty.Raid10N;
 
             if (!IsBGGroup() && !IsBFGroup())
@@ -2683,7 +2681,7 @@ namespace Game.Groups
                     return null;
 
                 ItemTemplate itemTemplate = Global.ObjectMgr.GetItemTemplate(itemid);
-                uint itemLevel = Item.GetItemLevel(itemTemplate, bonusData, player.GetLevel(), 0, 0, 0, 0, false, 0);
+                uint itemLevel = Item.GetItemLevel(itemTemplate, bonusData, player.GetLevel(), 0, 0, 0, 0);
                 return Item.GetDisenchantLoot(itemTemplate, (uint)bonusData.Quality, itemLevel);
             }
 

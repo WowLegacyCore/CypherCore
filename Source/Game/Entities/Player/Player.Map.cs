@@ -68,15 +68,15 @@ namespace Game.Entities
         }
         public static Difficulty CheckLoadedRaidDifficultyID(Difficulty difficulty)
         {
-            DifficultyRecord difficultyEntry = CliDB.DifficultyStorage.LookupByKey(difficulty);
-            if (difficultyEntry == null)
-                return Difficulty.NormalRaid;
+            //DifficultyRecord difficultyEntry = CliDB.DifficultyStorage.LookupByKey(difficulty);
+            //if (difficultyEntry == null)
+            //    return Difficulty.NormalRaid;
 
-            if (difficultyEntry.InstanceType != MapTypes.Raid)
-                return Difficulty.NormalRaid;
+            //if (difficultyEntry.InstanceType != MapTypes.Raid)
+            //    return Difficulty.NormalRaid;
 
-            if (!difficultyEntry.Flags.HasAnyFlag(DifficultyFlags.CanSelect) || difficultyEntry.Flags.HasAnyFlag(DifficultyFlags.Legacy))
-                return Difficulty.NormalRaid;
+            //if (!difficultyEntry.Flags.HasAnyFlag(DifficultyFlags.CanSelect) || difficultyEntry.Flags.HasAnyFlag(DifficultyFlags.Legacy))
+            //    return Difficulty.NormalRaid;
 
             return difficulty;
         }

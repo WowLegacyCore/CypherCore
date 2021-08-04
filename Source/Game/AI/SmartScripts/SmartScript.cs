@@ -2333,28 +2333,6 @@ namespace Game.AI
                     }
                     break;
                 }
-                case SmartActions.ScenePlay:
-                {
-                    foreach (var target in targets)
-                    {
-                        Player playerTarget = target.ToPlayer();
-                        if (playerTarget)
-                            playerTarget.GetSceneMgr().PlayScene(e.Action.scene.sceneId);
-                    }
-
-                    break;
-                }
-                case SmartActions.SceneCancel:
-                {
-                    foreach (var target in targets)
-                    {
-                        Player playerTarget = target.ToPlayer();
-                        if (playerTarget)
-                            playerTarget.GetSceneMgr().CancelSceneBySceneId(e.Action.scene.sceneId);
-                    }
-
-                    break;
-                }
                 case SmartActions.SetMovementSpeed:
                 {
                     uint speedInteger = e.Action.movementSpeed.speedInteger;

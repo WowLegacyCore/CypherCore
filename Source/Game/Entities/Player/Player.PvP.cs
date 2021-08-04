@@ -228,31 +228,6 @@ namespace Game.Entities
             AddHonorXP(honor);
         }
 
-        void RewardPlayerWithRewardPack(uint rewardPackID)
-        {
-            RewardPlayerWithRewardPack(CliDB.RewardPackStorage.LookupByKey(rewardPackID));
-        }
-
-        void RewardPlayerWithRewardPack(RewardPackRecord rewardPackEntry)
-        {
-            if (rewardPackEntry == null)
-                return;
-
-            CharTitlesRecord charTitlesEntry = CliDB.CharTitlesStorage.LookupByKey(rewardPackEntry.CharTitleID);
-            if (charTitlesEntry != null)
-                SetTitle(charTitlesEntry);
-
-            ModifyMoney(rewardPackEntry.Money);
-
-            var rewardCurrencyTypes = Global.DB2Mgr.GetRewardPackCurrencyTypesByRewardID(rewardPackEntry.Id);
-            foreach (RewardPackXCurrencyTypeRecord currency in rewardCurrencyTypes)
-                ModifyCurrency((CurrencyTypes)currency.CurrencyTypeID, currency.Quantity);
-
-            var rewardPackXItems = Global.DB2Mgr.GetRewardPackItemsByRewardID(rewardPackEntry.Id);
-            foreach (RewardPackXItemRecord rewardPackXItem in rewardPackXItems)
-                AddItem(rewardPackXItem.ItemID, rewardPackXItem.ItemQuantity);
-        }
-
         public void AddHonorXP(uint xp)
         {
             uint currentHonorXP = GetUpdateField<uint>(ActivePlayerFields.Honor);
@@ -303,13 +278,13 @@ namespace Game.Entities
 
         void ResetPvpTalents()
         {
-            foreach (var talentInfo in CliDB.PvpTalentStorage.Values)
-            {
-                if (talentInfo == null)
-                    continue;
+            //foreach (var talentInfo in CliDB.PvpTalentStorage.Values)
+            //{
+            //    if (talentInfo == null)
+            //        continue;
 
-                RemovePvpTalent(talentInfo);
-            }
+            //    RemovePvpTalent(talentInfo);
+            //}
 
             SQLTransaction trans = new();
             _SaveTalents(trans);
@@ -319,54 +294,51 @@ namespace Game.Entities
 
         public TalentLearnResult LearnPvpTalent(uint talentID, byte slot, ref uint spellOnCooldown)
         {
-            if (slot >= PlayerConst.MaxPvpTalentSlots)
-                return TalentLearnResult.FailedUnknown;
+            //if (slot >= PlayerConst.MaxPvpTalentSlots)
+            //    return TalentLearnResult.FailedUnknown;
 
-            if (IsInCombat())
-                return TalentLearnResult.FailedAffectingCombat;
+            //if (IsInCombat())
+            //    return TalentLearnResult.FailedAffectingCombat;
 
-            if (IsDead())
-                return TalentLearnResult.FailedCantDoThatRightNow;
+            //if (IsDead())
+            //    return TalentLearnResult.FailedCantDoThatRightNow;
 
-            PvpTalentRecord talentInfo = CliDB.PvpTalentStorage.LookupByKey(talentID);
-            if (talentInfo == null)
-                return TalentLearnResult.FailedUnknown;
+            //PvpTalentRecord talentInfo = CliDB.PvpTalentStorage.LookupByKey(talentID);
+            //if (talentInfo == null)
+            //    return TalentLearnResult.FailedUnknown;
 
-            if (talentInfo.SpecID != GetPrimarySpecialization())
-                return TalentLearnResult.FailedUnknown;
+            //if (talentInfo.SpecID != GetPrimarySpecialization())
+            //    return TalentLearnResult.FailedUnknown;
 
-            if (talentInfo.LevelRequired > GetLevel())
-                return TalentLearnResult.FailedUnknown;
+            //if (talentInfo.LevelRequired > GetLevel())
+            //    return TalentLearnResult.FailedUnknown;
 
-            if (Global.DB2Mgr.GetRequiredLevelForPvpTalentSlot(slot, GetClass()) > GetLevel())
-                return TalentLearnResult.FailedUnknown;
+            //PvpTalentCategoryRecord talentCategory = CliDB.PvpTalentCategoryStorage.LookupByKey(talentInfo.PvpTalentCategoryID);
+            //if (talentCategory != null)
+            //    if (!Convert.ToBoolean(talentCategory.TalentSlotMask & (1 << slot)))
+            //        return TalentLearnResult.FailedUnknown;
 
-            PvpTalentCategoryRecord talentCategory = CliDB.PvpTalentCategoryStorage.LookupByKey(talentInfo.PvpTalentCategoryID);
-            if (talentCategory != null)
-                if (!Convert.ToBoolean(talentCategory.TalentSlotMask & (1 << slot)))
-                    return TalentLearnResult.FailedUnknown;
+            //// Check if player doesn't have this talent in other slot
+            //if (HasPvpTalent(talentID, GetActiveTalentGroup()))
+            //    return TalentLearnResult.FailedUnknown;
 
-            // Check if player doesn't have this talent in other slot
-            if (HasPvpTalent(talentID, GetActiveTalentGroup()))
-                return TalentLearnResult.FailedUnknown;
+            //PvpTalentRecord talent = CliDB.PvpTalentStorage.LookupByKey(GetPvpTalentMap(GetActiveTalentGroup())[slot]);
+            //if (talent != null)
+            //{
+            //    if (!HasPlayerFlag(PlayerFlags.Resting) && !HasUnitFlag2(UnitFlags2.AllowChangingTalents))
+            //        return TalentLearnResult.FailedRestArea;
 
-            PvpTalentRecord talent = CliDB.PvpTalentStorage.LookupByKey(GetPvpTalentMap(GetActiveTalentGroup())[slot]);
-            if (talent != null)
-            {
-                if (!HasPlayerFlag(PlayerFlags.Resting) && !HasUnitFlag2(UnitFlags2.AllowChangingTalents))
-                    return TalentLearnResult.FailedRestArea;
+            //    if (GetSpellHistory().HasCooldown(talent.SpellID))
+            //    {
+            //        spellOnCooldown = talent.SpellID;
+            //        return TalentLearnResult.FailedCantRemoveTalent;
+            //    }
 
-                if (GetSpellHistory().HasCooldown(talent.SpellID))
-                {
-                    spellOnCooldown = talent.SpellID;
-                    return TalentLearnResult.FailedCantRemoveTalent;
-                }
+            //    RemovePvpTalent(talent);
+            //}
 
-                RemovePvpTalent(talent);
-            }
-
-            if (!AddPvpTalent(talentInfo, GetActiveTalentGroup(), slot))
-                return TalentLearnResult.FailedUnknown;
+            //if (!AddPvpTalent(talentInfo, GetActiveTalentGroup(), slot))
+            //    return TalentLearnResult.FailedUnknown;
 
             return TalentLearnResult.LearnOk;
         }
@@ -422,18 +394,18 @@ namespace Game.Entities
 
         public void TogglePvpTalents(bool enable)
         {
-            var pvpTalents = GetPvpTalentMap(GetActiveTalentGroup());
-            foreach (uint pvpTalentId in pvpTalents)
-            {
-                PvpTalentRecord pvpTalentInfo = CliDB.PvpTalentStorage.LookupByKey(pvpTalentId);
-                if (pvpTalentInfo != null)
-                {
-                    if (enable)
-                        LearnSpell(pvpTalentInfo.SpellID, false);
-                    else
-                        RemoveSpell(pvpTalentInfo.SpellID, true);
-                }
-            }
+            //var pvpTalents = GetPvpTalentMap(GetActiveTalentGroup());
+            //foreach (uint pvpTalentId in pvpTalents)
+            //{
+            //    PvpTalentRecord pvpTalentInfo = CliDB.PvpTalentStorage.LookupByKey(pvpTalentId);
+            //    if (pvpTalentInfo != null)
+            //    {
+            //        if (enable)
+            //            LearnSpell(pvpTalentInfo.SpellID, false);
+            //        else
+            //            RemoveSpell(pvpTalentInfo.SpellID, true);
+            //    }
+            //}
         }
 
         bool HasPvpTalent(uint talentID, byte activeTalentGroup) => GetPvpTalentMap(activeTalentGroup).Contains(talentID);

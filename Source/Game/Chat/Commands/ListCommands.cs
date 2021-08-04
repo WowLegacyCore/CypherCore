@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -625,29 +625,6 @@ namespace Game.Chat.Commands
                 string respawnTime = ri.respawnTime > GameTime.GetGameTime() ? Time.secsToTimeString((ulong)(ri.respawnTime - GameTime.GetGameTime()), true) : stringOverdue;
                 handler.SendSysMessage($"{ri.spawnId} | {ri.entry} | [{gridX},{gridY}] | {GetZoneName(ri.zoneId, handler.GetSessionDbcLocale())} ({ri.zoneId}) | {(map.IsSpawnGroupActive(data.spawnGroupData.groupId) ? respawnTime : "inactive")}");
             }
-            return true;
-        }
-
-        [Command("scenes", RBACPermissions.CommandListScenes)]
-        static bool HandleListScenesCommand(StringArguments args, CommandHandler handler)
-        {
-            Player target = handler.GetSelectedPlayer();
-            if (!target)
-                target = handler.GetSession().GetPlayer();
-
-            if (!target)
-            {
-                handler.SendSysMessage(CypherStrings.PlayerNotFound);
-                return false;
-            }
-
-            var instanceByPackageMap = target.GetSceneMgr().GetSceneTemplateByInstanceMap();
-
-            handler.SendSysMessage(CypherStrings.DebugSceneObjectList, target.GetSceneMgr().GetActiveSceneCount());
-
-            foreach (var instanceByPackage in instanceByPackageMap)
-                handler.SendSysMessage(CypherStrings.DebugSceneObjectDetail, instanceByPackage.Value.ScenePackageId, instanceByPackage.Key);
-
             return true;
         }
 

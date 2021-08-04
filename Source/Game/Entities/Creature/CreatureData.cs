@@ -167,10 +167,7 @@ namespace Game.Entities
             };
         }
 
-        public int GetHealthScalingExpansion()
-        {
-            return HealthScalingExpansion == (int)Expansion.LevelCurrent ? (int)Expansion.WarlordsOfDraenor : HealthScalingExpansion;
-        }
+        public int GetHealthScalingExpansion() => HealthScalingExpansion;
 
         public SkillType GetRequiredLootSkill()
         {
@@ -205,25 +202,14 @@ namespace Game.Entities
                 case Difficulty.Normal:
                 case Difficulty.Raid10N:
                 case Difficulty.Raid40:
-                case Difficulty.Scenario3ManN:
-                case Difficulty.NormalRaid:
                     return -1;
                 case Difficulty.Heroic:
                 case Difficulty.Raid25N:
-                case Difficulty.Scenario3ManHC:
-                case Difficulty.HeroicRaid:
                     return 0;
                 case Difficulty.Raid10HC:
-                case Difficulty.MythicKeystone:
-                case Difficulty.MythicRaid:
                     return 1;
                 case Difficulty.Raid25HC:
                     return 2;
-                case Difficulty.LFR:
-                case Difficulty.LFRNew:
-                case Difficulty.EventRaid:
-                case Difficulty.EventDungeon:
-                case Difficulty.EventScenario:
                 default:
                     return -1;
             }
@@ -292,11 +278,17 @@ namespace Game.Entities
 
     public class CreatureBaseStats
     {
+        public uint BaseHealth;
         public uint BaseMana;
+        public uint BaseAmor;
         public uint AttackPower;
         public uint RangedAttackPower;
+        public float BaseDamage;
 
         // Helpers
+        public uint GenerateHealth(CreatureTemplate info) =>
+            (uint)Math.Ceiling(BaseHealth * info.ModHealth);
+
         public uint GenerateMana(CreatureTemplate info)
         {
             // Mana can be 0.
@@ -305,6 +297,11 @@ namespace Game.Entities
 
             return (uint)Math.Ceiling(BaseMana * info.ModMana * info.ModManaExtra);
         }
+
+        public float GenerateBaseDamange() => BaseDamage;
+
+        public uint GenerateArmor(CreatureTemplate info) =>
+            (uint)Math.Ceiling(BaseAmor * info.ModArmor);
     }
 
     public class CreatureLocale
@@ -318,7 +315,7 @@ namespace Game.Entities
     public struct EquipmentItem
     {
         public uint ItemId;
-        public ushort AppearanceModId;
+        public uint AppearanceModId;
         public ushort ItemVisual;
     }
 

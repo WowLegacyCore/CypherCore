@@ -238,7 +238,7 @@ namespace Game.Entities
 
             var emotesEntry = CliDB.EmotesStorage.LookupByKey(animId);
             if (emotesEntry != null && spellVisualKitIds != null)
-                if (emotesEntry.AnimId == (uint)Anim.MountSpecial || emotesEntry.AnimId == (uint)Anim.MountSelfSpecial)
+                if (emotesEntry.AnimID == (uint)Anim.MountSpecial || emotesEntry.AnimID == (uint)Anim.MountSelfSpecial)
                     packet.SpellVisualKitIDs.AddRange(spellVisualKitIds);
 
             SendMessageToSet(packet, true);
@@ -284,7 +284,7 @@ namespace Game.Entities
             ChrRacesRecord race = CliDB.ChrRacesStorage.LookupByKey(displayExtra.DisplayRaceID);
 
             if (model != null && !Convert.ToBoolean(model.Flags & 0x80))
-                if (race != null && !Convert.ToBoolean(race.Flags & 0x4))
+                if (race != null && !race.Flags.HasAnyFlag(ChrRacesFlag.Unk0x04))
                     return true;
 
             return false;
@@ -1162,116 +1162,7 @@ namespace Game.Entities
                     break;
             }
 
-            Player thisPlayer = ToPlayer();
-            if (thisPlayer != null)
-            {
-                Aura artifactAura = GetAura(PlayerConst.ArtifactsAllWeaponsGeneralWeaponEquippedPassive);
-                if (artifactAura != null)
-                {
-                    Item artifact = ToPlayer().GetItemByGuid(artifactAura.GetCastItemGUID());
-                    if (artifact != null)
-                    {
-                        ArtifactAppearanceRecord artifactAppearance = CliDB.ArtifactAppearanceStorage.LookupByKey(artifact.GetModifier(ItemModifier.ArtifactAppearanceId));
-                        if (artifactAppearance != null)
-                            if ((ShapeShiftForm)artifactAppearance.OverrideShapeshiftFormID == form)
-                                return artifactAppearance.OverrideShapeshiftDisplayID;
-                    }
-                }
-
-                ShapeshiftFormModelData formModelData = Global.DB2Mgr.GetShapeshiftFormModelData(GetRace(), thisPlayer.GetNativeSex(), form);
-                if (formModelData != null)
-                {
-                    bool useRandom = false;
-                    switch (form)
-                    {
-                        case ShapeShiftForm.CatForm:
-                            useRandom = HasAura(210333);
-                            break; // Glyph of the Feral Chameleon
-                        case ShapeShiftForm.TravelForm:
-                            useRandom = HasAura(344336);
-                            break; // Glyph of the Swift Chameleon
-                        case ShapeShiftForm.AquaticForm:
-                            useRandom = HasAura(344338);
-                            break; // Glyph of the Aquatic Chameleon
-                        case ShapeShiftForm.BearForm:
-                            useRandom = HasAura(107059);
-                            break; // Glyph of the Ursol Chameleon
-                        case ShapeShiftForm.FlightFormEpic:
-                        case ShapeShiftForm.FlightForm:
-                            useRandom = HasAura(344342);
-                            break; // Glyph of the Aerial Chameleon
-                        default:
-                            break;
-                    }
-
-                    if (useRandom)
-                    {
-                        List<uint> displayIds = new();
-                        for (var i = 0; i < formModelData.Choices.Count; ++i)
-                        {
-                            ChrCustomizationDisplayInfoRecord displayInfo = formModelData.Displays[i];
-                            if (displayInfo != null)
-                            {
-                                ChrCustomizationReqRecord choiceReq = CliDB.ChrCustomizationReqStorage.LookupByKey(formModelData.Choices[i].ChrCustomizationReqID);
-                                if (choiceReq == null || thisPlayer.GetSession().MeetsChrCustomizationReq(choiceReq, GetClass(), false, thisPlayer.GetCustomizationChoices()))
-                                    displayIds.Add(displayInfo.DisplayID);
-                            }
-                        }
-
-                        if (!displayIds.Empty())
-                            return displayIds.SelectRandom();
-                    }
-                    else
-                    {
-                        uint formChoice = thisPlayer.GetCustomizationChoiceId(formModelData.OptionID);
-                        if (formChoice != 0)
-                        {
-                            var choiceIndex = formModelData.Choices.FindIndex(choice =>
-                            {
-                                return choice.Id == formChoice;
-                            });
-
-                            if (choiceIndex != -1)
-                            {
-                                ChrCustomizationDisplayInfoRecord displayInfo = formModelData.Displays[choiceIndex];
-                                if (displayInfo != null)
-                                    return displayInfo.DisplayID;
-                            }
-                        }
-                    }
-                }
-                switch (form)
-                {
-                    case ShapeShiftForm.GhostWolf:
-                        if (HasAura(58135)) // Glyph of Spectral Wolf
-                            return 60247;
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            uint modelid = 0;
-            SpellShapeshiftFormRecord formEntry = CliDB.SpellShapeshiftFormStorage.LookupByKey(form);
-            if (formEntry != null && formEntry.CreatureDisplayID[0] != 0)
-            {
-                // Take the alliance modelid as default
-                if (GetTypeId() != TypeId.Player)
-                    return formEntry.CreatureDisplayID[0];
-                else
-                {
-                    if (Player.TeamForRace(GetRace()) == Team.Alliance)
-                        modelid = formEntry.CreatureDisplayID[0];
-                    else
-                        modelid = formEntry.CreatureDisplayID[1];
-
-                    // If the player is horde but there are no values for the horde modelid - take the alliance modelid
-                    if (modelid == 0 && Player.TeamForRace(GetRace()) == Team.Horde)
-                        modelid = formEntry.CreatureDisplayID[0];
-                }
-            }
-
-            return modelid;
+            return 0;
         }
 
         public Totem ToTotem() => IsTotem() ? (this as Totem) : null;
@@ -1732,13 +1623,13 @@ namespace Game.Entities
             return GetUpdateField<ushort>(UnitFields.VirtualItems + slot * 2 + 1, 0);
         }
 
-        public void SetVirtualItem(int slot, uint itemId, ushort appearanceModId = 0, ushort itemVisual = 0)
+        public void SetVirtualItem(int slot, uint itemId, uint appearanceModId = 0, ushort itemVisual = 0)
         {
             if (slot >= SharedConst.MaxEquipmentItems)
                 return;
 
             SetUpdateField<uint>(UnitFields.VirtualItems + slot * 2, itemId);
-            SetUpdateField<ushort>(UnitFields.VirtualItems + slot * 2 + 1, appearanceModId, 0);
+            SetUpdateField<ushort>(UnitFields.VirtualItems + slot * 2 + 1, (ushort)appearanceModId, 0);
             SetUpdateField<ushort>(UnitFields.VirtualItems + slot * 2 + 1, itemVisual, 1);
         }
 
@@ -2374,9 +2265,6 @@ namespace Game.Entities
                 damage = 0;
                 return;
             }
-
-            if (attacker != null)
-                damage = (uint)(damage * attacker.GetDamageMultiplierForTarget(victim));
         }
 
         public static uint DealDamage(Unit attacker, Unit victim, uint damage, CleanDamage cleanDamage = null, DamageEffectType damagetype = DamageEffectType.Direct, SpellSchoolMask damageSchoolMask = SpellSchoolMask.Normal, SpellInfo spellProto = null, bool durabilityLoss = true)
@@ -2518,9 +2406,6 @@ namespace Game.Entities
                     }
                 }
             }
-
-            if (attacker != null)
-                damage = (uint)(damage / victim.GetHealthMultiplierForTarget(attacker));
 
             if (victim.GetTypeId() != TypeId.Player && (!victim.IsControlledByPlayer() || victim.IsVehicle()))
             {
@@ -3549,7 +3434,7 @@ namespace Game.Entities
 
             if (attacker != null)
             {
-                armor *= victim.GetArmorMultiplierForTarget(attacker);
+                armor *= victim.GetTotalAuraModifierByMiscMask(AuraType.ModTargetResistance, (int)SpellSchoolMask.Normal);
 
                 // bypass enemy armor by SPELL_AURA_BYPASS_ARMOR_FOR_CASTER
                 int armorBypassPct = 0;
@@ -3604,13 +3489,14 @@ namespace Game.Entities
             if (attacker != null)
                 attackerLevel = attacker.GetLevelForTarget(victim);
 
-            // Expansion and ContentTuningID necessary? Does Player get a ContentTuningID too ?
-            float armorConstant = Global.DB2Mgr.EvaluateExpectedStat(ExpectedStatType.ArmorConstant, attackerLevel, -2, 0, attacker.GetClass());
-            if ((armor + armorConstant) == 0)
-                return damage;
+            float levelModifier = attacker != null ? attacker.GetLevel() : attackerLevel;
+            if (levelModifier > 59.0f)
+                levelModifier = levelModifier + 4.5f * (levelModifier - 59.0f);
 
-            float mitigation = Math.Min(armor / (armor + armorConstant), 0.85f);
-            return Math.Max((uint)(damage * (1.0f - mitigation)), 0);
+            float damageReduction = 0.1f * armor / (8.5f * levelModifier + 40.0f);
+            damageReduction /= (1.0f + damageReduction);
+
+            return Math.Max((uint)(damage * (1.0f - damageReduction)), 0);
         }
 
         public uint MeleeDamageBonusDone(Unit victim, uint damage, WeaponAttackType attType, DamageEffectType damagetype, SpellInfo spellProto = null, SpellSchoolMask damageSchoolMask = SpellSchoolMask.Normal)

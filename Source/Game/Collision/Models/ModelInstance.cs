@@ -31,103 +31,103 @@ namespace Game.Collision
 
     public class ModelMinimalData
     {
-        public byte flags;
-        public byte adtId;
+        public byte Flags;
+        public byte AdtId;
         public uint Id;
-        public Vector3 iPos;
-        public float iScale;
-        public AxisAlignedBox iBound;
-        public string name;
+        public Vector3 Position;
+        public float Scale;
+        public AxisAlignedBox BoundingBox;
+        public string Name;
     }
 
     public class ModelSpawn : ModelMinimalData
     {
-        public Vector3 iRot;
+        public Vector3 Rotation;
 
         public ModelSpawn() { }
 
         public ModelSpawn(ModelSpawn spawn)
         {
-            flags = spawn.flags;
-            adtId = spawn.adtId;
+            Flags = spawn.Flags;
+            AdtId = spawn.AdtId;
             Id = spawn.Id;
-            iPos = spawn.iPos;
-            iRot = spawn.iRot;
-            iScale = spawn.iScale;
-            iBound = spawn.iBound;
-            name = spawn.name;
+            Position = spawn.Position;
+            Rotation = spawn.Rotation;
+            Scale = spawn.Scale;
+            BoundingBox = spawn.BoundingBox;
+            Name = spawn.Name;
         }
 
         public static bool ReadFromFile(BinaryReader reader, out ModelSpawn spawn)
         {
-            spawn = new ModelSpawn();
+            spawn = new ModelSpawn
+            {
+                Flags       = (byte)reader.ReadInt32(),
+                AdtId       = (byte)reader.ReadUInt16(),
+                Id          = reader.ReadUInt32(),
+                Position    = reader.Read<Vector3>(),
+                Rotation    = reader.Read<Vector3>(),
+                Scale       = reader.ReadSingle()
+            };
 
-            spawn.flags = reader.ReadByte();
-            spawn.adtId = reader.ReadByte();
-            spawn.Id = reader.ReadUInt32();
-            spawn.iPos = reader.Read<Vector3>();
-            spawn.iRot = reader.Read<Vector3>();
-            spawn.iScale = reader.ReadSingle();
-
-            bool has_bound = Convert.ToBoolean(spawn.flags & (uint)ModelFlags.HasBound);
-            if (has_bound) // only WMOs have bound in MPQ, only available after computation
+            if ((spawn.Flags & (uint)ModelFlags.HasBound) != 0) // only WMOs have bound in MPQ, only available after computation
             {
                 Vector3 bLow = reader.Read<Vector3>();
                 Vector3 bHigh = reader.Read<Vector3>();
-                spawn.iBound = new AxisAlignedBox(bLow, bHigh);
+                spawn.BoundingBox = new AxisAlignedBox(bLow, bHigh);
             }
 
             uint nameLen = reader.ReadUInt32();
-            spawn.name = reader.ReadString((int)nameLen);
+            spawn.Name = reader.ReadString((int)nameLen);
             return true;
         }
     }
 
     public class ModelInstance : ModelMinimalData
     {
-        Matrix3 iInvRot;
-        float iInvScale;
-        WorldModel iModel;
+        Matrix3 invRotation;
+        float invScale;
+        WorldModel model;
 
         public ModelInstance()
         {
-            iInvScale = 0.0f;
-            iModel = null;
+            invScale = 0.0f;
+            model = null;
         }
 
         public ModelInstance(ModelSpawn spawn, WorldModel model)
         {
-            flags = spawn.flags;
-            adtId = spawn.adtId;
+            Flags = spawn.Flags;
+            AdtId = spawn.AdtId;
             Id = spawn.Id;
-            iPos = spawn.iPos;
-            iScale = spawn.iScale;
-            iBound = spawn.iBound;
-            name = spawn.name;
+            Position = spawn.Position;
+            Scale = spawn.Scale;
+            BoundingBox = spawn.BoundingBox;
+            Name = spawn.Name;
 
-            iModel = model;
+            this.model = model;
 
-            iInvRot = Matrix3.fromEulerAnglesZYX(MathFunctions.PI * spawn.iRot.Y / 180.0f, MathFunctions.PI * spawn.iRot.X / 180.0f, MathFunctions.PI * spawn.iRot.Z / 180.0f).inverse();
-            iInvScale = 1.0f / iScale;
+            invRotation = Matrix3.fromEulerAnglesZYX(MathFunctions.PI * spawn.Rotation.Y / 180.0f, MathFunctions.PI * spawn.Rotation.X / 180.0f, MathFunctions.PI * spawn.Rotation.Z / 180.0f).inverse();
+            invScale = 1.0f / Scale;
         }
 
         public bool IntersectRay(Ray pRay, ref float pMaxDist, bool pStopAtFirstHit, ModelIgnoreFlags ignoreFlags)
         {
-            if (iModel == null)
+            if (model == null)
                 return false;
 
-            float time = pRay.intersectionTime(iBound);
+            float time = pRay.intersectionTime(BoundingBox);
             if (float.IsInfinity(time))
                 return false;
 
             // child bounds are defined in object space:
-            Vector3 p = iInvRot * (pRay.Origin - iPos) * iInvScale;
-            Ray modRay = new(p, iInvRot * pRay.Direction);
-            float distance = pMaxDist * iInvScale;
-            bool hit = iModel.IntersectRay(modRay, ref distance, pStopAtFirstHit, ignoreFlags);
+            Vector3 p = invRotation * (pRay.Origin - Position) * invScale;
+            Ray modRay = new(p, invRotation * pRay.Direction);
+            float distance = pMaxDist * invScale;
+            bool hit = model.IntersectRay(modRay, ref distance, pStopAtFirstHit, ignoreFlags);
             if (hit)
             {
-                distance *= iScale;
+                distance *= Scale;
                 pMaxDist = distance;
             }
             return hit;
@@ -135,28 +135,30 @@ namespace Game.Collision
 
         public void IntersectPoint(Vector3 p, AreaInfo info)
         {
-            if (iModel == null)
+            if (model == null)
                 return;
 
             // M2 files don't contain area info, only WMO files
-            if (Convert.ToBoolean(flags & (uint)ModelFlags.M2))
+            if (Convert.ToBoolean(Flags & (uint)ModelFlags.M2))
                 return;
-            if (!iBound.contains(p))
+
+            if (!BoundingBox.contains(p))
                 return;
+
             // child bounds are defined in object space:
-            Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
-            Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            if (iModel.IntersectPoint(pModel, zDirModel, out float zDist, info))
+            Vector3 pModel = invRotation * (p - Position) * invScale;
+            Vector3 zDirModel = invRotation * new Vector3(0.0f, 0.0f, -1.0f);
+            if (model.IntersectPoint(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
                 // Transform back to world space. Note that:
                 // Mat * vec == vec * Mat.transpose()
                 // and for rotation matrices: Mat.inverse() == Mat.transpose()
-                float world_Z = ((modelGround * iInvRot) * iScale + iPos).Z;
-                if (info.ground_Z < world_Z)
+                float worldZ = ((modelGround * invRotation) * Scale + Position).Z;
+                if (info.GroundZ < worldZ)
                 {
-                    info.ground_Z = world_Z;
-                    info.adtId = adtId;
+                    info.GroundZ = worldZ;
+                    info.AdtId = AdtId;
                 }
             }
         }
@@ -164,13 +166,13 @@ namespace Game.Collision
         public bool GetLiquidLevel(Vector3 p, LocationInfo info, ref float liqHeight)
         {
             // child bounds are defined in object space:
-            Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
+            Vector3 pModel = invRotation * (p - Position) * invScale;
             //Vector3 zDirModel = iInvRot * Vector3(0.f, 0.f, -1.f);
-            if (info.hitModel.GetLiquidLevel(pModel, out float zDist))
+            if (info.HitModel.GetLiquidLevel(pModel, out float zDist))
             {
                 // calculate world height (zDist in model coords):
                 // assume WMO not tilted (wouldn't make much sense anyway)
-                liqHeight = zDist * iScale + iPos.Z;
+                liqHeight = zDist * Scale + Position.Z;
                 return true;
             }
             return false;
@@ -178,34 +180,34 @@ namespace Game.Collision
 
         public bool GetLocationInfo(Vector3 p, LocationInfo info)
         {
-            if (iModel == null)
+            if (model == null)
                 return false;
 
             // M2 files don't contain area info, only WMO files
-            if (Convert.ToBoolean(flags & (uint)ModelFlags.M2))
+            if (Convert.ToBoolean(Flags & (uint)ModelFlags.M2))
                 return false;
-            if (!iBound.contains(p))
+            if (!BoundingBox.contains(p))
                 return false;
             // child bounds are defined in object space:
-            Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
-            Vector3 zDirModel = iInvRot * new Vector3(0.0f, 0.0f, -1.0f);
-            if (iModel.GetLocationInfo(pModel, zDirModel, out float zDist, info))
+            Vector3 pModel = invRotation * (p - Position) * invScale;
+            Vector3 zDirModel = invRotation * new Vector3(0.0f, 0.0f, -1.0f);
+            if (model.GetLocationInfo(pModel, zDirModel, out float zDist, info))
             {
                 Vector3 modelGround = pModel + zDist * zDirModel;
                 // Transform back to world space. Note that:
                 // Mat * vec == vec * Mat.transpose()
                 // and for rotation matrices: Mat.inverse() == Mat.transpose()
-                float world_Z = ((modelGround * iInvRot) * iScale + iPos).Z;
-                if (info.ground_Z < world_Z) // hm...could it be handled automatically with zDist at intersection?
+                float world_Z = ((modelGround * invRotation) * Scale + Position).Z;
+                if (info.GroundZ < world_Z) // hm...could it be handled automatically with zDist at intersection?
                 {
-                    info.ground_Z = world_Z;
-                    info.hitInstance = this;
+                    info.GroundZ = world_Z;
+                    info.HitInstance = this;
                     return true;
                 }
             }
             return false;
         }
 
-        public void SetUnloaded() { iModel = null; }
+        public void SetUnloaded() { model = null; }
     }
 }

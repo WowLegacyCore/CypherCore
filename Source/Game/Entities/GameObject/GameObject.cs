@@ -1843,20 +1843,16 @@ namespace Game.Entities
                         return;
 
                     //required lvl checks!
-                    var userLevels = Global.DB2Mgr.GetContentTuningData(info.ContentTuningId);
-                    if (userLevels.HasValue)
-                        if (player.GetLevel() < userLevels.Value.MaxLevel)
-                            return;
+                    if (player.GetLevel() < info.MeetingStone.minLevel)
+                        return;
 
-                    var targetLevels = Global.DB2Mgr.GetContentTuningData(info.ContentTuningId);
-                    if (targetLevels.HasValue)
-                        if (targetPlayer.GetLevel() < targetLevels.Value.MaxLevel)
-                            return;
+                    if (targetPlayer.GetLevel() < info.MeetingStone.minLevel)
+                        return;
 
                     if (info.entry == 194097)
-                        spellId = 61994;                            // Ritual of Summoning
+                        spellId = 61994;                                    // Ritual of Summoning
                     else
-                        spellId = 23598;// 59782;                            // Summoning Stone Effect
+                        spellId = 23598;// 59782;                           // Summoning Stone Effect
 
                     break;
                 }

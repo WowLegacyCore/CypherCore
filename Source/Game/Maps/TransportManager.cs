@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -87,13 +87,10 @@ namespace Game.Maps
             Log.outInfo(LogFilter.ServerLoading, "Loaded {0} transports in {1} ms", count, Time.GetMSTimeDiffToNow(oldMSTime));
         }
 
-        public void LoadTransportAnimationAndRotation()
+        public void LoadTransportAnimation()
         {
             foreach (TransportAnimationRecord anim in CliDB.TransportAnimationStorage.Values)
                 AddPathNodeToTransport(anim.TransportID, anim.TimeIndex, anim);
-
-            foreach (TransportRotationRecord rot in CliDB.TransportRotationStorage.Values)
-                AddPathRotationToTransport(rot.GameObjectsID, rot.TimeIndex, rot);
         }
 
         void GeneratePath(GameObjectTemplate goInfo, TransportTemplate transport)
@@ -164,12 +161,12 @@ namespace Game.Maps
             if (transport.mapsUsed.Count > 1)
             {
                 foreach (var mapId in transport.mapsUsed)
-                    Cypher.Assert(!CliDB.MapStorage.LookupByKey(mapId).Instanceable());
+                    Cypher.Assert(!CliDB.MapStorage.LookupByKey(mapId).IsInstanceable());
 
                 transport.inInstance = false;
             }
             else
-                transport.inInstance = CliDB.MapStorage.LookupByKey(transport.mapsUsed.First()).Instanceable();
+                transport.inInstance = CliDB.MapStorage.LookupByKey(transport.mapsUsed.First()).IsInstanceable();
 
             // last to first is always "teleport", even for closed paths
             keyFrames.Last().Teleport = true;
@@ -392,7 +389,7 @@ namespace Game.Maps
             MapRecord mapEntry = CliDB.MapStorage.LookupByKey(mapId);
             if (mapEntry != null)
             {
-                if (mapEntry.Instanceable() != tInfo.inInstance)
+                if (mapEntry.IsInstanceable() != tInfo.inInstance)
                 {
                     Log.outError(LogFilter.Transport, "Transport {0} (name: {1}) attempted creation in instance map (id: {2}) but it is not an instanced transport!", entry, trans.GetName(), mapId);
                     //return null;
@@ -528,7 +525,7 @@ namespace Game.Maps
             mode = Spline.EvaluationMode.Catmullrom;
             cyclic = false;
             points = new Vector3[_points.Count];
-            
+
             for(var i = 0; i < _points.Count; ++i)
                 points[i] = _points[i];
 

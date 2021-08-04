@@ -228,7 +228,7 @@ namespace Game.Entities
             PetSpells petSpellsPacket = new();
             petSpellsPacket.PetGUID = pet.GetGUID();
             petSpellsPacket.CreatureFamily = (ushort)pet.GetCreatureTemplate().Family;         // creature family (required for pet talents)
-            petSpellsPacket.Specialization = pet.GetSpecialization();
+            petSpellsPacket.Specialization = 0;
             petSpellsPacket.TimeLimit = (uint)pet.GetDuration();
             petSpellsPacket.ReactState = pet.GetReactState();
             petSpellsPacket.CommandState = charmInfo.GetCommandState();
@@ -298,50 +298,50 @@ namespace Game.Entities
 
         void LearnSpecializationSpells()
         {
-            var specSpells = Global.DB2Mgr.GetSpecializationSpells(GetPrimarySpecialization());
-            if (specSpells != null)
-            {
-                for (int j = 0; j < specSpells.Count; ++j)
-                {
-                    SpecializationSpellsRecord specSpell = specSpells[j];
-                    SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(specSpell.SpellID, Difficulty.None);
-                    if (spellInfo == null || spellInfo.SpellLevel > GetLevel())
-                        continue;
+            //var specSpells = Global.DB2Mgr.GetSpecializationSpells(GetPrimarySpecialization());
+            //if (specSpells != null)
+            //{
+            //    for (int j = 0; j < specSpells.Count; ++j)
+            //    {
+            //        SpecializationSpellsRecord specSpell = specSpells[j];
+            //        SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(specSpell.SpellID, Difficulty.None);
+            //        if (spellInfo == null || spellInfo.SpellLevel > GetLevel())
+            //            continue;
 
-                    LearnSpell(specSpell.SpellID, false);
-                    if (specSpell.OverridesSpellID != 0)
-                        AddOverrideSpell(specSpell.OverridesSpellID, specSpell.SpellID);
-                }
-            }
+            //        LearnSpell(specSpell.SpellID, false);
+            //        if (specSpell.OverridesSpellID != 0)
+            //            AddOverrideSpell(specSpell.OverridesSpellID, specSpell.SpellID);
+            //    }
+            //}
         }
 
         void RemoveSpecializationSpells()
         {
-            for (uint i = 0; i < PlayerConst.MaxSpecializations; ++i)
-            {
-                ChrSpecializationRecord specialization = Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), i);
-                if (specialization != null)
-                {
-                    var specSpells = Global.DB2Mgr.GetSpecializationSpells(specialization.Id);
-                    if (specSpells != null)
-                    {
-                        for (int j = 0; j < specSpells.Count; ++j)
-                        {
-                            SpecializationSpellsRecord specSpell = specSpells[j];
-                            RemoveSpell(specSpell.SpellID, true);
-                            if (specSpell.OverridesSpellID != 0)
-                                RemoveOverrideSpell(specSpell.OverridesSpellID, specSpell.SpellID);
-                        }
-                    }
+            //for (uint i = 0; i < PlayerConst.MaxSpecializations; ++i)
+            //{
+            //    ChrSpecializationRecord specialization = Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), i);
+            //    if (specialization != null)
+            //    {
+            //        var specSpells = Global.DB2Mgr.GetSpecializationSpells(specialization.Id);
+            //        if (specSpells != null)
+            //        {
+            //            for (int j = 0; j < specSpells.Count; ++j)
+            //            {
+            //                SpecializationSpellsRecord specSpell = specSpells[j];
+            //                RemoveSpell(specSpell.SpellID, true);
+            //                if (specSpell.OverridesSpellID != 0)
+            //                    RemoveOverrideSpell(specSpell.OverridesSpellID, specSpell.SpellID);
+            //            }
+            //        }
 
-                    for (uint j = 0; j < PlayerConst.MaxMasterySpells; ++j)
-                    {
-                        uint mastery = specialization.MasterySpellID[j];
-                        if (mastery != 0)
-                            RemoveAurasDueToSpell(mastery);
-                    }
-                }
-            }
+            //        for (uint j = 0; j < PlayerConst.MaxMasterySpells; ++j)
+            //        {
+            //            uint mastery = specialization.MasterySpellID[j];
+            //            if (mastery != 0)
+            //                RemoveAurasDueToSpell(mastery);
+            //        }
+            //    }
+            //}
         }
 
         public void SendSpellCategoryCooldowns()
@@ -1261,45 +1261,20 @@ namespace Game.Entities
             switch (SkillId)
             {
                 case SkillType.Herbalism:
-                case SkillType.Herbalism2:
-                case SkillType.OutlandHerbalism:
-                case SkillType.NorthrendHerbalism:
-                case SkillType.CataclysmHerbalism:
-                case SkillType.PandariaHerbalism:
-                case SkillType.DraenorHerbalism:
-                case SkillType.LegionHerbalism:
-                case SkillType.KulTiranHerbalism:
-                case SkillType.Jewelcrafting:
-                case SkillType.Inscription:
                     return UpdateSkillPro(SkillId, SkillGainChance(SkillValue, RedLevel + 100, RedLevel + 50, RedLevel + 25) * (int)Multiplicator, gathering_skill_gain);
                 case SkillType.Skinning:
-                case SkillType.Skinning2:
-                case SkillType.OutlandSkinning:
-                case SkillType.NorthrendSkinning:
-                case SkillType.CataclysmSkinning:
-                case SkillType.PandariaSkinning:
-                case SkillType.DraenorSkinning:
-                case SkillType.LegionSkinning:
-                case SkillType.KulTiranSkinning:
                     if (WorldConfig.GetIntValue(WorldCfg.SkillChanceSkinningSteps) == 0)
                         return UpdateSkillPro(SkillId, SkillGainChance(SkillValue, RedLevel + 100, RedLevel + 50, RedLevel + 25) * (int)Multiplicator, gathering_skill_gain);
                     else
                         return UpdateSkillPro(SkillId, (int)(SkillGainChance(SkillValue, RedLevel + 100, RedLevel + 50, RedLevel + 25) * Multiplicator) >> (int)(SkillValue / WorldConfig.GetIntValue(WorldCfg.SkillChanceSkinningSteps)), gathering_skill_gain);
                 case SkillType.Mining:
-                case SkillType.Mining2:
-                case SkillType.OutlandMining:
-                case SkillType.NorthrendMining:
-                case SkillType.CataclysmMining:
-                case SkillType.PandariaMining:
-                case SkillType.DraenorMining:
-                case SkillType.LegionMining:
-                case SkillType.KulTiranMining:
                     if (WorldConfig.GetIntValue(WorldCfg.SkillChanceMiningSteps) == 0)
                         return UpdateSkillPro(SkillId, SkillGainChance(SkillValue, RedLevel + 100, RedLevel + 50, RedLevel + 25) * (int)Multiplicator, gathering_skill_gain);
                     else
                         return UpdateSkillPro(SkillId, (int)(SkillGainChance(SkillValue, RedLevel + 100, RedLevel + 50, RedLevel + 25) * Multiplicator) >> (int)(SkillValue / WorldConfig.GetIntValue(WorldCfg.SkillChanceMiningSteps)), gathering_skill_gain);
+                default:
+                    return false;
             }
-            return false;
         }
 
         byte GetFishingStepsNeededToLevelUp(uint SkillValue)
@@ -1581,11 +1556,6 @@ namespace Game.Entities
                 {
                     case AbilityLearnType.OnSkillValue:
                     case AbilityLearnType.OnSkillLearn:
-                        break;
-                    case AbilityLearnType.RewardedFromQuest:
-                        if (!ability.Flags.HasAnyFlag(SkillLineAbilityFlags.CanFallbackToLearnedOnSkillLearn) ||
-                            !spellInfo.MeetsFutureSpellPlayerCondition(this))
-                            continue;
                         break;
                     default:
                         continue;
@@ -2554,7 +2524,7 @@ namespace Game.Entities
                     SetFreePrimaryProfessions(freeProfs - 1);
             }
 
-            var skill_bounds = Global.SpellMgr.GetSkillLineAbilityMapBounds(spellId);
+            var skillAbilities = Global.SpellMgr.GetSkillLineAbilityMapBounds(spellId);
 
             SpellLearnSkillNode spellLearnSkill = Global.SpellMgr.GetSpellLearnSkill(spellId);
             if (spellLearnSkill != null)
@@ -2562,37 +2532,35 @@ namespace Game.Entities
                 // add dependent skills if this spell is not learned from adding skill already
                 if ((uint)spellLearnSkill.skill != fromSkill)
                 {
-                    ushort skill_value = GetPureSkillValue(spellLearnSkill.skill);
-                    ushort skill_max_value = GetPureMaxSkillValue(spellLearnSkill.skill);
+                    ushort skillValue = GetPureSkillValue(spellLearnSkill.skill);
+                    ushort skillMaxValue = GetPureMaxSkillValue(spellLearnSkill.skill);
 
-                    if (skill_value < spellLearnSkill.value)
-                        skill_value = spellLearnSkill.value;
+                    if (skillValue < spellLearnSkill.value)
+                        skillValue = spellLearnSkill.value;
 
-                    ushort new_skill_max_value = spellLearnSkill.maxvalue == 0 ? GetMaxSkillValueForLevel() : spellLearnSkill.maxvalue;
+                    ushort newSkillMaxValue = spellLearnSkill.maxvalue == 0 ? GetMaxSkillValueForLevel() : spellLearnSkill.maxvalue;
+                    if (skillMaxValue < newSkillMaxValue)
+                        skillMaxValue = newSkillMaxValue;
 
-                    if (skill_max_value < new_skill_max_value)
-                        skill_max_value = new_skill_max_value;
-
-                    SetSkill(spellLearnSkill.skill, spellLearnSkill.step, skill_value, skill_max_value);
+                    SetSkill(spellLearnSkill.skill, spellLearnSkill.step, skillValue, skillMaxValue);
                 }
             }
             else
             {
                 // not ranked skills
-                foreach (var _spell_idx in skill_bounds)
+                foreach (var skillLineAbility in skillAbilities)
                 {
-                    SkillLineRecord pSkill = CliDB.SkillLineStorage.LookupByKey(_spell_idx.SkillLine);
+                    SkillLineRecord pSkill = CliDB.SkillLineStorage.LookupByKey(skillLineAbility.SkillLine);
                     if (pSkill == null)
                         continue;
 
-                    if (_spell_idx.SkillLine == fromSkill)
+                    if (skillLineAbility.SkillLine == fromSkill)
                         continue;
 
                     // Runeforging special case
-                    if ((_spell_idx.AcquireMethod == AbilityLearnType.OnSkillLearn && !HasSkill((SkillType)_spell_idx.SkillLine))
-                        || ((_spell_idx.SkillLine == (int)SkillType.Runeforging) && _spell_idx.TrivialSkillLineRankHigh == 0))
+                    if ((skillLineAbility.AcquireMethod == AbilityLearnType.OnSkillLearn && !HasSkill((SkillType)skillLineAbility.SkillLine)) || (skillLineAbility.TrivialSkillLineRankHigh == 0))
                     {
-                        SkillRaceClassInfoRecord rcInfo = Global.DB2Mgr.GetSkillRaceClassInfo(_spell_idx.SkillLine, GetRace(), GetClass());
+                        SkillRaceClassInfoRecord rcInfo = Global.DB2Mgr.GetSkillRaceClassInfo(skillLineAbility.SkillLine, GetRace(), GetClass());
                         if (rcInfo != null)
                             LearnDefaultSkill(rcInfo);
                     }
@@ -2601,8 +2569,8 @@ namespace Game.Entities
 
 
             // learn dependent spells
-            var spell_bounds = Global.SpellMgr.GetSpellLearnSpellMapBounds(spellId);
-            foreach (var spellNode in spell_bounds)
+            var spellLearnNodes = Global.SpellMgr.GetSpellLearnSpellMapBounds(spellId);
+            foreach (var spellNode in spellLearnNodes)
             {
                 if (!spellNode.AutoLearned)
                 {
@@ -2615,10 +2583,6 @@ namespace Game.Entities
                 if (spellNode.OverridesSpell != 0 && spellNode.Active)
                     AddOverrideSpell(spellNode.OverridesSpell, spellNode.Spell);
             }
-
-            // needs to be when spell is already learned, to prevent infinite recursion crashes
-            if (Global.DB2Mgr.GetMount(spellId) != null)
-                GetSession().GetCollectionMgr().AddMount(spellId, MountStatusFlags.None, false, !IsInWorld);
 
             // return true (for send learn packet) only if spell active (in case ranked spells) and not replace old spell
             return active && !disabled && !superceded_old;

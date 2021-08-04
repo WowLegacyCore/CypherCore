@@ -500,7 +500,7 @@ namespace Framework.Constants
         CookingSupp = 0x10000
     }
 
-    public enum InventoryType : byte
+    public enum InventoryType : sbyte
     {
         NonEquip = 0,
         Head = 1,
@@ -1193,7 +1193,7 @@ namespace Framework.Constants
         MawPower = 4
     }
 
-    public enum CurrencyFlags
+    public enum CurrencyFlags : uint
     {
         Tradeable = 0x01,
         // ...

@@ -573,7 +573,6 @@ namespace Game
                     rewardItem.RaceMask = (uint)rewards[i].RaceMask;
                     rewardItem.MinGuildLevel = 0;
                     rewardItem.MinGuildRep = rewards[i].MinGuildRep;
-                    rewardItem.AchievementsRequired = rewards[i].AchievementsRequired;
                     rewardItem.Cost = rewards[i].Cost;
                     rewardList.RewardItems.Add(rewardItem);
                 }

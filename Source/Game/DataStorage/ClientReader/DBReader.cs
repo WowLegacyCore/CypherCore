@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -98,7 +98,7 @@ namespace Game.DataStorage
                 // field meta data
                 FieldMeta = reader.ReadArray<FieldMetaData>(Header.FieldCount);
 
-                // column meta data 
+                // column meta data
                 ColumnMeta = reader.ReadArray<ColumnMetaData>(Header.FieldCount);
 
                 // pallet data
@@ -253,7 +253,7 @@ namespace Game.DataStorage
                 }
             }
 
-            return true;            
+            return true;
         }
 
         internal WDCHeader Header;

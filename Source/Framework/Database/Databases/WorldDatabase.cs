@@ -91,7 +91,6 @@ namespace Framework.Database
             PrepareStatement(WorldStatements.UPD_CREATURE_ZONE_AREA_DATA, "UPDATE creature SET zoneId = ?, areaId = ? WHERE guid = ?");
             PrepareStatement(WorldStatements.UPD_GAMEOBJECT_ZONE_AREA_DATA, "UPDATE gameobject SET zoneId = ?, areaId = ? WHERE guid = ?");
             PrepareStatement(WorldStatements.DEL_SPAWNGROUP_MEMBER, "DELETE FROM spawn_group WHERE spawnType = ? AND spawnId = ?");
-            PrepareStatement(WorldStatements.SEL_GUILD_REWARDS_REQ_ACHIEVEMENTS, "SELECT AchievementRequired FROM guild_rewards_req_achievements WHERE ItemID = ?");
         }
     }
 
@@ -168,7 +167,6 @@ namespace Framework.Database
         UPD_CREATURE_ZONE_AREA_DATA,
         UPD_GAMEOBJECT_ZONE_AREA_DATA,
         DEL_SPAWNGROUP_MEMBER,
-        SEL_GUILD_REWARDS_REQ_ACHIEVEMENTS,
 
         MAX_WORLDDATABASE_STATEMENTS
     }

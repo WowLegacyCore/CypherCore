@@ -213,23 +213,23 @@ namespace Game.Movement
             float result;
 
             if (isSafeFall)
-                termVel = SharedConst.terminalSafefallVelocity;
+                termVel = SharedConst.TerminalSafeFallVelocity;
             else
-                termVel = SharedConst.terminalVelocity;
+                termVel = SharedConst.TerminalVelocity;
 
             if (start_velocity > termVel)
                 start_velocity = termVel;
 
-            float terminal_time = (float)((isSafeFall ? SharedConst.terminal_safeFall_fallTime : SharedConst.terminal_fallTime) - start_velocity / SharedConst.gravity); // the time that needed to reach terminalVelocity
+            float terminal_time = (float)((isSafeFall ? SharedConst.TerminalSafeFallTime : SharedConst.TerminalFallTime) - start_velocity / SharedConst.Gravity); // the time that needed to reach terminalVelocity
 
             if (t_passed > terminal_time)
             {
                 result = termVel * (t_passed - terminal_time) +
                     start_velocity * terminal_time +
-                    (float)SharedConst.gravity * terminal_time * terminal_time * 0.5f;
+                    (float)SharedConst.Gravity * terminal_time * terminal_time * 0.5f;
             }
             else
-                result = t_passed * (float)(start_velocity + t_passed * SharedConst.gravity * 0.5f);
+                result = t_passed * (float)(start_velocity + t_passed * SharedConst.Gravity * 0.5f);
 
             return result;
         }
@@ -346,17 +346,17 @@ namespace Game.Movement
                 float time;
                 if (isSafeFall)
                 {
-                    if (path_length >= SharedConst.terminal_safeFall_length)
-                        time = (path_length - SharedConst.terminal_safeFall_length) / SharedConst.terminalSafefallVelocity + SharedConst.terminal_safeFall_fallTime;
+                    if (path_length >= SharedConst.TerminalSafeFallLength)
+                        time = (path_length - SharedConst.TerminalSafeFallLength) / SharedConst.TerminalSafeFallVelocity + SharedConst.TerminalSafeFallTime;
                     else
-                        time = (float)Math.Sqrt(2.0f * path_length / SharedConst.gravity);
+                        time = (float)Math.Sqrt(2.0f * path_length / SharedConst.Gravity);
                 }
                 else
                 {
-                    if (path_length >= SharedConst.terminal_length)
-                        time = (path_length - SharedConst.terminal_length) / SharedConst.terminalVelocity + SharedConst.terminal_fallTime;
+                    if (path_length >= SharedConst.TerminalLength)
+                        time = (path_length - SharedConst.TerminalLength) / SharedConst.TerminalVelocity + SharedConst.TerminalFallTime;
                     else
-                        time = (float)Math.Sqrt(2.0f * path_length / SharedConst.gravity);
+                        time = (float)Math.Sqrt(2.0f * path_length / SharedConst.Gravity);
                 }
 
                 return time;

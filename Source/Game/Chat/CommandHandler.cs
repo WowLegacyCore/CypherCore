@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -148,7 +148,7 @@ namespace Game.Chat
                             if (zone != null)
                                 zoneName = zone.AreaName[locale];
                         }
-                        
+
                         Log.outCommand(GetSession().GetAccountId(), "Command: {0} [Player: {1} ({2}) (Account: {3}) Postion: {4} Map: {5} ({6}) Area: {7} ({8}) Zone: {9} Selected: {10} ({11})]",
                             fullcmd, player.GetName(), player.GetGUID().ToString(), GetSession().GetAccountId(), player.GetPosition(), player.GetMapId(),
                             player.GetMap() ? player.GetMap().GetMapName() : "Unknown", areaId, areaName, zoneName, (player.GetSelectedUnit()) ? player.GetSelectedUnit().GetName() : "", guid.ToString());
@@ -495,7 +495,7 @@ namespace Game.Chat
                 return 0;
 
             if (!uint.TryParse(idS, out uint id))
-                return 0;               
+                return 0;
 
             switch (type)
             {
@@ -770,7 +770,7 @@ namespace Game.Chat
             {
                 messageChat.Initialize(ChatMsg.System, Language.Universal, null, null, lines[i]);
                 _session.SendPacket(messageChat);
-            }            
+            }
         }
 
         public void SendNotification(CypherStrings str, params object[] args)
@@ -992,7 +992,7 @@ namespace Game.Chat
     {
         Action<string> _reportToRA;
 
-        public RemoteAccessHandler(Action<string> reportToRA) : base() 
+        public RemoteAccessHandler(Action<string> reportToRA) : base()
         {
             _reportToRA = reportToRA;
         }

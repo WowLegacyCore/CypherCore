@@ -18,7 +18,8 @@ using System;
 
 namespace Framework.Constants
 {
-    public enum VehicleSeatFlags : uint
+    [Flags]
+    public enum VehicleSeatFlags : int
     {
         HasLowerAnimForEnter = 0x01,
         HasLowerAnimForRide = 0x02,
@@ -51,10 +52,10 @@ namespace Framework.Constants
         HasStartWaritingForVehTransitionAnimExit = 0x10000000,
         CanCast = 0x20000000, // LuaUnithasvehicleui
         Unk2 = 0x40000000, // Checked In Conjunction With 0x800 In Castspell2
-        AllowsInteraction = 0x80000000
     }
 
-    public enum VehicleSeatFlagsB : uint
+    [Flags]
+    public enum VehicleSeatFlagsB : int
     {
         None = 0x00,
         UsableForced = 0x02,
@@ -66,7 +67,6 @@ namespace Framework.Constants
         KeepPet = 0x20000,
         UsableForced4 = 0x02000000,
         CanSwitch = 0x4000000,
-        VehiclePlayerframeUi = 0x80000000            // Lua_Unithasvehicleplayerframeui - Actually Checked For Flagsb &~ 0x80000000
     }
 
     public enum SpellClickCastFlags

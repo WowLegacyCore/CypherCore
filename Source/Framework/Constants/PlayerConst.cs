@@ -21,7 +21,7 @@ namespace Framework.Constants
 {
     public struct PlayerConst
     {
-        public const Expansion CurrentExpansion = Expansion.ShadowLands;
+        public const Expansion CurrentExpansion = Expansion.BurningCrusade;
 
         public const int MaxTalentTiers = 7;
         public const int MaxTalentColumns = 3;

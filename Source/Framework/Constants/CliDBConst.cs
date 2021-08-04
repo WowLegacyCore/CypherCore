@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -39,17 +39,14 @@ namespace Framework.Constants
         Compressed = 0x10,
     }
 
-    public enum AbilityLearnType : byte
+    public enum AbilityLearnType : sbyte
     {
         OnSkillValue = 1, // Spell state will update depending on skill value
         OnSkillLearn = 2, // Spell will be learned/removed together with entire skill
         RewardedFromQuest = 4 // Learned as quest reward, also re-learned if missing
     }
 
-    public enum SkillLineAbilityFlags
-    {
-        CanFallbackToLearnedOnSkillLearn = 0x80, // The skill is rewarded from a quest if player started on exile's reach
-    }
+    public enum SkillLineAbilityFlags : sbyte { }
 
     public enum Anim
     {
@@ -989,7 +986,7 @@ namespace Framework.Constants
     }
 
     [Flags]
-    public enum BattlemasterListFlags : int
+    public enum BattlemasterListFlags : sbyte
     {
         Disabled = 0x01,
         SkipRoleCheck = 0x02,
@@ -1002,6 +999,7 @@ namespace Framework.Constants
 
     public enum ChrRacesFlag
     {
+        Unk0x04 = 0x04,
         AlliedRace = 0x80000
     }
 
@@ -1026,6 +1024,7 @@ namespace Framework.Constants
     [Flags]
     public enum ContentTuningFlag
     {
+        Unk0x02 = 0x02,
         DisabledForItem = 0x04,
         Horde = 0x8,
         Alliance = 0x10
@@ -1037,7 +1036,7 @@ namespace Framework.Constants
         AzeriteEmpoweredItemRespecCost = 6785
     }
 
-    public enum Emote
+    public enum Emote : ushort
     {
         OneshotNone = 0,
         OneshotTalk = 1,
@@ -1163,284 +1162,7 @@ namespace Framework.Constants
         StateCustomSpell05 = 421,
         StateSpelleffectHold = 422,
         StateEatNoSheathe = 423,
-        StateMount = 424,
-        StateReady2hl = 425,
-        StateSitChairHigh = 426,
-        StateFall = 427,
-        StateLoot = 428,
-        StateSubmergedNew = 429,
-        OneshotCower = 430,
-        StateCower = 431,
-        OneshotUseStanding = 432,
-        StateStealthStand = 433,
-        OneshotOmnicastGhoul = 434,
-        OneshotAttackBow = 435,
-        OneshotAttackRifle = 436,
-        StateSwimIdle = 437,
-        StateAttackUnarmed = 438,
-        OneshotSpellCastWSound = 439,
-        OneshotDodge = 440,
-        OneshotParry1h = 441,
-        OneshotParry2h = 442,
-        OneshotParry2hl = 443,
-        StateFlyfall = 444,
-        OneshotFlydeath = 445,
-        StateFlyFall = 446,
-        OneshotFlySitGroundDown = 447,
-        OneshotFlySitGroundUp = 448,
-        OneshotEmerge = 449,
-        OneshotDragonSpit = 450,
-        StateSpecialUnarmed = 451,
-        OneshotFlygrab = 452,
-        StateFlygrabclosed = 453,
-        OneshotFlygrabthrown = 454,
-        StateFlySitGround = 455,
-        StateWalkBackwards = 456,
-        OneshotFlytalk = 457,
-        OneshotFlyattack1h = 458,
-        StateCustomSpell08 = 459,
-        OneshotFlyDragonSpit = 460,
-        StateSitChairLow = 461,
-        OneshotStun = 462,
-        OneshotSpellCastOmni = 463,
-        StateReadyThrown = 465,
-        OneshotWorkChopwood = 466,
-        OneshotWorkMining = 467,
-        StateSpellChannelOmni = 468,
-        StateSpellChannelDirected = 469,
-        StandStateNone = 470,
-        StateReadyjoust = 471,
-        StateStrangulate = 472,
-        StateStrangulate2 = 473,
-        StateReadySpellOmni = 474,
-        StateHoldJoust = 475,
-        OneshotCryJaina = 476,
-        OneshotSpecialUnarmed = 477,
-        StateDanceNosheathe = 478,
-        OneshotSniff = 479,
-        OneshotDragonstomp = 480,
-        OneshotKnockdown = 482,
-        StateRead = 483,
-        OneshotFlyemotetalk = 485,
-        StateReadAllowmovement = 492,
-        StateCustomSpell06 = 498,
-        StateCustomSpell07 = 499,
-        StateCustomSpell082 = 500,
-        StateCustomSpell09 = 501,
-        StateCustomSpell10 = 502,
-        StateReady1hAllowMovement = 505,
-        StateReady2hAllowMovement = 506,
-        OneshotMonkoffenseAttackunarmed = 507,
-        OneshotMonkoffenseSpecialunarmed = 508,
-        OneshotMonkoffenseParryunarmed = 509,
-        StateMonkoffenseReadyunarmed = 510,
-        OneshotPalmstrike = 511,
-        StateCrane = 512,
-        OneshotOpen = 517,
-        StateReadChristmas = 518,
-        OneshotFlyattack2hl = 526,
-        OneshotFlyattackthrown = 527,
-        StateFlyreadyspelldirected = 528,
-        StateFlyReady1h = 531,
-        StateMeditate = 533,
-        StateFlyReady2hl = 534,
-        OneshotToground = 535,
-        OneshotTofly = 536,
-        StateAttackthrown = 537,
-        StateSpellChannelDirectedNosound = 538,
-        OneshotWork = 539,
-        StateReadyunarmedNosound = 540,
-        OneshotMonkoffenseAttackunarmedoff = 543,
-        ReclinedMountPassenger = 546,
-        OneshotQuestion_2 = 547,
-        OneshotSpellChannelDirectedNosound = 549,
-        StateKneel_2 = 550,
-        OneshotFlyattackunarmed = 551,
-        OneshotFlycombatwound = 552,
-        OneshotMountselfspecial = 553,
-        OneshotAttackunarmedNosound = 554,
-        StateWoundcriticalDoesntWork = 555,
-        OneshotAttack1hNoSound = 556,
-        StateMountSelfIdle = 557,
-        OneshotWalk = 558,
-        StateOpened = 559,
-        StateCustomspell03 = 564,
-        OneshotBreathoffire = 565,
-        StateAttack1h = 567,
-        StateWorkChopwood2 = 568,
-        StateUsestandingLoop = 569,
-        StateUsestanding = 572,
-        OneshotSheath = 573,
-        OneshotLaughNoSound = 574,
-        ReclinedMount = 575,
-        OneshotAttack1h2 = 577,
-        StateCryNosound = 578,
-        OneshotCryNosound = 579,
-        OneshotCombatcritical = 584,
-        StateTrain = 585,
-        StateWorkChopwoodLumberAxe = 586,
-        OneshotSpecialattack2h = 587,
-        StateReadAndTalk = 588,
-        OneshotStandVar1 = 589,
-        RexxarStranglesGoblin = 590,
-        OneshotStandVar2 = 591,
-        OneshotDeath = 592,
-        StateTalkonce = 595,
-        StateAttack2h = 596,
-        StateSitGround = 598,
-        StateWorkChopwood3 = 599,
-        StateCustomspell01 = 601,
-        OneshotCombatwound = 602,
-        OneshotTalkExclamation = 603,
-        OneshotQuestion2 = 604,
-        StateCry = 605,
-        StateUsestandingLoop2 = 606,
-        StateWorkSmith = 613,
-        StateWorkChopwood4 = 614,
-        StateCustomspell02 = 615,
-        StateReadAndSit = 616,
-        StateParryUnarmed = 619,
-        StateBlockShield = 620,
-        StateSitGround2 = 621,
-        OneshotMountspecial = 628,
-        OneshotSettle = 636,
-        StateAttackUnarmedStill = 638,
-        StateReadBookAndTalk = 641,
-        OneshotSlam = 642,
-        OneshotGrabthrown = 643,
-        OneshotReadyspelldirectedNosound = 644,
-        StateReadyspellomniWithSound = 645,
-        OneshotTalkBarserver = 646,
-        OneshotWaveBarserver = 647,
-        StateWorkMining2 = 648,
-        StateReady2hlAllowMovement = 654,
-        StateUsestandingNosheatheStill = 655,
-        OneshotWorkStill = 657,
-        StateHoldThrownInterrupts = 658,
-        OneshotCannibalize = 659,
-        OneshotNoNotSwimming = 661,
-        StateReadyglv = 663,
-        OneshotCombatabilityglv01 = 664,
-        OneshotCombatabilityglvoff01 = 665,
-        OneshotCombatabilityglvbig02 = 666,
-        OneshotParryglv = 667,
-        StateWorkMining3 = 668,
-        OneshotTalkNosheathe = 669,
-        OneshotStandVar3 = 671,
-        StateKneel2 = 672,
-        OneshotCustom0 = 673,
-        OneshotCustom1 = 674,
-        OneshotCustom2 = 675,
-        OneshotCustom3 = 676,
-        StateFlyReadyUnarmed = 677,
-        OneshotCheerForthealliance = 679,
-        OneshotCheerForthehorde = 680,
-        OneshotStandVar4 = 690,
-        OneshotFlyemoteexclamation = 691,
-        StateEmoteeat = 700,
-        StateMonkhealChannelomni = 705,
-        StateMonkdefenseReadyunarmed = 706,
-        OneshotStand = 707,
-        StateWapourhold = 709,
-        StateReadyblowdart = 710,
-        StateWorkChopmeat = 711,
-        StateMonk2hlidle = 712,
-        StateWaperch = 713,
-        StateWaguardstand01 = 714,
-        StateReadAndSitChairMed = 715,
-        StateWaguardstand02 = 716,
-        StateWaguardstand03 = 717,
-        StateWaguardstand04 = 718,
-        StateWachant02 = 719,
-        StateWalean01 = 720,
-        StateDrunkwalk = 721,
-        StateWascrubbing = 722,
-        StateWachant01 = 723,
-        StateWachant03 = 724,
-        StateWasummon01 = 725,
-        StateWatrance01 = 726,
-        StateCustomspell05 = 727,
-        StateWahammerloop = 728,
-        StateWabound01 = 729,
-        StateWabound02 = 730,
-        StateWasackhold = 731,
-        StateWasit01 = 732,
-        StateWarowingstandleft = 733,
-        StateWarowingstandright = 734,
-        StateLootBiteSound = 735,
-        OneshotWasummon01 = 736,
-        OneshotStandVar22 = 737,
-        OneshotFalconeerStart = 738,
-        StateFalconeerLoop = 739,
-        OneshotFalconeerEnd = 740,
-        StateWaperchNointeract = 741,
-        OneshotWastanddrink = 742,
-        StateWalean02 = 743,
-        OneshotReadEnd = 744,
-        StateWaguardstand04AllowMovement = 745,
-        StateReadycrossbow = 747,
-        OneshotWastanddrinkNosheath = 748,
-        StateWahang01 = 749,
-        StateWabeggarstand = 750,
-        StateWadrunkstand = 751,
-        OneshotWacriertalk = 753,
-        StateHoldCrossbow = 754,
-        StateWasit02 = 757,
-        StateWacrankstand = 761,
-        OneshotReadStart = 762,
-        OneshotReadLoop = 763,
-        OneshotWadrunkdrink = 765,
-        StateSitChairMedEat = 766,
-        StateKneelCopy = 867,
-        StateWorkChopmeatNosheathe = 868,
-        OneshotBarpatronPoint = 870,
-        StateStandNosound = 871,
-        StateMountFlightIdleNosound = 872,
-        StateUsestandingLoop3 = 873,
-        OneshotVehiclegrab = 874,
-        StateUsestandingLoop4 = 875,
-        StateBarpatronStand = 876,
-        OneshotWabeggarpoint = 877,
-        StateWacrierstand01 = 878,
-        OneshotWabeggarbeg = 879,
-        StateWaboatwheelstand = 880,
-        StateWasit03 = 882,
-        StateBarsweepStand = 883,
-        StateWaguardstand05 = 884,
-        StateWaguardstand06 = 885,
-        StateBartendstand = 886,
-        StateWahammerloop2 = 887,
-        // StandStateStateReadythrown          = 890,  //< Doesn'T Work
-        StateWorkMiningNoCombat = 893,
-        OneshotCaststrong = 894,
-        StateCustomspell07 = 895,
-        StateWalk = 897,
-        OneshotClose = 898,
-        StateWacratehold = 900,
-        StateFlycustomspell02 = 901,
-        OneshotSleep = 902,
-        StateStandSetemotestate = 903,
-        OneshotWawalktalk = 904,
-        OneshotTakeOffFinish = 905,
-        OneshotAttack2h = 906,
-        StateWaBarrelHold = 908,
-        StateWaBarrelWalk = 909,
-        StateCustomspell04 = 910,
-        StateFlywaperch01 = 912,
-        OneshotPalspellcast1hup = 916,
-        OneshotReadyspellomni = 917,
-        OneshotSpellcastDirected = 961,
-        StateFlycustomspell07 = 977,
-        StateFlychannelcastomni = 978,
-        StateClosed = 979,
-        StateCustomspell10 = 980,
-        StateWawheelbarrowstand = 981,
-        StateCustomspell06 = 982,
-        StateCustom1 = 983,
-        StateWasit04 = 986,
-        OneshotBarsweepStand = 987,
-        TorghastTalkingHeadMawCastSound = 989,
-        TorghastTalkingHeadMawCastSound2 = 990
+        ClassicStateDance = 913,
     }
 
     public enum GlyphSlotType
@@ -1450,7 +1172,7 @@ namespace Framework.Constants
         Prime = 2
     }
 
-    public enum ItemSetFlags
+    public enum ItemSetFlags : uint
     {
         LegacyInactive = 0x01,
     }
@@ -1529,51 +1251,16 @@ namespace Framework.Constants
         PvpOpen = 17,
         PvpClose = 18,
         Fishing = 19,
-        Inscription = 20,
-        OpenFromVehicle = 21,
-        Archaeology = 22,
-        PvpOpenFast = 23,
-        LumberMill = 28,
-        Skinning = 29,
-        AncientMana = 30,
-        Warboard = 31,
-        ClassicHerbalism = 32,
-        OutlandHerbalism = 33,
-        NorthrendHerbalism = 34,
-        CataclysmHerbalism = 35,
-        PandariaHerbalism = 36,
-        DraenorHerbalism = 37,
-        LegionHerbalism = 38,
-        KulTiranHerbalism = 39,
-        ClassicMining = 40,
-        OutlandMining = 41,
-        NorthrendMining = 42,
-        CataclysmMining = 43,
-        PandariaMining = 44,
-        DraenorMining = 45,
-        LegionMining = 46,
-        KulTiranMining = 47,
-        Skinning2 = 48,
-        Open2 = 149,
-        Foraging = 150,
-        JellyDeposit = 152,
-        ShadowlandHerbalism = 153,
-        ShadowlandMining = 155,
-        CovenantNightFae = 157,
-        CovenantVenthyr = 158,
-        CovenantKyrian = 159,
-        CovenantNecrolord = 160,
-        ProfessionEngineering = 161
+        REUSEME = 20,
     }
 
-    public enum MapTypes : byte
+    public enum MapTypes : sbyte
     {
         Common = 0,
         Instance = 1,
         Raid = 2,
         Battleground = 3,
         Arena = 4,
-        Scenario = 5
     }
 
     public enum MapDifficultyFlags : byte
@@ -1644,7 +1331,7 @@ namespace Framework.Constants
         GearDiff = 8
     }
 
-    public enum PrestigeLevelInfoFlags : byte
+    public enum PrestigeLevelInfoFlags : sbyte
     {
         Disabled = 0x01                      // Prestige levels with this flag won't be included to calculate max prestigelevel.
     }
@@ -1702,7 +1389,7 @@ namespace Framework.Constants
         Battleground = 7
     }
 
-    public enum SpellShapeshiftFormFlags
+    public enum SpellShapeshiftFormFlags : int
     {
         Stance = 0x01,
         NotToggleable = 0x02,   // player cannot cancel the aura giving this shapeshift
@@ -2043,7 +1730,7 @@ namespace Framework.Constants
         CreatureSpellDamage = 9
     }
 
-    public enum UiMapFlag
+    public enum UiMapFlag : int
     {
         None = 0x00,
         NoHighlight = 0x01,
@@ -2073,7 +1760,7 @@ namespace Framework.Constants
         Max
     }
 
-    public enum UiMapType
+    public enum UiMapType : int
     {
         Cosmic = 0,
         World = 1,

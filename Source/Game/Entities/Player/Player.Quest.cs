@@ -49,19 +49,15 @@ namespace Game.Entities
 
         public int GetQuestMinLevel(Quest quest)
         {
-            var questLevels = Global.DB2Mgr.GetContentTuningData(quest.ContentTuningId);
-            if (questLevels.HasValue)
+            if (quest.Level == -1 && quest.ScalingFactionGroup != 0)
             {
                 ChrRacesRecord race = CliDB.ChrRacesStorage.LookupByKey(GetRace());
                 FactionTemplateRecord raceFaction = CliDB.FactionTemplateStorage.LookupByKey(race.FactionID);
-                int questFactionGroup = CliDB.ContentTuningStorage.LookupByKey(quest.ContentTuningId).GetScalingFactionGroup();
-                if (questFactionGroup != 0 && raceFaction.FactionGroup != questFactionGroup)
-                    return questLevels.Value.MaxLevel;
-
-                return questLevels.Value.MinLevelWithDelta;
+                if (raceFaction == null || raceFaction.FactionGroup != quest.ScalingFactionGroup)
+                    return quest.MaxScalingLevel;
             }
 
-            return 0;
+            return quest.MinLevel;
         }
 
         public int GetQuestLevel(Quest quest)
@@ -69,11 +65,10 @@ namespace Game.Entities
             if (quest == null)
                 return 0;
 
-            var questLevels = Global.DB2Mgr.GetContentTuningData(quest.ContentTuningId);
-            if (questLevels.HasValue)
+            if (quest.Level == -1)
             {
                 int minLevel = GetQuestMinLevel(quest);
-                int maxLevel = questLevels.Value.MaxLevel;
+                int maxLevel = quest.MaxScalingLevel;
                 int level = (int)GetLevel();
                 if (level >= minLevel)
                     return Math.Min(level, maxLevel);
@@ -614,52 +609,6 @@ namespace Game.Entities
                 }
             }
 
-            // QuestPackageItem.db2
-            if (quest.PackageID != 0)
-            {
-                bool hasFilteredQuestPackageReward = false;
-                var questPackageItems = Global.DB2Mgr.GetQuestPackageItems(quest.PackageID);
-                if (questPackageItems != null)
-                {
-                    foreach (var questPackageItem in questPackageItems)
-                    {
-                        if (questPackageItem.ItemID != rewardId)
-                            continue;
-
-                        if (CanSelectQuestPackageItem(questPackageItem))
-                        {
-                            hasFilteredQuestPackageReward = true;
-                            InventoryResult res = CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, questPackageItem.ItemID, questPackageItem.ItemQuantity);
-                            if (res != InventoryResult.Ok)
-                            {
-                                SendEquipError(res, null, null, questPackageItem.ItemID);
-                                return false;
-                            }
-                        }
-                    }
-                }
-
-                if (!hasFilteredQuestPackageReward)
-                {
-                    List<QuestPackageItemRecord> questPackageItems1 = Global.DB2Mgr.GetQuestPackageItemsFallback(quest.PackageID);
-                    if (questPackageItems1 != null)
-                    {
-                        foreach (QuestPackageItemRecord questPackageItem in questPackageItems1)
-                        {
-                            if (questPackageItem.ItemID != rewardId)
-                                continue;
-
-                            InventoryResult res = CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, questPackageItem.ItemID, questPackageItem.ItemQuantity);
-                            if (res != InventoryResult.Ok)
-                            {
-                                SendEquipError(res, null, null, questPackageItem.ItemID);
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
             return true;
         }
 
@@ -869,52 +818,6 @@ namespace Game.Entities
 
             return false;
         }
-
-        public void RewardQuestPackage(uint questPackageId, uint onlyItemId = 0)
-        {
-            bool hasFilteredQuestPackageReward = false;
-            var questPackageItems = Global.DB2Mgr.GetQuestPackageItems(questPackageId);
-            if (questPackageItems != null)
-            {
-                foreach (QuestPackageItemRecord questPackageItem in questPackageItems)
-                {
-                    if (onlyItemId != 0 && questPackageItem.ItemID != onlyItemId)
-                        continue;
-
-                    if (CanSelectQuestPackageItem(questPackageItem))
-                    {
-                        hasFilteredQuestPackageReward = true;
-                        List<ItemPosCount> dest = new();
-                        if (CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, questPackageItem.ItemID, questPackageItem.ItemQuantity) == InventoryResult.Ok)
-                        {
-                            Item item = StoreNewItem(dest, questPackageItem.ItemID, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(questPackageItem.ItemID));
-                            SendNewItem(item, questPackageItem.ItemQuantity, true, false);
-                        }
-                    }
-                }
-            }
-
-            if (!hasFilteredQuestPackageReward)
-            {
-                var questPackageItemsFallback = Global.DB2Mgr.GetQuestPackageItemsFallback(questPackageId);
-                if (questPackageItemsFallback != null)
-                {
-                    foreach (QuestPackageItemRecord questPackageItem in questPackageItemsFallback)
-                    {
-                        if (onlyItemId != 0 && questPackageItem.ItemID != onlyItemId)
-                            continue;
-
-                        List<ItemPosCount> dest = new();
-                        if (CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, questPackageItem.ItemID, questPackageItem.ItemQuantity) == InventoryResult.Ok)
-                        {
-                            Item item = StoreNewItem(dest, questPackageItem.ItemID, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(questPackageItem.ItemID));
-                            SendNewItem(item, questPackageItem.ItemQuantity, true, false);
-                        }
-                    }
-                }
-            }
-        }
-
         public void RewardQuest(Quest quest, LootItemType rewardType, uint rewardId, WorldObject questGiver, bool announce = true)
         {
             //this THING should be here to protect code from quest, which cast on player far teleport as a reward
@@ -989,11 +892,6 @@ namespace Game.Entities
                             }
                         }
                     }
-
-
-                    // QuestPackageItem.db2
-                    if (rewardProto != null && quest.PackageID != 0)
-                        RewardQuestPackage(quest.PackageID, rewardId);
                     break;
                 case LootItemType.Currency:
                     if (CliDB.CurrencyTypesStorage.HasRecord(rewardId) && quest.GetRewChoiceItemsCount() != 0)
@@ -1092,14 +990,12 @@ namespace Game.Entities
             }
             else
             {
-                foreach (QuestRewardDisplaySpell displaySpell in quest.RewardDisplaySpell)
+                for (uint i = 0; i < SharedConst.QuestRewardDisplaySpellCount; ++i)
                 {
-                    var playerCondition = CliDB.PlayerConditionStorage.LookupByKey(displaySpell.PlayerConditionId);
-                    if (playerCondition != null)
-                        if (!ConditionManager.IsPlayerMeetingCondition(this, playerCondition))
-                            continue;
+                    if (quest.RewardDisplaySpell[i] <= 0)
+                        continue;
 
-                    SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(displaySpell.SpellId, GetMap().GetDifficultyID());
+                    SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(quest.RewardDisplaySpell[i], GetMap().GetDifficultyID());
                     Unit caster = this;
                     if (questGiver && questGiver.IsTypeMask(TypeMask.Unit) && !quest.HasFlag(QuestFlags.PlayerCastOnComplete) && !spellInfo.HasTargetType(Targets.UnitCaster))
                     {

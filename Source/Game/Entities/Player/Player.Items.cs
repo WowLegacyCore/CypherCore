@@ -1292,8 +1292,6 @@ namespace Game.Entities
                     DB.Characters.Execute(stmt);
                 }
 
-                if (addToCollection)
-                    GetSession().GetCollectionMgr().OnItemAdded(item);
 
                 ItemChildEquipmentRecord childItemEntry = Global.DB2Mgr.GetItemChildEquipment(itemId);
                 if (childItemEntry != null)
@@ -1490,11 +1488,6 @@ namespace Game.Entities
                     if (HasSpell((uint)proto.Effects[1].SpellID))
                         return InventoryResult.InternalBagError;
             }
-
-            ArtifactRecord artifact = CliDB.ArtifactStorage.LookupByKey(proto.GetArtifactID());
-            if (artifact != null)
-                if (artifact.ChrSpecializationID != GetPrimarySpecialization())
-                    return InventoryResult.CantUseItem;
 
             return InventoryResult.Ok;
         }
@@ -2459,8 +2452,6 @@ namespace Game.Entities
                     it.SaveRefundDataToDB();
                     AddRefundReference(it.GetGUID());
                 }
-
-                GetSession().GetCollectionMgr().OnItemAdded(it);
             }
             return true;
         }
@@ -3764,14 +3755,6 @@ namespace Game.Entities
                 }
             }
 
-            uint armor = proto.GetArmor(itemLevel);
-            if (armor != 0)
-            {
-                HandleStatFlatModifier(UnitMods.Armor, UnitModifierFlatType.Total, armor, apply);
-                if (proto.GetClass() == ItemClass.Armor && (ItemSubClassArmor)proto.GetSubClass() == ItemSubClassArmor.Shield)
-                    SetUpdateField<float>(ActivePlayerFields.ShieldBlock, apply ? armor * 2.5f : 0.0f);
-            }
-
             WeaponAttackType attType = GetAttackBySlot(slot, proto.GetInventoryType());
             if (attType != WeaponAttackType.Max && CanUseAttackType(attType))
                 _ApplyWeaponDamage(slot, item, apply);
@@ -3791,10 +3774,6 @@ namespace Game.Entities
                 // check if it is valid spell
                 SpellInfo spellproto = Global.SpellMgr.GetSpellInfo((uint)effectData.SpellID, Difficulty.None);
                 if (spellproto == null)
-                    continue;
-
-                if (spellproto.HasAura(AuraType.ModXpPct) && !GetSession().GetCollectionMgr().CanApplyHeirloomXpBonus(item.GetEntry(), GetLevel())
-                    && Global.DB2Mgr.GetHeirloomByItemId(item.GetEntry()) != null)
                     continue;
 
                 if (effectData.ChrSpecializationID != 0 && effectData.ChrSpecializationID != GetPrimarySpecialization())
@@ -4769,12 +4748,9 @@ namespace Game.Entities
                             return InventoryResult.ClientLockedOut;
                     }
 
-                    ContentTuningLevels? requiredLevels = null;
+                    ScalingStatDistributionRecord ssd = CliDB.ScalingStatDistributionStorage.LookupByKey(pItem.GetScalingStatDistribution());
                     // check allowed level (extend range to upper values if MaxLevel more or equal max player level, this let GM set high level with 1...max range items)
-                    if (pItem.GetQuality() == ItemQuality.Heirloom)
-                        requiredLevels = Global.DB2Mgr.GetContentTuningData(pItem.GetScalingContentTuningId(), true);
-
-                    if (requiredLevels.HasValue && requiredLevels.Value.MaxLevel < SharedConst.DefaultMaxLevel && requiredLevels.Value.MaxLevel < GetLevel() && Global.DB2Mgr.GetHeirloomByItemId(pProto.GetId()) == null)
+                    if (ssd != null && ssd.MaxLevel < WorldConfig.GetIntValue(WorldCfg.MaxPlayerLevel) && ssd.MaxLevel < GetLevel())
                         return InventoryResult.NotEquippable;
 
                     byte eslot = FindEquipSlot(pItem, slot, swap);
@@ -5077,7 +5053,7 @@ namespace Game.Entities
             if (pItem != null)
             {
                 SetUpdateField<uint>(PlayerFields.VisibleItems + (int)(slot * 2), pItem.GetVisibleEntry(this));
-                SetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), pItem.GetVisibleAppearanceModId(this));
+                SetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), (ushort)pItem.GetVisibleAppearanceModId(this));
                 SetUpdateField<ushort>(PlayerFields.VisibleItems + 1 + (int)(slot * 2), pItem.GetVisibleItemVisual(this), 1);
             }
             else
@@ -5726,7 +5702,7 @@ namespace Game.Entities
         public void SendLoot(ObjectGuid guid, LootType loot_type, bool aeLooting = false)
         {
             if (!GetLootGUID().IsEmpty() && !aeLooting)
-                Session.DoLootReleaseAll();
+                session.DoLootReleaseAll();
 
             Loot loot;
             PermissionTypes permission = PermissionTypes.All;
@@ -5934,8 +5910,6 @@ namespace Game.Entities
                         if (bg.GetTypeID(true) == BattlegroundTypeId.AV)
                             loot.FillLoot(SharedConst.PlayerCorpseLootEntry, LootStorage.Creature, this, true);
                     }
-                    else if (GetZoneId() == WintergraspAreaIds.Wintergrasp)
-                        loot.FillLoot(SharedConst.PlayerCorpseLootEntry, LootStorage.Creature, this, true);
 
                     // It may need a better formula
                     // Now it works like this: lvl10: ~6copper, lvl70: ~9silver

@@ -218,9 +218,9 @@ namespace Game.Entities
 
             RemoveSpecializationSpells();
 
-            ChrSpecializationRecord defaultSpec = Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass());
-            SetPrimarySpecialization(defaultSpec.Id);
-            SetActiveTalentGroup(defaultSpec.OrderIndex);
+            // ChrSpecializationRecord defaultSpec = Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass());
+            // SetPrimarySpecialization(defaultSpec.Id);
+            // SetActiveTalentGroup(defaultSpec.OrderIndex);
 
             LearnSpecializationSpells();
 
@@ -246,7 +246,7 @@ namespace Game.Entities
         public void SetLootSpecId(uint id) => SetUpdateField<uint>(ActivePlayerFields.LootSpecID, id);
         public uint GetLootSpecId() => GetUpdateField<uint>(ActivePlayerFields.LootSpecID);
 
-        public uint GetDefaultSpecId() => Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass()).Id;
+        public uint GetDefaultSpecId() => 0; /*Global.DB2Mgr.GetDefaultChrSpecializationForClass(GetClass()).Id;*/
 
         public void ActivateTalentGroup(ChrSpecializationRecord spec)
         {
@@ -305,23 +305,6 @@ namespace Game.Entities
                     RemoveOverrideSpell(talentInfo.OverridesSpellID, talentInfo.SpellID);
             }
 
-            foreach (var talentInfo in CliDB.PvpTalentStorage.Values)
-            {
-                SpellInfo spellInfo = Global.SpellMgr.GetSpellInfo(talentInfo.SpellID, Difficulty.None);
-                if (spellInfo == null)
-                    continue;
-
-                RemoveSpell(talentInfo.SpellID, true);
-
-                // search for spells that the talent teaches and unlearn them
-                foreach (SpellEffectInfo effect in spellInfo.GetEffects())
-                    if (effect != null && effect.TriggerSpell > 0 && effect.Effect == SpellEffectName.LearnSpell)
-                        RemoveSpell(effect.TriggerSpell, true);
-
-                if (talentInfo.OverridesSpellID != 0)
-                    RemoveOverrideSpell(talentInfo.OverridesSpellID, talentInfo.SpellID);
-            }
-
             // Remove spec specific spells
             RemoveSpecializationSpells();
 
@@ -346,18 +329,6 @@ namespace Game.Entities
                     if (talentInfo.OverridesSpellID != 0)
                         AddOverrideSpell(talentInfo.OverridesSpellID, talentInfo.SpellID);
                 }
-            }
-
-            for (byte slot = 0; slot < PlayerConst.MaxPvpTalentSlots; ++slot)
-            {
-                PvpTalentRecord talentInfo = CliDB.PvpTalentStorage.LookupByKey(GetPvpTalentMap(GetActiveTalentGroup())[slot]);
-                if (talentInfo == null)
-                    continue;
-
-                if (talentInfo.SpellID == 0)
-                    continue;
-
-                AddPvpTalent(talentInfo, GetActiveTalentGroup(), slot);
             }
 
             LearnSpecializationSpells();
@@ -517,76 +488,76 @@ namespace Game.Entities
 
         public void SendTalentsInfoData()
         {
-            UpdateTalentData packet = new();
-            packet.Info.PrimarySpecialization = GetPrimarySpecialization();
+            //UpdateTalentData packet = new();
+            //packet.Info.PrimarySpecialization = GetPrimarySpecialization();
 
-            for (byte i = 0; i < PlayerConst.MaxSpecializations; ++i)
-            {
-                ChrSpecializationRecord spec = Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), i);
-                if (spec == null)
-                    continue;
+            //for (byte i = 0; i < PlayerConst.MaxSpecializations; ++i)
+            //{
+            //    ChrSpecializationRecord spec = Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), i);
+            //    if (spec == null)
+            //        continue;
 
-                var talents = GetTalentMap(i);
-                var pvpTalents = GetPvpTalentMap(i);
+            //    var talents = GetTalentMap(i);
+            //    var pvpTalents = GetPvpTalentMap(i);
 
-                UpdateTalentData.TalentGroupInfo groupInfoPkt = new();
-                groupInfoPkt.SpecID = spec.Id;
+            //    UpdateTalentData.TalentGroupInfo groupInfoPkt = new();
+            //    groupInfoPkt.SpecID = spec.Id;
 
-                foreach (var pair in talents)
-                {
-                    if (pair.Value == PlayerSpellState.Removed)
-                        continue;
+            //    foreach (var pair in talents)
+            //    {
+            //        if (pair.Value == PlayerSpellState.Removed)
+            //            continue;
 
-                    TalentRecord talentInfo = CliDB.TalentStorage.LookupByKey(pair.Key);
-                    if (talentInfo == null)
-                    {
-                        Log.outError(LogFilter.Player, "Player {0} has unknown talent id: {1}", GetName(), pair.Key);
-                        continue;
-                    }
+            //        TalentRecord talentInfo = CliDB.TalentStorage.LookupByKey(pair.Key);
+            //        if (talentInfo == null)
+            //        {
+            //            Log.outError(LogFilter.Player, "Player {0} has unknown talent id: {1}", GetName(), pair.Key);
+            //            continue;
+            //        }
 
-                    SpellInfo spellEntry = Global.SpellMgr.GetSpellInfo(talentInfo.SpellID, Difficulty.None);
-                    if (spellEntry == null)
-                    {
-                        Log.outError(LogFilter.Player, "Player {0} has unknown talent spell: {1}", GetName(), talentInfo.SpellID);
-                        continue;
-                    }
+            //        SpellInfo spellEntry = Global.SpellMgr.GetSpellInfo(talentInfo.SpellID, Difficulty.None);
+            //        if (spellEntry == null)
+            //        {
+            //            Log.outError(LogFilter.Player, "Player {0} has unknown talent spell: {1}", GetName(), talentInfo.SpellID);
+            //            continue;
+            //        }
 
-                    groupInfoPkt.TalentIDs.Add((ushort)pair.Key);
-                }
+            //        groupInfoPkt.TalentIDs.Add((ushort)pair.Key);
+            //    }
 
-                for (byte slot = 0; slot < PlayerConst.MaxPvpTalentSlots; ++slot)
-                {
-                    if (pvpTalents[slot] == 0)
-                        continue;
+            //    for (byte slot = 0; slot < PlayerConst.MaxPvpTalentSlots; ++slot)
+            //    {
+            //        if (pvpTalents[slot] == 0)
+            //            continue;
 
-                    PvpTalentRecord talentInfo = CliDB.PvpTalentStorage.LookupByKey(pvpTalents[slot]);
-                    if (talentInfo == null)
-                    {
-                        Log.outError(LogFilter.Player, $"Player.SendTalentsInfoData: Player '{GetName()}' ({GetGUID()}) has unknown pvp talent id: {pvpTalents[slot]}");
-                        continue;
-                    }
+            //        PvpTalentRecord talentInfo = CliDB.PvpTalentStorage.LookupByKey(pvpTalents[slot]);
+            //        if (talentInfo == null)
+            //        {
+            //            Log.outError(LogFilter.Player, $"Player.SendTalentsInfoData: Player '{GetName()}' ({GetGUID()}) has unknown pvp talent id: {pvpTalents[slot]}");
+            //            continue;
+            //        }
 
-                    SpellInfo spellEntry = Global.SpellMgr.GetSpellInfo(talentInfo.SpellID, Difficulty.None);
-                    if (spellEntry == null)
-                    {
-                        Log.outError(LogFilter.Player, $"Player.SendTalentsInfoData: Player '{GetName()}' ({GetGUID()}) has unknown pvp talent spell: {talentInfo.SpellID}");
-                        continue;
-                    }
+            //        SpellInfo spellEntry = Global.SpellMgr.GetSpellInfo(talentInfo.SpellID, Difficulty.None);
+            //        if (spellEntry == null)
+            //        {
+            //            Log.outError(LogFilter.Player, $"Player.SendTalentsInfoData: Player '{GetName()}' ({GetGUID()}) has unknown pvp talent spell: {talentInfo.SpellID}");
+            //            continue;
+            //        }
 
-                    PvPTalent pvpTalent = new();
-                    pvpTalent.PvPTalentID = (ushort)pvpTalents[slot];
-                    pvpTalent.Slot = slot;
-                    groupInfoPkt.PvPTalents.Add(pvpTalent);
-                }
+            //        PvPTalent pvpTalent = new();
+            //        pvpTalent.PvPTalentID = (ushort)pvpTalents[slot];
+            //        pvpTalent.Slot = slot;
+            //        groupInfoPkt.PvPTalents.Add(pvpTalent);
+            //    }
 
-                if (i == GetActiveTalentGroup())
-                    packet.Info.ActiveGroup = (byte)packet.Info.TalentGroups.Count;
+            //    if (i == GetActiveTalentGroup())
+            //        packet.Info.ActiveGroup = (byte)packet.Info.TalentGroups.Count;
 
-                if (!groupInfoPkt.TalentIDs.Empty() || !groupInfoPkt.PvPTalents.Empty() || i == GetActiveTalentGroup())
-                    packet.Info.TalentGroups.Add(groupInfoPkt);
-            }
+            //    if (!groupInfoPkt.TalentIDs.Empty() || !groupInfoPkt.PvPTalents.Empty() || i == GetActiveTalentGroup())
+            //        packet.Info.TalentGroups.Add(groupInfoPkt);
+            //}
 
-            SendPacket(packet);
+            //SendPacket(packet);
         }
 
         public void SendRespecWipeConfirm(ObjectGuid guid, uint cost)

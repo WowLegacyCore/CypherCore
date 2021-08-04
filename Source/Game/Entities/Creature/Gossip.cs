@@ -276,7 +276,7 @@ namespace Game.Misc
                 {
                     ClientGossipText text = new();
                     text.QuestID = questID;
-                    text.ContentTuningID = quest.ContentTuningId;
+                    text.ContentTuningID = 0;
                     text.QuestType = item.QuestIcon;
                     text.QuestFlags = (uint)quest.Flags;
                     text.QuestFlagsEx = (uint)quest.FlagsEx;
@@ -368,7 +368,7 @@ namespace Game.Misc
                 {
                     ClientGossipText text = new();
                     text.QuestID = questID;
-                    text.ContentTuningID = quest.ContentTuningId;
+                    text.ContentTuningID = 0;
                     text.QuestType = questMenuItem.QuestIcon;
                     text.QuestFlags = (uint)quest.Flags;
                     text.QuestFlagsEx = (uint)quest.FlagsEx;

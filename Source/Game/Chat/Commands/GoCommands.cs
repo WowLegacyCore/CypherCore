@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -341,7 +341,7 @@ namespace Game.Chat.Commands
             else
                 player.SaveRecallPosition();
 
-            player.TeleportTo(node.ContinentID, node.Pos.X, node.Pos.Y, node.Pos.Z, player.GetOrientation());
+            player.TeleportTo((uint)node.ContinentID, node.Pos.X, node.Pos.Y, node.Pos.Z, player.GetOrientation());
             return true;
         }
 
@@ -380,7 +380,7 @@ namespace Game.Chat.Commands
             else
                 player.SaveRecallPosition();
 
-            player.TeleportTo(at.ContinentID, at.Pos.X, at.Pos.Y, at.Pos.Z, player.GetOrientation());
+            player.TeleportTo((uint)at.ContinentID, at.Pos.X, at.Pos.Y, at.Pos.Z, player.GetOrientation());
             return true;
         }
 

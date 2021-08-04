@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,33 +27,7 @@ namespace Game.BattleFields
 
         public void InitBattlefield()
         {
-            BattleField wg = new BattlefieldWG();
-            // respawn, init variables
-            if (!wg.SetupBattlefield())
-            {
-                Log.outError(LogFilter.Battlefield, "Battlefield: Wintergrasp init failed.");
-            }
-            else
-            {
-                _battlefieldSet.Add(wg);
-                Log.outInfo(LogFilter.Battlefield, "Battlefield: Wintergrasp successfully initiated.");
-            }
 
-            /*
-            For Cataclysm: Tol Barad
-            Battlefield* tb = new BattlefieldTB;
-            // respawn, init variables
-            if (!tb.SetupBattlefield())
-            {
-                TC_LOG_DEBUG("bg.battlefield", "Battlefield: Tol Barad init failed.");
-                delete tb;
-            }
-            else
-            {
-                _battlefieldSet.push_back(tb);
-                TC_LOG_DEBUG("bg.battlefield", "Battlefield: Tol Barad successfully initiated.");
-            }
-            */
         }
 
         public void AddZone(uint zoneId, BattleField bf)

@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -196,33 +196,9 @@ namespace Game
                 }
             }
 
-            uint preferredMountDisplay = 0;
-            MountRecord mount = CliDB.MountStorage.LookupByKey(activateTaxi.FlyingMountID);
-            if (mount != null)
-            {
-                if (GetPlayer().HasSpell(mount.SourceSpellID))
-                {
-                    var mountDisplays = Global.DB2Mgr.GetMountDisplays(mount.Id);
-                    if (mountDisplays != null)
-                    {
-                        List<MountXDisplayRecord> usableDisplays = mountDisplays.Where(mountDisplay =>
-                        {
-                            PlayerConditionRecord playerCondition = CliDB.PlayerConditionStorage.LookupByKey(mountDisplay.PlayerConditionID);
-                            if (playerCondition != null)
-                                return ConditionManager.IsPlayerMeetingCondition(GetPlayer(), playerCondition);
-
-                            return true;
-                        }).ToList();
-
-                        if (!usableDisplays.Empty())
-                            preferredMountDisplay = usableDisplays.SelectRandom().CreatureDisplayInfoID;
-                    }
-                }
-            }
-
             List<uint> nodes = new();
             Global.TaxiPathGraph.GetCompleteNodeRoute(from, to, GetPlayer(), nodes);
-            GetPlayer().ActivateTaxiPathTo(nodes, unit, 0, preferredMountDisplay);
+            GetPlayer().ActivateTaxiPathTo(nodes, unit);
         }
 
         public void SendActivateTaxiReply(ActivateTaxiReply reply = ActivateTaxiReply.Ok)

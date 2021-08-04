@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -28,7 +28,7 @@ namespace Game.Chat
     public class LanguageManager : Singleton<LanguageManager>
     {
         MultiMap<uint, LanguageDesc> _langsMap = new();
-        MultiMap<Tuple<uint, byte>, string> _wordsMap = new();
+        MultiMap<(uint, byte), string> _wordsMap = new();
 
         LanguageManager() { }
 
@@ -83,10 +83,7 @@ namespace Game.Chat
             foreach (LanguageWordsRecord wordEntry in CliDB.LanguageWordsStorage.Values)
             {
                 byte length = (byte)Math.Min(18, wordEntry.Word.Length);
-
-                var key = Tuple.Create(wordEntry.LanguageID, length);
-
-                _wordsMap.Add(key, wordEntry.Word);
+                _wordsMap.Add((wordEntry.LanguageID, length), wordEntry.Word);
                 ++wordsNum;
             }
 

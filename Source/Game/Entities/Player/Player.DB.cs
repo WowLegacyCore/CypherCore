@@ -57,8 +57,6 @@ namespace Game.Entities
                         ObjectGuid bagGuid = counter != 0 ? ObjectGuid.Create(HighGuid.Item, counter) : ObjectGuid.Empty;
                         byte slot = result.Read<byte>(34);
 
-                        GetSession().GetCollectionMgr().CheckHeirloomUpgrades(item);
-
                         InventoryResult err = InventoryResult.Ok;
                         if (item.HasItemFlag(ItemFieldFlags.Child))
                         {
@@ -548,7 +546,7 @@ namespace Game.Entities
 
                 // accept saved data only for valid position (and non instanceable), and accessable
                 if (GridDefines.IsValidMapCoord(homebind.GetMapId(), homebind.posX, homebind.posY, homebind.posZ) &&
-                    !map.Instanceable() && GetSession().GetExpansion() >= map.Expansion())
+                    !map.IsInstanceable() && GetSession().GetExpansion() >= map.Expansion())
                     ok = true;
                 else
                 {
@@ -902,42 +900,25 @@ namespace Game.Entities
                 while (result.NextRow());
             }
         }
-        void _LoadPvpTalents(SQLResult result)
-        {
-            // "SELECT talentID0, talentID1, talentID2, talentID3, talentGroup FROM character_pvp_talent WHERE guid = ?"
-            if (!result.IsEmpty())
-            {
-                do
-                {
-                    for (byte slot = 0; slot < PlayerConst.MaxPvpTalentSlots; ++slot)
-                    {
-                        PvpTalentRecord talent = CliDB.PvpTalentStorage.LookupByKey(result.Read<uint>(slot));
-                        if (talent != null)
-                            AddPvpTalent(talent, result.Read<byte>(4), slot);
-                    }
-                }
-                while (result.NextRow());
-            }
-        }
         void _LoadGlyphs(SQLResult result)
         {
             // SELECT talentGroup, glyphId from character_glyphs WHERE guid = ?
             if (result.IsEmpty())
                 return;
 
-            do
-            {
-                byte spec = result.Read<byte>(0);
-                if (spec >= PlayerConst.MaxSpecializations || Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), spec) == null)
-                    continue;
+            //do
+            //{
+            //    byte spec = result.Read<byte>(0);
+            //    if (spec >= PlayerConst.MaxSpecializations || Global.DB2Mgr.GetChrSpecializationByIndex(GetClass(), spec) == null)
+            //        continue;
 
-                ushort glyphId = result.Read<ushort>(1);
-                if (!CliDB.GlyphPropertiesStorage.ContainsKey(glyphId))
-                    continue;
+            //    ushort glyphId = result.Read<ushort>(1);
+            //    if (!CliDB.GlyphPropertiesStorage.ContainsKey(glyphId))
+            //        continue;
 
-                GetGlyphs(spec).Add(glyphId);
+            //    GetGlyphs(spec).Add(glyphId);
 
-            } while (result.NextRow());
+            //} while (result.NextRow());
         }
         void _LoadGlyphAuras()
         {
@@ -954,7 +935,7 @@ namespace Game.Entities
                 if (!result.IsEmpty() && !HasAtLoginFlag(AtLoginFlags.Resurrect))
                 {
                     _corpseLocation = new WorldLocation(result.Read<ushort>(0), result.Read<float>(1), result.Read<float>(2), result.Read<float>(3), result.Read<float>(4));
-                    if (!CliDB.MapStorage.LookupByKey(_corpseLocation.GetMapId()).Instanceable())
+                    if (!CliDB.MapStorage.LookupByKey(_corpseLocation.GetMapId()).IsInstanceable())
                         AddPlayerLocalFlag(PlayerLocalFlags.ReleaseTimer);
                     else
                         RemovePlayerLocalFlag(PlayerLocalFlags.ReleaseTimer);
@@ -1954,23 +1935,6 @@ namespace Game.Entities
                     trans.Append(stmt);
                 }
             }
-
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.DEL_CHAR_PVP_TALENT);
-            stmt.AddValue(0, GetGUID().GetCounter());
-            trans.Append(stmt);
-
-            for (byte group = 0; group < PlayerConst.MaxSpecializations; ++group)
-            {
-                var talents = GetPvpTalentMap(group);
-                stmt = DB.Characters.GetPreparedStatement(CharStatements.INS_CHAR_PVP_TALENT);
-                stmt.AddValue(0, GetGUID().GetCounter());
-                stmt.AddValue(1, talents[0]);
-                stmt.AddValue(2, talents[1]);
-                stmt.AddValue(3, talents[2]);
-                stmt.AddValue(4, talents[3]);
-                stmt.AddValue(5, group);
-                trans.Append(stmt);
-            }
         }
         public void _SaveMail(SQLTransaction trans)
         {
@@ -2801,10 +2765,7 @@ namespace Game.Entities
 
             UpdateDisplayPower();
             _LoadTalents(holder.GetResult(PlayerLoginQueryLoad.Talents));
-            _LoadPvpTalents(holder.GetResult(PlayerLoginQueryLoad.PvpTalents));
             _LoadSpells(holder.GetResult(PlayerLoginQueryLoad.Spells));
-            GetSession().GetCollectionMgr().LoadHeirlooms();
-            GetSession().GetCollectionMgr().LoadMounts();
 
             LearnSpecializationSpells();
 
@@ -2847,7 +2808,7 @@ namespace Game.Entities
             // unread mails and next delivery time, actual mails not loaded
             _LoadMailInit(holder.GetResult(PlayerLoginQueryLoad.MailCount), holder.GetResult(PlayerLoginQueryLoad.MailDate));
 
-            m_social = Global.SocialMgr.LoadFromDB(holder.GetResult(PlayerLoginQueryLoad.SocialList), GetGUID());
+            playerSocial = Global.SocialMgr.LoadFromDB(holder.GetResult(PlayerLoginQueryLoad.SocialList), GetGUID());
 
             // check PLAYER_CHOSEN_TITLE compatibility with PLAYER__FIELD_KNOWN_TITLES
             // note: PLAYER__FIELD_KNOWN_TITLES updated at quest status loaded
@@ -3335,10 +3296,6 @@ namespace Game.Entities
             // save stats can be out of transaction
             if (GetSession().IsLogingOut() || !WorldConfig.GetBoolValue(WorldCfg.StatsSaveOnlyOnLogout))
                 _SaveStats(characterTransaction);
-
-            // TODO: Move this out
-            GetSession().GetCollectionMgr().SaveAccountHeirlooms(loginTransaction);
-            GetSession().GetCollectionMgr().SaveAccountMounts(loginTransaction);
 
             stmt = DB.Login.GetPreparedStatement(LoginStatements.DEL_BNET_LAST_PLAYER_CHARACTERS);
             stmt.AddValue(0, GetSession().GetAccountId());

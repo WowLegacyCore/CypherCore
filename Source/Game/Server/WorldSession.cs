@@ -55,7 +55,6 @@ namespace Game
             isRecruiter = isARecruiter;
             expireTime = 60000; // 1 min after socket loss, session is deleted
             m_currentBankerGUID = ObjectGuid.Empty;
-            _collectionMgr = new CollectionMgr(this);
 
             m_Address = sock.GetRemoteIpAddress().Address.ToString();
             ResetTimeOutTime(false);
@@ -673,11 +672,6 @@ namespace Game
             return _transactionCallbacks.AddCallback(callback);
         }
 
-        public bool CanAccessAlliedRaces()
-        {
-            return GetAccountExpansion() >= Expansion.BattleForAzeroth;
-        }
-
         void InitWarden(BigInteger k)
         {
             if (_os == "Win")
@@ -735,8 +729,6 @@ namespace Game
         {
             LoadAccountData(realmHolder.GetResult(AccountInfoQueryLoad.GlobalAccountDataIndexPerRealm), AccountDataTypes.GlobalCacheMask);
             LoadTutorialsData(realmHolder.GetResult(AccountInfoQueryLoad.TutorialsIndexPerRealm));
-            _collectionMgr.LoadAccountHeirlooms(holder.GetResult(AccountInfoQueryLoad.GlobalAccountHeirlooms));
-            _collectionMgr.LoadAccountMounts(holder.GetResult(AccountInfoQueryLoad.Mounts));
 
             if (!m_inQueue)
                 SendAuthResponse(BattlenetRpcErrorCode.Ok, false);
@@ -825,9 +817,6 @@ namespace Game
         public uint GetRecruiterId() => recruiterId;
         public bool IsARecruiter() => isRecruiter;
 
-        // Battle Pets
-        public CollectionMgr GetCollectionMgr() => _collectionMgr;
-
         // Battlenet
         public Array<byte> GetRealmListSecret() => _realmListSecret;
         void SetRealmListSecret(Array<byte> secret) { _realmListSecret = secret; }
@@ -890,8 +879,6 @@ namespace Game
         RBACData _RBACData;
 
         ObjectGuid m_currentBankerGUID;
-
-        CollectionMgr _collectionMgr;
 
         ConnectToKey _instanceConnectKey;
 

@@ -123,8 +123,6 @@ namespace Game
                 while (result.NextRow());
             }
 
-            charResult.IsAlliedRacesCreationAllowed = CanAccessAlliedRaces();
-
             foreach (var requirement in Global.ObjectMgr.GetRaceUnlockRequirements())
             {
                 EnumCharactersResult.RaceUnlock raceUnlock = new();
@@ -179,38 +177,14 @@ namespace Game
 
         public bool MeetsChrCustomizationReq(ChrCustomizationReqRecord req, Class playerClass, bool checkRequiredDependentChoices, List<ChrCustomizationChoice> selectedChoices)
         {
-            if (!req.GetFlags().HasFlag(ChrCustomizationReqFlag.HasRequirements))
+            if (!req.Flags.HasAnyFlag(ChrCustomizationReqFlag.HasRequirements))
                 return true;
 
             if (req.ClassMask != 0 && (req.ClassMask & (1 << ((int)playerClass - 1))) == 0)
                 return false;
 
-            if (req.AchievementID != 0 /*&& !HasAchieved(req->AchievementID)*/)
+            if (req.ReqAchievementID != 0 /*&& !HasAchieved(req->AchievementID)*/)
                 return false;
-
-            if (checkRequiredDependentChoices)
-            {
-                var requiredChoices = Global.DB2Mgr.GetRequiredCustomizationChoices(req.Id);
-                if (requiredChoices != null)
-                {
-                    foreach (var key in requiredChoices.Keys)
-                    {
-                        bool hasRequiredChoiceForOption = false;
-                        foreach (uint requiredChoice in requiredChoices[key])
-                        {
-                            if (selectedChoices.Any(choice => choice.ChrCustomizationChoiceID == requiredChoice))
-                            {
-                                hasRequiredChoiceForOption = true;
-                                break;
-                            }
-                        }
-
-                        if (!hasRequiredChoiceForOption)
-                            return false;
-                    }
-                }
-
-            }
 
             return true;
         }
@@ -326,14 +300,6 @@ namespace Game
                 return;
             }
 
-            //if (raceExpansionRequirement.AchievementId && !)
-            //{
-            //    TC_LOG_ERROR("entities.player.cheat", "Expansion %u account:[%d] tried to Create character without achievement %u race (%u)",
-            //        GetAccountExpansion(), GetAccountId(), raceExpansionRequirement.AchievementId, charCreate.CreateInfo.Race);
-            //    SendCharCreate(CHAR_CREATE_ALLIED_RACE_ACHIEVEMENT);
-            //    return;
-            //}
-
             // prevent character creating Expansion class without Expansion account
             ClassAvailability classExpansionRequirement = Global.ObjectMgr.GetClassExpansionRequirement(charCreate.CreateInfo.RaceId, charCreate.CreateInfo.ClassId);
             if (classExpansionRequirement == null)
@@ -437,11 +403,8 @@ namespace Game
                     }
                 }
 
-                int demonHunterReqLevel = WorldConfig.GetIntValue(WorldCfg.CharacterCreatingMinLevelForDemonHunter);
-                bool hasDemonHunterReqLevel = demonHunterReqLevel == 0;
                 bool allowTwoSideAccounts = !Global.WorldMgr.IsPvPRealm() || HasPermission(RBACPermissions.TwoSideCharacterCreation);
                 int skipCinematics = WorldConfig.GetIntValue(WorldCfg.SkipCinematics);
-                bool checkDemonHunterReqs = !HasPermission(RBACPermissions.SkipCheckCharacterCreationDemonHunter);
 
                 void finalizeCharacterCreation(SQLResult result1)
                 {
@@ -450,16 +413,6 @@ namespace Game
                     {
                         Team team = Player.TeamForRace(createInfo.RaceId);
                         byte accRace = result1.Read<byte>(1);
-
-                        if (checkDemonHunterReqs)
-                        {
-                            if (!hasDemonHunterReqLevel)
-                            {
-                                byte accLevel = result1.Read<byte>(0);
-                                if (accLevel >= demonHunterReqLevel)
-                                    hasDemonHunterReqLevel = true;
-                            }
-                        }
 
                         // need to check team only for first character
                         // @todo what to if account already has characters of both races?
@@ -478,7 +431,7 @@ namespace Game
 
                         // search same race for cinematic or same class if need
                         // @todo check if cinematic already shown? (already logged in?; cinematic field)
-                        while ((skipCinematics == 1 && !haveSameRace))
+                        while (skipCinematics == 1 && !haveSameRace)
                         {
                             if (!result1.NextRow())
                                 break;
@@ -487,23 +440,7 @@ namespace Game
 
                             if (!haveSameRace)
                                 haveSameRace = createInfo.RaceId == (Race)accRace;
-
-                            if (checkDemonHunterReqs)
-                            {
-                                if (!hasDemonHunterReqLevel)
-                                {
-                                    byte acc_level = result1.Read<byte>(0);
-                                    if (acc_level >= demonHunterReqLevel)
-                                        hasDemonHunterReqLevel = true;
-                                }
-                            }
                         }
-                    }
-
-                    if (checkDemonHunterReqs && !hasDemonHunterReqLevel)
-                    {
-                        SendCharCreate(ResponseCodes.CharCreateNewPlayer);
-                        return;
                     }
 
                     Player newChar = new(this);
@@ -2558,10 +2495,6 @@ namespace Game
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.Talents, stmt);
 
-            stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_CHARACTER_PVP_TALENTS);
-            stmt.AddValue(0, lowGuid);
-            SetQuery(PlayerLoginQueryLoad.PvpTalents, stmt);
-
             stmt = DB.Characters.GetPreparedStatement(CharStatements.SEL_PLAYER_ACCOUNT_DATA);
             stmt.AddValue(0, lowGuid);
             SetQuery(PlayerLoginQueryLoad.AccountData, stmt);
@@ -2665,7 +2598,6 @@ namespace Game
         BgData,
         Glyphs,
         Talents,
-        PvpTalents,
         AccountData,
         Skills,
         WeeklyQuestStatus,
